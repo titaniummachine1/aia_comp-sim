@@ -167,13 +167,30 @@ Verified exact at q=0/0.5/1 for args 0–6 (e.g. flat 20 m q=1: vx=36.4 =
     (122/168 cases; fallback-profile rows are the failures).
 14. **Slice crossed-net delta (+~0.05 s over the tail)** — open fit; only
     slice rows at crossed-net profile sit slightly above the tail.
+15. **Curve force basis (NthLanding fixture-fitted)**: the ball's curve
+    field is a z-axis acceleration applied along a FIXED axis — signed by
+    the shot's curve direction (CurveRight = +Z, everything else = -Z in
+    the fixture fits) — with the slow 0.75/s decay while the field is
+    non-zero. NOT velocity-perp, NOT team-flipped in the two mined cases.
+    The same two cases also suggest the PREDICTOR does not zero curve on
+    bounce (residual ~0.55 m on 
+egative-curve-team-one); live
+    ApplyFloorBounce does zero it. Open fit.
+16. **Predictor net policy**: rally predictions (stopOnTape=false) PASS
+    THROUGH a below-tape net crossing and keep integrating — only serve /
+    stopOnTape predictions fail there (
+egative-curve-team-one crossed
+    at y=0.44 and still predicted its 2nd bounce).
+17. **TryPredictNthLandingFrom returns Nullable<bool>** — when false,
+    the serialized out words are zeroed placeholders, NOT a position.
+    Always read 
+eturn_bool_word before trusting landing_f32_words.
 
 ## 6. Current state (commit where this doc was added)
 
 - `aia_comp-sim`: 157 lib tests green; tennis game mode complete (world,
   scoring, serve, net, bounce, VM wiring, mode gate, GameSpec versions).
-- Solver rewritten to the empirical algorithm; replay = **122/168 within
-  0.25 m/s**. Remaining failures: fallback-aim rows (discovery #13) and
+- Solver replay = **164/168 within 0.25 m/s**; landing replay = **8/10**. Remaining failures: fallback-aim rows (discovery #13) and
   slice crossed-net (#14). Fix order: (a) fallback direction from input
   velocity, (b) slice net term, (c) tighten gate to 0.05 m/s, then
   bit-compare.
