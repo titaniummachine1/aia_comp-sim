@@ -137,7 +137,7 @@ impl TennisWorld {
             phase_t: 0.0,
             tick: 0,
             sim_time: 0.0,
-            ball: BallState::new(Vec3::ZERO, Vec3::ZERO, ShotType::Flat, 0.0),
+            ball: BallState::new(Vec3::ZERO, Vec3::ZERO, ShotType::Flat.game_arg(), 0.0),
             ball_held: true,
             serve_in_flight: false,
             serve_taped: false,
@@ -338,8 +338,8 @@ impl TennisWorld {
         };
         let from = self.ball.pos;
         let target3 = Vec3::new(target.x, BOUNCE_FLOOR_Y, target.y);
-        let vel = solve_shot(from, target3, shot, q, &self.flight);
-        self.ball = BallState::new(from, vel, shot, q);
+        let vel = solve_shot(from, target3, shot.game_arg(), q, &self.flight);
+        self.ball = BallState::new(from, vel, shot.game_arg(), q);
         self.players[i].last_aim = target;
         self.last_shot[Self::idx(side)] = Some(shot);
         if q >= 0.75 && matches!(shot, ShotType::Topspin | ShotType::Flat) {
@@ -371,7 +371,7 @@ impl TennisWorld {
                 self.players[Self::idx(server)].pos.y,
             ),
             Vec3::ZERO,
-            ShotType::Flat,
+            ShotType::Flat.game_arg(),
             0.0,
         );
         self.phase = Phase::ServeSetup;
@@ -396,7 +396,7 @@ impl TennisWorld {
         );
         let d = (COURT_Y + TOSS_HEIGHT + 1.0) - hand.y;
         let speed = ((d * (GRAVITY + GRAVITY)).sqrt()).max(TOSS_MIN_SPEED);
-        self.ball = BallState::new(hand, Vec3::new(0.0, speed, 0.0), ShotType::Flat, 0.0);
+        self.ball = BallState::new(hand, Vec3::new(0.0, speed, 0.0), ShotType::Flat.game_arg(), 0.0);
         self.ball_held = false;
         self.phase = Phase::Toss;
         self.phase_t = 0.0;

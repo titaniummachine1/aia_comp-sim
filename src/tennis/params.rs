@@ -83,23 +83,15 @@ pub const DROP_HOP_MAX: f32 = 11.8;
 /// Spin floor: below this upward speed the ball rolls dead.
 pub const BOUNCE_SPIN_FLOOR: f32 = 0.45;
 
-// --- Shot solver (v0.14 recovered per-type {speed, lift, minTime}) ---
-pub const SHOT_SPEEDS: [f32; 8] = [24.0, 16.0, 28.0, 12.0, 7.6, 24.0, 24.0, 24.0];
-pub const SHOT_LIFTS: [f32; 8] = [0.08, 0.04, 0.02, 6.0, 0.27, 0.08, 0.08, 0.08];
-pub const SHOT_MIN_TIMES: [f32; 8] = [0.14, 0.18, 0.12, 0.40, 0.38, 0.14, 0.14, 0.14];
-/// Charge power range: `min + (max-min)*q` for flat/topspin; other shots cap
-/// the boost at `min + 0.42*(max-min)` (v0.14 min/max charge words).
+// --- Shot solver charge words (v0.14 pinned) ---
 pub const CHARGE_POWER_MIN: f32 = 0.85;
 pub const CHARGE_POWER_MAX: f32 = 1.0;
-/// Non-flat/topsin shots get a reduced high-end charge multiplier.
+/// Non-straight shots get a reduced high-end charge multiplier
+/// (`0.85 + 0.42*0.45` = 1.039, verified at q=0/0.5/1 in the fixture).
 pub const CHARGE_OTHER_FRACTION: f32 = 0.42;
-/// Flat / topspin are the "fire" shots: full charge range.
-pub fn shot_has_full_charge(shot: super::shot_type::ShotType) -> bool {
-    matches!(
-        shot,
-        super::shot_type::ShotType::Topspin | super::shot_type::ShotType::Flat
-    )
-}
+
+/// Minimum flight times per game arg (straight family only).
+pub const SHOT_MIN_TIMES: [f32; 7] = [0.14, 0.18, 0.12, 0.40, 0.38, 0.14, 0.14];
 
 /// Lateral curve acceleration magnitude at pace 1, per shot
 /// (`reference_curve`: curveL/R = ±(1.3+1.4q)*12.4; drop/lob (0.45+0.4q)*5.2;
@@ -166,22 +158,20 @@ mod measured_constants_tests {
     }
 
     #[test]
-    fn shot_tables_are_pinned() {
-        // {speed, lift, minTime} per physical shot type.
-        let expect: [(f32, f32, f32); 8] = [
-            (24.0, 0.08, 0.14), // Topspin
-            (16.0, 0.04, 0.18), // Slice
-            (28.0, 0.02, 0.12), // Flat
-            (12.0, 6.0, 0.40),  // Lob
-            (7.6, 0.27, 0.38),  // Drop
-            (24.0, 0.08, 0.14), // Curve Left
-            (24.0, 0.08, 0.14), // Curve Right
-            (24.0, 0.08, 0.14), // Trick (shares the curve family)
+    fn shot_table_is_pinned() {
+        // (speed base, lift) per game ARG, verified against the live capture.
+        use super::super::shot_type::ShotArg;
+        let expect = [
+            (ShotArg::Topspin, 24.0, 0.08),
+            (ShotArg::Slice, 16.0, 0.04),
+            (ShotArg::Flat, 28.0, 0.02),
+            (ShotArg::Lob, 12.0, 6.0),
+            (ShotArg::Drop, 7.6, 0.27),
+            (ShotArg::CurveLeft, 24.0, 0.08),
+            (ShotArg::CurveRight, 24.0, 0.08),
         ];
-        for (i, (s, l, t)) in expect.into_iter().enumerate() {
-            assert_eq!(SHOT_SPEEDS[i], s, "speed {i}");
-            assert_eq!(SHOT_LIFTS[i], l, "lift {i}");
-            assert_eq!(SHOT_MIN_TIMES[i], t, "minTime {i}");
+        for (arg, s, l) in expect {
+            assert_eq!(arg.table(), (s, l), "{arg:?}");
         }
     }
 

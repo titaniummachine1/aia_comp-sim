@@ -31,7 +31,7 @@ pub mod world;
 pub use ball::{BallState, FlightEvent, FlightModel};
 pub use court::Side;
 pub use score::Score;
-pub use shot_type::ShotType;
+pub use shot_type::{ShotArg, ShotType};
 pub use world::{EndReason, Phase, TennisWorld};
 
 #[cfg(test)]

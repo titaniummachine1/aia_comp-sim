@@ -1,17 +1,16 @@
-//! Physical shot types — the game's `TennisShotType` enum
-//! (`tennis-sim/native/protocol.hpp` lines 533-535).
+//! Physical shot arguments — the game's `ComputeShotVelocity` argument
+//! domain, empirically verified against the live-captured 168-case matrix.
+//!
+//! Game ARG order (NOT the graph dropdown order):
+//! `0 Topspin, 1 Slice, 2 Flat, 3 Lob, 4 Drop, 5 CurveLeft, 6 CurveRight`
+//! (7 = trick variants resolve to one of the above via the seeded roll).
 //!
 //! The graph dropdown order (what `Shot: N` means in graph JSON) is
 //! `0 Topspin, 1 Slice, 2 Flat, 3 Trick, 4 Drop, 5 Lob, 6 Curve Left,
-//! 7 Curve Right`, while the PHYSICAL enum orders Trick and Lob differently:
-//! `Topspin 0, Slice 1, Flat 2, Trick 3, Drop 4, Lob 5, Curve Left 6,
-//! Curve Right 7` with the option mapping `0→0, 1→1, 2→2, 4→4, 5→3, 6→5,
-//! 7→6` (`recovered_vm_resolve_physical_shot_option`).
-//!
-//! To avoid the same class of bug as the soccer phantom dropdown entry, this
-//! module uses ONE canonical order everywhere in the Rust port: the GRAPH
-//! dropdown order (`ShotType` below). Conversion to the physical order lives
-//! here and is the only place the two orders meet.
+//! 7 Curve Right` — [`ShotType`] below. Conversion to the game argument
+//! lives here and is the only place the two orders meet. The recovered
+//! mapping (`0→0, 1→1, 2→2, 4→4, 5→3, 6→5, 7→6`) is confirmed by the
+//! fixture matrix: dropdown Lob(5) behaves as arg 3, CurveL(6) as arg 5.
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ShotType {
@@ -42,58 +41,89 @@ impl ShotType {
         })
     }
 
+    /// Graph dropdown order → game physical argument.
+    /// `Topspin→0, Slice→1, Flat→2, Trick→3 (variant roll upstream),
+    /// Drop→4, Lob→3?` — no: empirically Lob rolls to arg 3 and Trick is
+    /// resolved by the game's variant roll before the solver; the mapping
+    /// below follows the recovered table `0→0, 1→1, 2→2, 4→4, 5→3, 6→5,
+    /// 7→6` with Trick→3 pending its RNG resolution.
+    pub fn game_arg(self) -> ShotArg {
+        match self {
+            ShotType::Topspin => ShotArg::Topspin,
+            ShotType::Slice => ShotArg::Slice,
+            ShotType::Flat => ShotArg::Flat,
+            ShotType::Trick => ShotArg::Lob, // trick variant roll: placeholder
+            ShotType::Drop => ShotArg::Drop,
+            ShotType::Lob => ShotArg::Lob,
+            ShotType::CurveLeft => ShotArg::CurveLeft,
+            ShotType::CurveRight => ShotArg::CurveRight,
+        }
+    }
+
     pub fn from_physical(v: i32) -> ShotType {
         match v {
             0 => ShotType::Topspin,
             1 => ShotType::Slice,
             2 => ShotType::Flat,
-            3 => ShotType::Trick,
+            3 => ShotType::Lob,
             4 => ShotType::Drop,
-            5 => ShotType::Lob,
-            6 => ShotType::CurveLeft,
-            _ => ShotType::CurveRight,
+            5 => ShotType::CurveLeft,
+            6 => ShotType::CurveRight,
+            _ => ShotType::Trick,
         }
     }
+}
 
-    /// Graph dropdown index → physical enum value
-    /// (`0→0, 1→1, 2→2, 4→4, 5→3, 6→5, 7→6`; 3 Trick stays trick).
-    pub fn physical_value(self) -> i32 {
+/// The game solver's argument domain (empirical behavior table).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ShotArg {
+    Topspin = 0,
+    Slice = 1,
+    Flat = 2,
+    Lob = 3,
+    Drop = 4,
+    CurveLeft = 5,
+    CurveRight = 6,
+}
+
+impl ShotArg {
+    /// (speed base, lift) — pinned words verified live.
+    pub fn table(self) -> (f32, f32) {
         match self {
-            ShotType::Topspin => 0,
-            ShotType::Slice => 1,
-            ShotType::Flat => 2,
-            ShotType::Trick => 3,
-            ShotType::Drop => 4,
-            ShotType::Lob => 5,
-            ShotType::CurveLeft => 6,
-            ShotType::CurveRight => 7,
+            ShotArg::Topspin => (24.0, 0.08),
+            ShotArg::Slice => (16.0, 0.04),
+            ShotArg::Flat => (28.0, 0.02),
+            ShotArg::Lob => (12.0, 6.0),
+            ShotArg::Drop => (7.6, 0.27),
+            ShotArg::CurveLeft | ShotArg::CurveRight => (24.0, 0.08),
         }
     }
 
-    /// Lateral curve acceleration at pace 1 (m/s²), signed: + = ball's right.
-    /// Curve shots: ±(1.3 + 1.4q) × 12.4; drop/lob: (0.45+0.4q) × 5.2 with
-    /// sign from the aim side; slice: (0.85+0.55q) × magnitude factor;
-    /// flat/topspin: none (`recovered_shot.hpp reference_curve`).
+    /// Full charge range only for the straight family (0, 2).
+    pub fn full_charge(self) -> bool {
+        matches!(self, ShotArg::Topspin | ShotArg::Flat)
+    }
+
     pub fn curve_sign(self) -> f32 {
         match self {
-            ShotType::CurveLeft => -1.0,
-            ShotType::CurveRight => 1.0,
+            ShotArg::CurveLeft => -1.0,
+            ShotArg::CurveRight => 1.0,
             _ => 0.0,
         }
     }
 
     pub fn is_curve(self) -> bool {
-        matches!(self, ShotType::CurveLeft | ShotType::CurveRight)
+        matches!(self, ShotArg::CurveLeft | ShotArg::CurveRight)
     }
 }
 
 /// Curve acceleration magnitude for a charged shot at pace 1.
-pub fn curve_accel(shot: ShotType, q: f32, speed: f32) -> f32 {
+pub fn curve_accel(arg: ShotArg, q: f32, speed: f32) -> f32 {
     let q = q.clamp(0.0, 1.0);
-    match shot {
-        ShotType::CurveLeft | ShotType::CurveRight => (1.3 + 1.4 * q) * CURVE_BASE_CURVE_SHOTS,
-        ShotType::Drop | ShotType::Lob => (0.45 + 0.4 * q) * CURVE_BASE_SOFT_SHOTS,
-        ShotType::Slice => (0.85 + 0.55 * q) * speed * 0.12,
+    match arg {
+        ShotArg::CurveLeft | ShotArg::CurveRight => (1.3 + 1.4 * q) * CURVE_BASE_CURVE_SHOTS,
+        ShotArg::Lob | ShotArg::Drop => (0.45 + 0.4 * q) * CURVE_BASE_SOFT_SHOTS,
+        ShotArg::Slice => (0.85 + 0.55 * q) * speed * 0.12,
         _ => 0.0,
     }
 }

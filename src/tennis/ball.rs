@@ -16,7 +16,7 @@
 use bevy::prelude::Vec3;
 
 use super::params::*;
-use super::shot_type::ShotType;
+use super::shot_type::ShotArg;
 
 /// Live ball state.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -25,7 +25,7 @@ pub struct BallState {
     pub vel: Vec3,
     /// Lateral curve accel magnitude at pace 1 (signed, + = ball's right).
     pub curve: f32,
-    pub shot: ShotType,
+    pub shot: ShotArg,
     pub charge: f32,
     /// Per-hit power scalar (charge/fatigue multiplier, normally 1). Flight
     /// forces scale by `pace²`, preserving the full-gravity arc shape — the
@@ -36,7 +36,7 @@ pub struct BallState {
 }
 
 impl BallState {
-    pub fn new(pos: Vec3, vel: Vec3, shot: ShotType, charge: f32) -> Self {
+    pub fn new(pos: Vec3, vel: Vec3, shot: ShotArg, charge: f32) -> Self {
         let sign = shot.curve_sign();
         let curve = if sign == 0.0 {
             0.0
@@ -175,19 +175,19 @@ impl FlightModel {
         let mut forward = BOUNCE_FORWARD_KEEP;
         if first {
             match ball.shot {
-                ShotType::Topspin => {
+                ShotArg::Topspin => {
                     ball.vel.x *= TOPSPIN_FORWARD_KICK;
                     ball.vel.z *= TOPSPIN_FORWARD_KICK;
                     restitution *= TOPSPIN_BOUNCE_SCALE;
                 }
-                ShotType::Slice => {
+                ShotArg::Slice => {
                     let q = ball.charge.clamp(0.0, 1.0);
                     let f0 = (SLICE_FORWARD_KEEP + 0.08).min(1.0);
                     forward = f0 + q * (SLICE_FORWARD_KEEP * SLICE_FORWARD_KEEP - f0);
                     let r0 = (SLICE_BOUNCE_SCALE + 0.10).min(1.0);
                     restitution = r0 + q * (SLICE_BOUNCE_SCALE * 1.4 - r0);
                 }
-                ShotType::Drop => {
+                ShotArg::Drop => {
                     forward = DROP_FORWARD_KEEP;
                     restitution *= DROP_BOUNCE_SCALE;
                 }
@@ -198,8 +198,8 @@ impl FlightModel {
         let mut vy = ball.vel.y.abs() * restitution;
         if first {
             match ball.shot {
-                ShotType::Drop => vy = vy.clamp(DROP_HOP_MIN, DROP_HOP_MAX),
-                ShotType::Slice => vy = vy.max(BOUNCE_MIN_SPEED * 0.85),
+                ShotArg::Drop => vy = vy.clamp(DROP_HOP_MIN, DROP_HOP_MAX),
+                ShotArg::Slice => vy = vy.max(BOUNCE_MIN_SPEED * 0.85),
                 _ => vy = vy.max(BOUNCE_MIN_SPEED),
             }
         } else {
@@ -278,13 +278,13 @@ mod tests {
         let mut full = BallState::new(
             Vec3::new(-13.0, 1.5, 0.0),
             Vec3::new(20.0, 6.0, 0.0),
-            ShotType::Flat,
+            ShotArg::Flat,
             0.0,
         );
         let mut half = BallState::new(
             Vec3::new(-13.0, 1.5, 0.0),
             Vec3::new(10.0, 3.0, 0.0),
-            ShotType::Flat,
+            ShotArg::Flat,
             0.0,
         );
         // Advance the full-speed ball 1 s of flight, the half-speed ball the
@@ -308,7 +308,7 @@ mod tests {
         let mut ball = BallState::new(
             Vec3::new(-0.05, 0.8, 0.0),
             Vec3::new(20.0, 0.0, 3.0),
-            ShotType::Flat,
+            ShotArg::Flat,
             0.0,
         );
         let e = flight.step(&mut ball, FIXED_DT, false);
@@ -324,7 +324,7 @@ mod tests {
         let mut drop = BallState::new(
             Vec3::new(5.0, 1.0, 0.0),
             Vec3::new(3.0, -8.0, 0.0),
-            ShotType::Drop,
+            ShotArg::Drop,
             0.0,
         );
         flight.floor_bounce(&mut drop);
@@ -334,7 +334,7 @@ mod tests {
         let mut flat = BallState::new(
             Vec3::new(5.0, 1.0, 0.0),
             Vec3::new(20.0, -8.0, 0.0),
-            ShotType::Flat,
+            ShotArg::Flat,
             0.0,
         );
         flight.floor_bounce(&mut flat);

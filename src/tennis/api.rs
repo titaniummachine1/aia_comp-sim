@@ -147,7 +147,18 @@ pub fn build_team_api(world: &super::world::TennisWorld, side: super::court::Sid
     set(&mut api, "Is Break Point", world.score.is_break_point() && side == receiver);
     set(&mut api, "Is Match Point", world.score.is_match_point(side));
     set(&mut api, "Ball On Self Side", world.ball.pos.x * side.sign() > 0.0);
-    set(&mut api, "Ball Incoming", world.ball.pos.x * side.sign() < 0.0 || (world.serve_in_flight && server == opponent));
+    // v0.14 quirk (replicated): `Ball Incoming` goes false at the FIRST
+    // bounce, not when the ball's direction changes. True only while the
+    // ball is un-bounced since the last strike and moving toward this side.
+    set(
+        &mut api,
+        "Ball Incoming",
+        world.ball.bounces == 0
+            && !world.ball_held
+            && (world.ball.pos.x * side.sign() < 0.0
+                || world.ball.vel.x * side.sign() > 0.0
+                || (world.serve_in_flight && server == opponent)),
+    );
     set(&mut api, "Ball In Swing Range", world_reaches(world, side));
     set(&mut api, "Ball Has Bounced", world.ball.bounces > 0 && !world.ball_held);
     set(&mut api, "Must Wait For Bounce", world.serve_in_flight && !world.serve_bounced && side == receiver);
