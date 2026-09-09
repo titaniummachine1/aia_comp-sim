@@ -97,12 +97,16 @@ impl FlightModel {
         let _ = speed;
         let pace = ball.pace.max(1e-4);
         let pace2 = pace * pace;
-        // Curve accel along the ball's right, with per-family decay.
+        // Curve accel along the team right axis (unit ±Z, the game's
+        // NetRight(team) — verified against the NthLanding fixture), with
+        // the slow 0.75 decay whenever a curve field is present.
         if ball.curve != 0.0 {
-            let dir = ball.vel.normalize_or_zero();
-            let right = Vec3::new(-dir.z, 0.0, dir.x);
+            let right = Vec3::new(0.0, 0.0, 1.0);
             ball.vel += right * (pace2 * ball.curve) * h;
-            let decay = if ball.shot.is_curve() {
+            // Empirical (NthLanding fixture slice-team-one): any ball
+            // carrying a curve field decays at the slow 0.75 rate — the
+            // 2.4 rate only applies to curve-free flight.
+            let decay = if ball.curve != 0.0 {
                 CURVE_DECAY_CURVE_SHOTS
             } else {
                 CURVE_DECAY_OTHER
@@ -218,6 +222,19 @@ impl FlightModel {
     /// Horizons: 6 s (first bounce) / 10 s (second), matching the recovered
     /// `TryPredictNthLandingFrom`. `None` = no landing within horizon.
     pub fn predict_landing(&self, ball: &mut BallState, n: usize) -> Option<Landing> {
+        self.predict_landing_tape(ball, n, false)
+    }
+
+    /// Prediction with the tape policy: stop_on_tape (serves) fails at a
+    /// below-tape net crossing; rally predictions pass through — the game's
+    /// TryPredictNthLandingFrom with stopOnTape=false keeps integrating
+    /// (fixture negative-curve-team-one crosses below tape and lands).
+    pub fn predict_landing_tape(
+        &self,
+        ball: &mut BallState,
+        n: usize,
+        stop_on_tape: bool,
+    ) -> Option<Landing> {
         let horizon = if n == 0 { 6.0 } else { 10.0 };
         let mut t = 0.0;
         let start_bounces = ball.bounces;
@@ -231,8 +248,8 @@ impl FlightModel {
             if prev.x * ball.pos.x < 0.0 {
                 let fraction: f32 = ((0.0 - prev.x) / (ball.pos.x - prev.x)).clamp(0.0, 1.0);
                 let at_net = prev.lerp(ball.pos, fraction);
-                if at_net.y < NET_TAPE_HEIGHT && at_net.z.abs() <= NET_HALF_WIDTH {
-                    // Prediction ends at the net: no landing.
+                if at_net.y < NET_TAPE_HEIGHT && at_net.z.abs() <= NET_HALF_WIDTH && stop_on_tape {
+                    // Serve/tape prediction ends at the net: no landing.
                     return None;
                 }
             }
