@@ -1,9 +1,11 @@
+[workspace]
+
 [package]
-name = "aicomp-soccer-sim"
+name = "aia_comp-sim"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-description = "Fully 2D top-down close copy of AIComp Soccer for rapid offline testing"
+description = "AIComp sim hub: offline copies of AIComp games (soccer live, tennis in progress) for rapid testing"
 default-run = "soccer_sim"
 
 # Bins:

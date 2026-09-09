@@ -1,6 +1,8 @@
-# AIComp Soccer Sim
+# AIA_comp Sim Hub
 
-A reverse-engineered 2D simulation of [AIComp Soccer](https://github.com/UnicornOne/AIComp) for offline AI development and testing. Built with [Bevy](https://bevyengine.org) in Rust.
+Offline sim hub for AIComp games. **Soccer** is live (2D Bevy sim, see below); **tennis** is in progress. Built with [Bevy](https://bevyengine.org) in Rust.
+
+## Soccer
 
 ## Quick Start
 
