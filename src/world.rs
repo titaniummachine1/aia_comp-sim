@@ -899,7 +899,8 @@ mod tests {
                     move_to: p.pos,
                     sprint: false,
                     interact: false,
-                };
+                
+                    shoot: false,};
             }
             let mut away_out = gk.think(&away_api);
             apply_1v1_freeze(&mut home_out, &mut away_out, &world, true);
@@ -981,12 +982,14 @@ mod tests {
                 move_to: world.players[i].pos,
                 sprint: false,
                 interact: false,
-            };
+            
+                shoot: false,};
             away.commands[i] = BrainCommand {
                 move_to: world.ball.pos,
                 sprint: false,
                 interact: i + 1 == 4,
-            };
+            
+                shoot: false,};
         }
 
         world.step_with_commands(&home, &away, FIXED_DT);
@@ -1050,7 +1053,8 @@ mod tests {
                 move_to: Vec2::ZERO,
                 sprint: false,
                 interact: true,
-            }; 4],
+            
+                shoot: false,}; 4],
             ..Default::default()
         };
         let release = BrainOutput {
@@ -1058,7 +1062,8 @@ mod tests {
                 move_to: Vec2::ZERO,
                 sprint: false,
                 interact: false,
-            }; 4],
+            
+                shoot: false,}; 4],
             ..Default::default()
         };
 
@@ -1277,7 +1282,8 @@ mod tests {
                 move_to: target,
                 sprint: false,
                 interact: false,
-            }; 4],
+            
+                shoot: false,}; 4],
             ..Default::default()
         };
         for _ in 0..20 {
@@ -1526,7 +1532,8 @@ mod tests {
                     move_to: p.pos,
                     sprint: false,
                     interact: false,
-                };
+                
+                    shoot: false,};
             }
             out
         };

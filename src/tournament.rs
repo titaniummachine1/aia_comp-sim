@@ -227,7 +227,8 @@ pub fn freeze_removed(
                 move_to: player.pos,
                 sprint: false,
                 interact: false,
-            };
+            
+                shoot: false,};
         }
     }
 }

@@ -33,7 +33,8 @@ fn park_others(out: &mut BrainOutput, api: &TeamApi) {
             move_to: me,
             sprint: false,
             interact: false,
-        };
+        
+            shoot: false,};
     }
 }
 
@@ -75,7 +76,8 @@ impl TeamBrain for PerfectControllerBrain {
                 move_to: park,
                 sprint: false,
                 interact: false,
-            };
+            
+                shoot: false,};
         }
 
         let me = api.get_transform("Team Player 1").unwrap_or(Vec2::ZERO);
@@ -97,7 +99,8 @@ impl TeamBrain for PerfectControllerBrain {
             move_to: me + d,
             sprint: keypress::is_pressed("LeftShift"),
             interact: keypress::is_pressed("E"),
-        };
+        
+            shoot: false,};
         out
     }
 }
@@ -170,7 +173,8 @@ impl TeamBrain for Test1Brain {
             move_to,
             sprint,
             interact,
-        };
+        
+            shoot: false,};
 
         self.prev_has = has;
         self.prev_charge = charge;
@@ -214,7 +218,8 @@ impl TeamBrain for KickRoutineBrain {
                 move_to: park,
                 sprint: false,
                 interact: false,
-            };
+            
+                shoot: false,};
         }
 
         let ball = api.get_transform("Ball").unwrap_or(Vec2::ZERO);
@@ -247,31 +252,36 @@ impl TeamBrain for KickRoutineBrain {
                         move_to: center,
                         sprint: false,
                         interact: true,
-                    }
+                    
+                        shoot: false,}
                 } else if charge >= charge_need {
                     BrainCommand {
                         move_to: me + dir * 10.0,
                         sprint: sprint_release,
                         interact: false,
-                    }
+                    
+                        shoot: false,}
                 } else {
                     BrainCommand {
                         move_to: me + dir * 10.0,
                         sprint: false,
                         interact: true,
-                    }
+                    
+                        shoot: false,}
                 }
             }
             1 | 3 | 5 => BrainCommand {
                 move_to: ball,
                 sprint: false,
                 interact: near && !has,
-            },
+            
+                shoot: false,},
             _ => BrainCommand {
                 move_to: center,
                 sprint: false,
                 interact: false,
-            },
+            
+                shoot: false,},
         };
 
         self.prev_has = has;
@@ -339,7 +349,8 @@ impl TeamBrain for Test2Brain {
             move_to,
             sprint: false,
             interact,
-        };
+        
+            shoot: false,};
         out
     }
 }

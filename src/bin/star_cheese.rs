@@ -446,7 +446,8 @@ fn main() {
                 move_to: slot_for[slot],
                 sprint: false,
                 interact,
-            };
+            
+                shoot: false,};
         }
 
         let before = w.possession.carrier;

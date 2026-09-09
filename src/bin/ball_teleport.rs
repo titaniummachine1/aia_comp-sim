@@ -86,13 +86,15 @@ fn main() {
         move_to: Vec2::new(-100.0, 0.0),
         sprint: false,
         interact: false,
-    };
+    
+        shoot: false,};
     for slot in 1..4 {
         home.commands[slot] = BrainCommand {
             move_to: w.players[slot].pos + Vec2::new(-100.0, 0.0),
             sprint: false,
             interact: true,
-        };
+        
+            shoot: false,};
     }
     w.step_with_commands(&home, &BrainOutput::default(), FIXED_DT);
 

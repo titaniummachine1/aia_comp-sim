@@ -599,7 +599,8 @@ mod tests {
             move_to: attacker.pos,
             sprint: false,
             interact: true,
-        };
+        
+            shoot: false,};
         let drain = apply_interact(
             &mut attacker,
             &mut ball,
@@ -662,7 +663,8 @@ mod tests {
             move_to: attacker.pos,
             sprint: false,
             interact: true,
-        };
+        
+            shoot: false,};
         let drain = apply_interact(
             &mut attacker,
             &mut ball,
@@ -718,7 +720,8 @@ mod tests {
             move_to: attacker.pos,
             sprint: false,
             interact: true,
-        };
+        
+            shoot: false,};
         let drain = apply_interact(
             &mut attacker,
             &mut ball,
@@ -779,7 +782,8 @@ mod tests {
             move_to: attacker.pos,
             sprint: false,
             interact: true,
-        };
+        
+            shoot: false,};
         let drain = apply_interact(
             &mut attacker,
             &mut ball,
@@ -843,7 +847,8 @@ mod tests {
             move_to: mate.pos,
             sprint: false,
             interact: true,
-        };
+        
+            shoot: false,};
         apply_interact(
             &mut mate, &mut ball, &mut poss, cmd, &params, 0.019, None, None, None, None, 1.0,
         );
@@ -887,7 +892,8 @@ mod tests {
                 move_to,
                 sprint: false,
                 interact: true,
-            },
+            
+                shoot: false,},
             &params,
             0.019,
             None,
@@ -936,7 +942,8 @@ mod tests {
             move_to: Vec2::X,
             sprint: false,
             interact: true,
-        };
+        
+            shoot: false,};
         apply_interact(
             &mut shooter,
             &mut ball,
@@ -982,7 +989,8 @@ mod tests {
             move_to: Vec2::ZERO,
             sprint: false,
             interact: true, // held this tick, but interact_rising_edge is false because prev bit was 1
-        };
+        
+            shoot: false,};
         apply_interact(
             &mut player,
             &mut ball,

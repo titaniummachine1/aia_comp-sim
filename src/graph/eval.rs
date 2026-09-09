@@ -190,6 +190,7 @@ impl<'a> EvalCtx<'a> {
             move_to,
             sprint,
             interact,
+            shoot: false,
         }
     }
 

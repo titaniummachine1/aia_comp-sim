@@ -323,7 +323,8 @@ fn exec_inst(inst: &Instruction, ctx: &mut ExecutionContext, names: &[String]) {
                         move_to,
                         sprint,
                         interact,
-                    };
+                    
+                        shoot: false,};
                 }
             }
         }

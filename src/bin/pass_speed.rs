@@ -115,12 +115,14 @@ fn trace(params: &SimParams, press: u32, fresh: bool, swap: bool) {
             move_to: w.players[pa].pos,
             sprint: false,
             interact: p1_int,
-        };
+        
+            shoot: false,};
         home.commands[rx] = BrainCommand {
             move_to: w.players[rx].pos,
             sprint: false,
             interact: p2_int,
-        };
+        
+            shoot: false,};
         w.step_with_commands(&home, &BrainOutput::default(), FIXED_DT);
 
         // The release tick: the carrier no longer holds the ball. Catches the

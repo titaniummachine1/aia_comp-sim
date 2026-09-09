@@ -374,7 +374,8 @@ pub fn decide(
                 move_to: slot_for[slot],
                 sprint: false,
                 interact,
-            };
+            
+                shoot: false,};
         }
 
 

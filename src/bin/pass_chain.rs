@@ -96,7 +96,7 @@ fn main() {
             if interact {
                 pressing.push_str(&format!("{} ", p.id.0));
             }
-            home.commands[slot] = BrainCommand { move_to: p.pos, sprint: false, interact };
+            home.commands[slot] = BrainCommand { move_to: p.pos, sprint: false, interact , shoot: false};
         }
         w.step_with_commands(&home, &BrainOutput::default(), FIXED_DT);
 

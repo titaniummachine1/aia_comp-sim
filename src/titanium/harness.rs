@@ -44,7 +44,8 @@ pub fn freeze_except_many(out: &mut BrainOutput, world: &MatchWorld, team: TeamI
             move_to: p.pos,
             sprint: false,
             interact: false,
-        };
+        
+            shoot: false,};
     }
 }
 
@@ -333,20 +334,23 @@ impl crate::brain::TeamBrain for PassDrillAttackerBrain {
                     move_to: p1 + aim * 10.0,
                     sprint: true,
                     interact: false,
-                }
+                
+                    shoot: false,}
             } else {
                 BrainCommand {
                     move_to: p1,
                     sprint: false,
                     interact: true,
-                }
+                
+                    shoot: false,}
             }
         } else {
             BrainCommand {
                 move_to: p1,
                 sprint: false,
                 interact: false,
-            }
+            
+                shoot: false,}
         };
 
         let h2 = api.get_bool("Team Player 2 Has Ball").unwrap_or(false);
@@ -364,13 +368,15 @@ impl crate::brain::TeamBrain for PassDrillAttackerBrain {
                     move_to: p2 + aim * 10.0,
                     sprint: true,
                     interact: false,
-                }
+                
+                    shoot: false,}
             } else {
                 BrainCommand {
                     move_to: p2,
                     sprint: false,
                     interact: true,
-                }
+                
+                    shoot: false,}
             }
         } else {
             // Making a run toward the opposite flank — a real moving
@@ -379,7 +385,8 @@ impl crate::brain::TeamBrain for PassDrillAttackerBrain {
                 move_to: self.receiver_run_target,
                 sprint: true,
                 interact: true,
-            }
+            
+                shoot: false,}
         };
 
         out

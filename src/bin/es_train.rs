@@ -69,7 +69,8 @@ impl<'a> TeamBrain for BenchedBrain<'a> {
                     move_to: bevy::prelude::Vec2::new(goal_x, 0.0),
                     sprint: false,
                     interact: false,
-                };
+                
+                    shoot: false,};
             }
         }
         out
