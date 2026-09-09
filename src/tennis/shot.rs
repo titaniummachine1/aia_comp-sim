@@ -114,7 +114,12 @@ pub fn steer_velocity_to_aim(
     let mut best_err = f32::INFINITY;
     for _ in 0..20 {
         let mut probe = BallState::new(from, vel, arg, q);
-        let Some(landing) = flight.predict_landing(&mut probe, 0) else {
+        // Steer predicts with the tape policy: a below-tape net crossing
+        // fails the prediction, which forces the loop to stretch/loft the
+        // arc until it clears — the game's net-avoidance lives here, not in
+        // the raw solve (net-lip fixture: raw fires through for all args,
+        // steered clears for all args).
+        let Some(landing) = flight.predict_landing_tape(&mut probe, 0, true) else {
             // Failed prediction: add loft and retry (game: vel.y += 1.15).
             vel.y += 1.15;
             best = vel;
