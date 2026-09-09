@@ -47,10 +47,10 @@ pub fn compute_shot_velocity_arg(
     target: Vec3,
     arg: ShotArg,
     q: f32,
-    incoming_dir: Option<Vec2>,
+    incoming_dir: Option<Vec3>,
 ) -> Vec3 {
     let q = q.clamp(0.0, 1.0);
-    let (base, _lift) = arg.table();
+    let (base, lift) = arg.table();
     let from_xz = Vec2::new(from.x, from.z);
     let target_xz = Vec2::new(target.x, target.z);
     let flat = target_xz - from_xz;
@@ -65,8 +65,7 @@ pub fn compute_shot_velocity_arg(
     // (game fallback rows; no ballistic solve happens).
     if distance < 1e-3 {
         if let Some(dir3) = incoming_dir {
-            let dir = dir3.normalize_or_zero();
-            return Vec3::new(dir.x * speed, 0.0, dir.y * speed);
+            return dir3.normalize_or_zero() * speed;
         }
     }
     let dir = if distance > 1e-4 { flat / distance } else { Vec2::X };
