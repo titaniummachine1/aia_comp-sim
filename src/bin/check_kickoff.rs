@@ -1,10 +1,10 @@
 // Diagnostic: check kickoff positions with graph-declared formations
-use aicomp_soccer_sim::*;
-use aicomp_soccer_sim::brain::TeamId;
-use aicomp_soccer_sim::match_state::{place_kickoff, KickoffFormations};
-use aicomp_soccer_sim::params::SimParams;
-use aicomp_soccer_sim::ball::Ball;
-use aicomp_soccer_sim::player::Player;
+use aia_comp_sim::*;
+use aia_comp_sim::brain::TeamId;
+use aia_comp_sim::match_state::{place_kickoff, KickoffFormations};
+use aia_comp_sim::params::SimParams;
+use aia_comp_sim::ball::Ball;
+use aia_comp_sim::player::Player;
 use bevy::prelude::Vec2;
 
 fn main() {
@@ -36,7 +36,7 @@ fn main() {
         let mut ball = Ball::default();
         let mut players: Vec<Player> = Vec::new();
         for team in [TeamId::Home, TeamId::Away] {
-            for id in aicomp_soccer_sim::player::PlayerId::ALL {
+            for id in aia_comp_sim::player::PlayerId::ALL {
                 players.push(Player {
                     team, id, pos: Vec2::ZERO, vel: Vec2::ZERO, facing: Vec2::X,
                     stamina: 1.0, stamina_regen_lock_left: 0.0, shot_charge: 0.0,
@@ -68,7 +68,7 @@ fn main() {
         let mut ball = Ball::default();
         let mut players: Vec<Player> = Vec::new();
         for team in [TeamId::Home, TeamId::Away] {
-            for id in aicomp_soccer_sim::player::PlayerId::ALL {
+            for id in aia_comp_sim::player::PlayerId::ALL {
                 players.push(Player {
                     team, id, pos: Vec2::ZERO, vel: Vec2::ZERO, facing: Vec2::X,
                     stamina: 1.0, stamina_regen_lock_left: 0.0, shot_charge: 0.0,

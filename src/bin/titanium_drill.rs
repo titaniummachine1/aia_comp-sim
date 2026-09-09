@@ -22,24 +22,24 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use bevy::prelude::Vec2;
 
-use aicomp_soccer_sim::brain::{TeamBrain, TeamId};
-use aicomp_soccer_sim::graph_vm::RuntimeBrain;
-use aicomp_soccer_sim::load_team_graph;
-use aicomp_soccer_sim::params::{default_params_path, SimParams};
-use aicomp_soccer_sim::player::PlayerId;
-use aicomp_soccer_sim::scenario::{evaluate_scenario1, Scenario1Outcome};
-use aicomp_soccer_sim::titanium::{apply_1v1_freeze, repark_1v1_inactive, setup_1v1_harness};
-use aicomp_soccer_sim::world::{MatchWorld, FIXED_DT};
+use aia_comp_sim::brain::{TeamBrain, TeamId};
+use aia_comp_sim::graph_vm::RuntimeBrain;
+use aia_comp_sim::load_team_graph;
+use aia_comp_sim::params::{default_params_path, SimParams};
+use aia_comp_sim::player::PlayerId;
+use aia_comp_sim::scenario::{evaluate_scenario1, Scenario1Outcome};
+use aia_comp_sim::titanium::{apply_1v1_freeze, repark_1v1_inactive, setup_1v1_harness};
+use aia_comp_sim::world::{MatchWorld, FIXED_DT};
 
 /// Build a team brain from a graph .txt. Defaults to the Titanium graph in
 /// the AIComp saves dir — this repo ships no native team AI, the graph is
 /// the team. Build it with the engine repo's `scripts/build_titanium.py`.
 fn build_gk_brain(graph_path: &Option<PathBuf>) -> Result<Box<dyn TeamBrain>, String> {
     match graph_path {
-        None => aicomp_soccer_sim::batch::build_default_titanium_brain(),
+        None => aia_comp_sim::batch::build_default_titanium_brain(),
         Some(path) => {
             let g = load_team_graph(path).map_err(|e| format!("load graph {path:?}: {e}"))?;
-            Ok(Box::new(RuntimeBrain::compile(g)))
+            Ok(Box::new(RuntimeBrain::compile_for(g, aia_comp_sim::mode::GameSpec::soccer())))
         }
     }
 }

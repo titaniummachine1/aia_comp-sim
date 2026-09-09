@@ -53,6 +53,35 @@ pub struct BrainOutput {
     /// only knowable by running the graph. `None` means the port is unwired
     /// and the engine default stands.
     pub kickoff_positions: [Option<Vec2>; 4],
+    /// Tennis-mode controller output (`TennisController` node), written by
+    /// `EmitTennisController`. `None` in soccer graphs and when a tennis
+    /// graph leaves the tick without a controller evaluation.
+    pub tennis_command: Option<TennisCommand>,
+}
+
+/// One tennis bot's controller outputs (`TennisController` ports):
+/// `Vector31` = move/aim target (pitch-plane XZ, meaning depends on phase:
+/// movement target while receiving, aim destination while striking),
+/// `Bool1` = swing hold (charge while held, release swings),
+/// `Float1` = shot type dropdown index (0 Topspin .. 7 Curve Right),
+/// `Bool2` = sprint.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct TennisCommand {
+    pub move_or_aim: Vec2,
+    pub swing: bool,
+    pub shot_type: f32,
+    pub sprint: bool,
+}
+
+impl Default for TennisCommand {
+    fn default() -> Self {
+        Self {
+            move_or_aim: Vec2::ZERO,
+            swing: false,
+            shot_type: 2.0, // Flat
+            sprint: false,
+        }
+    }
 }
 
 impl Default for BrainOutput {
@@ -60,6 +89,7 @@ impl Default for BrainOutput {
         Self {
             commands: [BrainCommand::default(); 4],
             kickoff_positions: [None; 4],
+            tennis_command: None,
         }
     }
 }

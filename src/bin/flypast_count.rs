@@ -9,11 +9,11 @@ use std::env;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
-use aicomp_soccer_sim::batch::{BrainInput, ProgramCache};
-use aicomp_soccer_sim::brain::{TeamBrain, TeamId};
-use aicomp_soccer_sim::graph_vm::RuntimeBrain;
-use aicomp_soccer_sim::params::{default_params_path, SimParams};
-use aicomp_soccer_sim::world::{MatchWorld, FIXED_DT};
+use aia_comp_sim::batch::{BrainInput, ProgramCache};
+use aia_comp_sim::brain::{TeamBrain, TeamId};
+use aia_comp_sim::graph_vm::RuntimeBrain;
+use aia_comp_sim::params::{default_params_path, SimParams};
+use aia_comp_sim::world::{MatchWorld, FIXED_DT};
 
 fn build(input: &BrainInput, cache: &ProgramCache) -> Result<Box<dyn TeamBrain>, String> {
     match input {

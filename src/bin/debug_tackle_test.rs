@@ -9,13 +9,13 @@
 
 use std::path::PathBuf;
 
-use aicomp_soccer_sim::brain::{TeamBrain, TeamId};
-use aicomp_soccer_sim::graph::load_team_graph;
-use aicomp_soccer_sim::graph_vm::RuntimeBrain;
-use aicomp_soccer_sim::params::{default_params_path, SimParams};
-use aicomp_soccer_sim::player::PlayerId;
-use aicomp_soccer_sim::probe_brains::{Test1Brain, Test2Brain};
-use aicomp_soccer_sim::world::{MatchWorld, FIXED_DT};
+use aia_comp_sim::brain::{TeamBrain, TeamId};
+use aia_comp_sim::graph::load_team_graph;
+use aia_comp_sim::graph_vm::RuntimeBrain;
+use aia_comp_sim::params::{default_params_path, SimParams};
+use aia_comp_sim::player::PlayerId;
+use aia_comp_sim::probe_brains::{Test1Brain, Test2Brain};
+use aia_comp_sim::world::{MatchWorld, FIXED_DT};
 
 fn soccer_saves_dir() -> PathBuf {
     let home = std::env::var("USERPROFILE")
@@ -30,7 +30,7 @@ fn soccer_saves_dir() -> PathBuf {
         .join("Soccer")
 }
 
-fn p1(world: &MatchWorld, team: TeamId) -> &aicomp_soccer_sim::Player {
+fn p1(world: &MatchWorld, team: TeamId) -> &aia_comp_sim::Player {
     world
         .players
         .iter()
@@ -78,8 +78,8 @@ fn main() {
             h.nodes.len(),
             a.nodes.len()
         );
-        home_g = Some(RuntimeBrain::compile(h));
-        away_g = Some(RuntimeBrain::compile(a));
+        home_g = Some(RuntimeBrain::compile_for(h, aia_comp_sim::mode::GameSpec::soccer()));
+        away_g = Some(RuntimeBrain::compile_for(a, aia_comp_sim::mode::GameSpec::soccer()));
     }
 
     let mut t = 0.0_f32;

@@ -484,7 +484,7 @@ mod tests {
         }
 
         let graph = crate::graph::load_team_graph(&path).expect("load AIA");
-        let mut compiled = Lowerer::compile(graph);
+        let mut compiled = Lowerer::compile_for(graph, crate::mode::GameSpec::soccer());
         let before_total =
             compiled.settle.instructions.len() + compiled.controllers.instructions.len();
         let before_const = compiled

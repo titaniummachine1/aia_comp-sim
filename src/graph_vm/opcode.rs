@@ -49,6 +49,9 @@ pub enum OpCode {
     EmitController,
     /// Faceoff spot for one player, read off `ConstructSoccerProperties`.
     EmitFaceoff,
+    /// Tennis controller output (move/aim, swing hold, shot type, sprint) —
+    /// written by `TennisController` into `BrainOutput.tennis_command`.
+    EmitTennisController,
     Debug,
     TimePlot,
     OpaqueEffect,
@@ -96,8 +99,8 @@ impl OpCode {
             LoadApi | LoadVar | Keypress => OpEffect::ReadOnly,
             StoreVar => OpEffect::Write,
             Call | Return => OpEffect::Write,
-            EmitController | EmitFaceoff | Debug | TimePlot | OpaqueEffect | DebugDrawLine
-            | DebugDrawDisc => {
+            EmitController | EmitTennisController | EmitFaceoff | Debug | TimePlot
+            | OpaqueEffect | DebugDrawLine | DebugDrawDisc => {
                 OpEffect::External
             }
         }

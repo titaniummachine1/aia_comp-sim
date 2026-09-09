@@ -14,21 +14,21 @@ use std::process::ExitCode;
 
 use bevy::prelude::Vec2;
 
-use aicomp_soccer_sim::batch::{
+use aia_comp_sim::batch::{
     default_team_brain, soccer_aia_graph_path, BrainInput, ProgramCache,
 };
-use aicomp_soccer_sim::brain::{TeamBrain, TeamId};
-use aicomp_soccer_sim::graph_vm::RuntimeBrain;
-use aicomp_soccer_sim::params::{default_params_path, SimParams};
-use aicomp_soccer_sim::world::{MatchWorld, FIXED_DT};
+use aia_comp_sim::brain::{TeamBrain, TeamId};
+use aia_comp_sim::graph_vm::RuntimeBrain;
+use aia_comp_sim::params::{default_params_path, SimParams};
+use aia_comp_sim::world::{MatchWorld, FIXED_DT};
 
 fn build_brain(input: &BrainInput, cache: &ProgramCache) -> Result<Box<dyn TeamBrain>, String> {
     // Built-ins matter here as much as graphs: running a symmetric built-in
     // against itself is the control that tells you whether an asymmetry is in
     // a team's logic or in the simulator itself.
     let path = match input {
-        BrainInput::Chase => return Ok(Box::new(aicomp_soccer_sim::brain::ChaseBallBrain::default())),
-        BrainInput::Idle => return Ok(Box::new(aicomp_soccer_sim::brain::IdleBrain)),
+        BrainInput::Chase => return Ok(Box::new(aia_comp_sim::brain::ChaseBallBrain::default())),
+        BrainInput::Idle => return Ok(Box::new(aia_comp_sim::brain::IdleBrain)),
         BrainInput::Aia => soccer_aia_graph_path(),
         BrainInput::Graph(p) => p.clone(),
         other => {
@@ -141,7 +141,7 @@ fn disc_color_name(rgba: [f32; 4]) -> String {
     for name in [
         "White", "Red", "Green", "Yellow", "Orange", "Magenta", "Cyan", "Blue", "Gray", "Black",
     ] {
-        let named = aicomp_soccer_sim::debug_draw::named_rgba(name);
+        let named = aia_comp_sim::debug_draw::named_rgba(name);
         if (named[0] - rgba[0]).abs() < 1e-3
             && (named[1] - rgba[1]).abs() < 1e-3
             && (named[2] - rgba[2]).abs() < 1e-3
@@ -152,7 +152,7 @@ fn disc_color_name(rgba: [f32; 4]) -> String {
     format!("{rgba:?}")
 }
 
-fn discs_to_named(discs: &[aicomp_soccer_sim::debug_draw::DebugDisc]) -> Vec<(String, Vec2)> {
+fn discs_to_named(discs: &[aia_comp_sim::debug_draw::DebugDisc]) -> Vec<(String, Vec2)> {
     discs
         .iter()
         .map(|d| (disc_color_name(d.rgba), d.center))
@@ -249,12 +249,12 @@ fn main() -> ExitCode {
 
     for _tick in 0..max_ticks {
         let (home_api, away_api) = world.build_apis();
-        aicomp_soccer_sim::debug_draw::begin_frame();
+        aia_comp_sim::debug_draw::begin_frame();
         let home_out = home_brain.think(&home_api);
-        let home_discs = aicomp_soccer_sim::debug_draw::snapshot().discs;
-        aicomp_soccer_sim::debug_draw::begin_frame();
+        let home_discs = aia_comp_sim::debug_draw::snapshot().discs;
+        aia_comp_sim::debug_draw::begin_frame();
         let away_out = away_brain.think(&away_api);
-        let away_discs = aicomp_soccer_sim::debug_draw::snapshot().discs;
+        let away_discs = aia_comp_sim::debug_draw::snapshot().discs;
         world.step_with_commands(&home_out, &away_out, FIXED_DT);
 
         let pos = |team: TeamId, id: u8| -> Vec2 {

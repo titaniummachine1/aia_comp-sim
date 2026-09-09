@@ -323,9 +323,24 @@ fn exec_inst(inst: &Instruction, ctx: &mut ExecutionContext, names: &[String]) {
                         move_to,
                         sprint,
                         interact,
-                    
-                        shoot: false,};
+                        shoot: false,
+                    };
                 }
+            }
+        }
+        OpCode::EmitTennisController => {
+            // ops: [move_or_aim, swing, shot_type, sprint, slot]
+            if ops.len() >= 5 {
+                let move_or_aim = pitch_plane(reg_v(ctx, ops[0] as usize));
+                let swing = reg_b(ctx, ops[1] as usize);
+                let shot_type = reg_f(ctx, ops[2] as usize);
+                let sprint = reg_b(ctx, ops[3] as usize);
+                ctx.output.tennis_command = Some(crate::brain::TennisCommand {
+                    move_or_aim,
+                    swing,
+                    shot_type,
+                    sprint,
+                });
             }
         }
         OpCode::EmitFaceoff => {

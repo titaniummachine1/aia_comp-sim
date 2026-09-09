@@ -250,12 +250,31 @@ pub struct DenseTeamApi {
 
 impl DenseTeamApi {
     pub fn empty(team: crate::brain::TeamId) -> Self {
+        Self::empty_with_counts(
+            team,
+            bool_count(),
+            float_count(),
+            transform_count(),
+            vector_count(),
+        )
+    }
+
+    /// Mode-agnostic construction — tennis (and any future game mode) sizes
+    /// its own dense catalogs. Ids are per-mode: a tennis snapshot must be
+    /// read with tennis indices only.
+    pub fn empty_with_counts(
+        team: crate::brain::TeamId,
+        bools: usize,
+        floats: usize,
+        transforms: usize,
+        vectors: usize,
+    ) -> Self {
         Self {
             team,
-            bools: vec![false; bool_count()].into_boxed_slice(),
-            floats: vec![0.0; float_count()].into_boxed_slice(),
-            transforms: vec![Vec2::ZERO; transform_count()].into_boxed_slice(),
-            vectors: vec![None; vector_count()].into_boxed_slice(),
+            bools: vec![false; bools].into_boxed_slice(),
+            floats: vec![0.0; floats].into_boxed_slice(),
+            transforms: vec![Vec2::ZERO; transforms].into_boxed_slice(),
+            vectors: vec![None; vectors].into_boxed_slice(),
         }
     }
 

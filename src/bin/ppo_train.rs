@@ -4,22 +4,22 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::io::{Read, Write};
 use std::net::TcpListener;
 
-use aicomp_soccer_sim::api::ApiFieldMask;
-use aicomp_soccer_sim::replay::Replay;
-use aicomp_soccer_sim::batch::{build_brain, BrainInput, GraphEngine, ProgramCache};
-use aicomp_soccer_sim::brain::{BrainCommand, BrainOutput, ChaseBallBrain, IdleBrain, TeamBrain, TeamId};
-use aicomp_soccer_sim::params::SimParams;
-use aicomp_soccer_sim::train::{
+use aia_comp_sim::api::ApiFieldMask;
+use aia_comp_sim::replay::Replay;
+use aia_comp_sim::batch::{build_brain, BrainInput, GraphEngine, ProgramCache};
+use aia_comp_sim::brain::{BrainCommand, BrainOutput, ChaseBallBrain, IdleBrain, TeamBrain, TeamId};
+use aia_comp_sim::params::SimParams;
+use aia_comp_sim::train::{
     Activations, NetGradients, NetWeights, TrainedBrain,
     INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM,
     VALUES_PER_PLAYER, COMPASS_DIRS, SOFTMAX_GROUPS,
     SPRINT_OFFSET, TACKLE_OFFSET, TEAM_OUTPUT_START,
     extract_features,
 };
-use aicomp_soccer_sim::world::{MatchWorld, FIXED_DT};
-use aicomp_soccer_sim::match_state::MatchPhase;
-use aicomp_soccer_sim::possession::reset_possession_for_kickoff;
-use aicomp_soccer_sim::deterministic::{
+use aia_comp_sim::world::{MatchWorld, FIXED_DT};
+use aia_comp_sim::match_state::MatchPhase;
+use aia_comp_sim::possession::reset_possession_for_kickoff;
+use aia_comp_sim::deterministic::{
     evaluate_and_apply, evaluate_and_apply_with_action, DeterministicCache, NNActions, ShootTarget,
 };
 
@@ -59,7 +59,7 @@ struct Step {
 }
 
 fn extract_features_raw(
-    api: &aicomp_soccer_sim::api::TeamApi,
+    api: &aia_comp_sim::api::TeamApi,
     opp_vel: &[bevy::prelude::Vec2; 4],
 ) -> [f32; INPUT_DIM] {
     let (input, _) = extract_features(api, opp_vel);
@@ -67,7 +67,7 @@ fn extract_features_raw(
 }
 
 fn compute_reward(
-    api: &aicomp_soccer_sim::api::TeamApi,
+    api: &aia_comp_sim::api::TeamApi,
     prev_score_us: u32,
     prev_score_them: u32,
     cur_score_us: u32,
@@ -183,10 +183,10 @@ fn compute_reward(
 fn output_to_commands(
     output: &[f32],
     noise: &[f32; OUTPUT_DIM],
-    api: &aicomp_soccer_sim::api::TeamApi,
+    api: &aia_comp_sim::api::TeamApi,
     rng: &mut StdRng,
 ) -> (BrainOutput, NNActions) {
-    use aicomp_soccer_sim::player::PlayerId;
+    use aia_comp_sim::player::PlayerId;
     let mut out = BrainOutput::default();
     let mut players = [bevy::prelude::Vec2::ZERO; 4];
     for (i, id) in PlayerId::ALL.iter().enumerate() {
@@ -393,7 +393,7 @@ fn log_prob_grad(_mean: &[f32], noise: &[f32; OUTPUT_DIM]) -> [f32; OUTPUT_DIM] 
 /// are in range, pick the one with lowest stamina that can still win the
 /// tackle (stamina >= carrier stamina). Only one player tackles at a time.
 fn auto_tackle(
-    nn_api: &aicomp_soccer_sim::api::TeamApi,
+    nn_api: &aia_comp_sim::api::TeamApi,
     nn_out: &mut BrainOutput,
     params: &SimParams,
 ) {
@@ -456,7 +456,7 @@ fn auto_tackle(
 /// all others to not interact this tick. This avoids wasting stamina on
 /// simultaneous tackle attempts — borrowed from Titanium's strategy.
 fn coordinate_tackles(
-    nn_api: &aicomp_soccer_sim::api::TeamApi,
+    nn_api: &aia_comp_sim::api::TeamApi,
     nn_out: &mut BrainOutput,
     params: &SimParams,
 ) {
@@ -576,7 +576,7 @@ fn run_trajectory(
 
         // Compute opponent velocities from position deltas.
         let mut cur_opp_pos = [bevy::prelude::Vec2::ZERO; 4];
-        for (i, id) in aicomp_soccer_sim::player::PlayerId::ALL.iter().enumerate() {
+        for (i, id) in aia_comp_sim::player::PlayerId::ALL.iter().enumerate() {
             cur_opp_pos[i] = nn_api.get_transform(&format!("Opponent Player {}", id.0)).unwrap_or(bevy::prelude::Vec2::ZERO);
         }
         let mut opp_vel = [bevy::prelude::Vec2::ZERO; 4];
@@ -820,7 +820,7 @@ fn run_tiebreaker(
             };
 
             let mut cur_opp_pos = [bevy::prelude::Vec2::ZERO; 4];
-            for (i, id) in aicomp_soccer_sim::player::PlayerId::ALL.iter().enumerate() {
+            for (i, id) in aia_comp_sim::player::PlayerId::ALL.iter().enumerate() {
                 cur_opp_pos[i] = nn_api.get_transform(&format!("Opponent Player {}", id.0)).unwrap_or(bevy::prelude::Vec2::ZERO);
             }
             let mut opp_vel = [bevy::prelude::Vec2::ZERO; 4];
@@ -994,7 +994,7 @@ fn run_self_play(
 
         // Compute opp velocities for cur side.
         let mut cur_opp_pos = [bevy::prelude::Vec2::ZERO; 4];
-        for (i, id) in aicomp_soccer_sim::player::PlayerId::ALL.iter().enumerate() {
+        for (i, id) in aia_comp_sim::player::PlayerId::ALL.iter().enumerate() {
             cur_opp_pos[i] = cur_api.get_transform(&format!("Opponent Player {}", id.0)).unwrap_or(bevy::prelude::Vec2::ZERO);
         }
         let mut opp_vel_cur = [bevy::prelude::Vec2::ZERO; 4];
@@ -1008,7 +1008,7 @@ fn run_self_play(
 
         // Compute opp velocities for opp side (from opp's perspective).
         let mut cur_opp_pos_opp = [bevy::prelude::Vec2::ZERO; 4];
-        for (i, id) in aicomp_soccer_sim::player::PlayerId::ALL.iter().enumerate() {
+        for (i, id) in aia_comp_sim::player::PlayerId::ALL.iter().enumerate() {
             cur_opp_pos_opp[i] = opp_api.get_transform(&format!("Opponent Player {}", id.0)).unwrap_or(bevy::prelude::Vec2::ZERO);
         }
         let mut opp_vel_opp = [bevy::prelude::Vec2::ZERO; 4];
@@ -1222,7 +1222,7 @@ fn ppo_update(
 }
 
 fn discover_opponents() -> Vec<BrainInput> {
-    let saves = aicomp_soccer_sim::batch::soccer_saves_dir();
+    let saves = aia_comp_sim::batch::soccer_saves_dir();
     let mut opponents = Vec::new();
 
     let real_scripts = [

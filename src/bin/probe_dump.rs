@@ -14,15 +14,15 @@
 use std::env;
 use std::process::ExitCode;
 
-use aicomp_soccer_sim::batch::{default_team_brain, soccer_aia_graph_path, BrainInput, ProgramCache};
-use aicomp_soccer_sim::brain::{IdleBrain, TeamBrain, TeamId};
-use aicomp_soccer_sim::graph_vm::RuntimeBrain;
-use aicomp_soccer_sim::params::{default_params_path, SimParams};
-use aicomp_soccer_sim::world::{MatchWorld, FIXED_DT};
+use aia_comp_sim::batch::{default_team_brain, soccer_aia_graph_path, BrainInput, ProgramCache};
+use aia_comp_sim::brain::{IdleBrain, TeamBrain, TeamId};
+use aia_comp_sim::graph_vm::RuntimeBrain;
+use aia_comp_sim::params::{default_params_path, SimParams};
+use aia_comp_sim::world::{MatchWorld, FIXED_DT};
 
 fn build_brain(input: &BrainInput, cache: &ProgramCache) -> Result<Box<dyn TeamBrain>, String> {
     let path = match input {
-        BrainInput::Chase => return Ok(Box::new(aicomp_soccer_sim::brain::ChaseBallBrain::default())),
+        BrainInput::Chase => return Ok(Box::new(aia_comp_sim::brain::ChaseBallBrain::default())),
         BrainInput::Idle => return Ok(Box::new(IdleBrain)),
         BrainInput::Aia => soccer_aia_graph_path(),
         BrainInput::Graph(p) => p.clone(),
@@ -110,18 +110,18 @@ fn main() -> ExitCode {
         }
         }
         let (home_api, away_api) = world.build_apis();
-        aicomp_soccer_sim::debug_draw::begin_frame();
+        aia_comp_sim::debug_draw::begin_frame();
         let home_out = home_brain.think(&home_api);
-        let frame = aicomp_soccer_sim::debug_draw::snapshot();
+        let frame = aia_comp_sim::debug_draw::snapshot();
         last_discs = frame.discs;
         last_lines = frame.lines;
         last_plots = frame.plots;
-        aicomp_soccer_sim::debug_draw::begin_frame();
+        aia_comp_sim::debug_draw::begin_frame();
         let away_out = away_brain.think(&away_api);
         world.step_with_commands(&home_out, &away_out, FIXED_DT);
     }
 
-    println!("{}", aicomp_soccer_sim::graph_vm::diagnostics::banner().trim_end());
+    println!("{}", aia_comp_sim::graph_vm::diagnostics::banner().trim_end());
     for (name, v) in &last_plots {
         println!("PLOT	{name}	{v:.4}");
     }
@@ -140,14 +140,14 @@ fn main() -> ExitCode {
     if let Some((x, z, vx, vz)) = ball_state {
         // Ground truth: the simulator's own tick-by-tick rollout of the same
         // state, to compare against the graph's drawn terminal point above.
-        let mut b = aicomp_soccer_sim::ball::Ball {
+        let mut b = aia_comp_sim::ball::Ball {
             pos: bevy::prelude::Vec2::new(x, z),
             vel: bevy::prelude::Vec2::new(vx, vz),
             height: params.ball_rest_height,
             vel_y: 0.0,
             held: false,
         };
-        let path = aicomp_soccer_sim::predict::predict_ball_path(&b, &params, FIXED_DT, 30.0);
+        let path = aia_comp_sim::predict::predict_ball_path(&b, &params, FIXED_DT, 30.0);
         let last = path.last().expect("path always has a sample");
         println!(
             "SIM\trest=({:.4},{:.4})\tt={:.3}s\tsamples={}",
@@ -163,7 +163,7 @@ fn main() -> ExitCode {
 
 fn disc_color_name(rgba: [f32; 4]) -> String {
     for name in ["White", "Red", "Green", "Yellow", "Orange", "Magenta", "Cyan", "Blue", "Gray", "Black"] {
-        let named = aicomp_soccer_sim::debug_draw::named_rgba(name);
+        let named = aia_comp_sim::debug_draw::named_rgba(name);
         if (named[0] - rgba[0]).abs() < 1e-3 && (named[1] - rgba[1]).abs() < 1e-3 && (named[2] - rgba[2]).abs() < 1e-3 {
             return name.to_string();
         }

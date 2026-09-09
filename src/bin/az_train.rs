@@ -4,19 +4,19 @@ use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
 use std::io::{Read, Write};
 use std::net::TcpListener;
 
-use aicomp_soccer_sim::api::ApiFieldMask;
-use aicomp_soccer_sim::batch::{build_brain, BrainInput, GraphEngine, ProgramCache};
-use aicomp_soccer_sim::brain::{BrainCommand, BrainOutput, TeamBrain, TeamId};
-use aicomp_soccer_sim::params::SimParams;
-use aicomp_soccer_sim::train::{
+use aia_comp_sim::api::ApiFieldMask;
+use aia_comp_sim::batch::{build_brain, BrainInput, GraphEngine, ProgramCache};
+use aia_comp_sim::brain::{BrainCommand, BrainOutput, TeamBrain, TeamId};
+use aia_comp_sim::params::SimParams;
+use aia_comp_sim::train::{
     NetGradients, NetWeights,
     INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM,
     VALUES_PER_PLAYER, COMPASS_DIRS, SOFTMAX_GROUPS,
     SPRINT_OFFSET, TACKLE_OFFSET, TEAM_OUTPUT_START,
     extract_features,
 };
-use aicomp_soccer_sim::world::{MatchWorld, FIXED_DT};
-use aicomp_soccer_sim::deterministic::{
+use aia_comp_sim::world::{MatchWorld, FIXED_DT};
+use aia_comp_sim::deterministic::{
     evaluate_and_apply_with_action, DeterministicCache, NNActions, ShootTarget,
 };
 
@@ -109,11 +109,11 @@ fn add_dirichlet_noise(logits: &mut [f32], alpha: f32, weight: f32, rng: &mut St
 /// Decode NN output into BrainOutput and NNActions, with softmax sampling.
 fn output_to_commands(
     output: &[f32],
-    api: &aicomp_soccer_sim::api::TeamApi,
+    api: &aia_comp_sim::api::TeamApi,
     rng: &mut StdRng,
     add_noise: bool,
 ) -> (BrainOutput, NNActions) {
-    use aicomp_soccer_sim::player::PlayerId;
+    use aia_comp_sim::player::PlayerId;
     let mut out = BrainOutput::default();
     let mut players = [bevy::prelude::Vec2::ZERO; 4];
     for (i, id) in PlayerId::ALL.iter().enumerate() {
@@ -254,7 +254,7 @@ fn output_to_commands(
 /// For sigmoid outputs: the raw sigmoid value.
 fn build_policy_target(
     output: &[f32],
-    api: &aicomp_soccer_sim::api::TeamApi,
+    api: &aia_comp_sim::api::TeamApi,
     rng: &mut StdRng,
 ) -> [f32; OUTPUT_DIM] {
     let mut target = [0.0f32; OUTPUT_DIM];
@@ -289,7 +289,7 @@ fn build_policy_target(
 
 /// Auto-tackle macro (same as ppo_train).
 fn auto_tackle(
-    nn_api: &aicomp_soccer_sim::api::TeamApi,
+    nn_api: &aia_comp_sim::api::TeamApi,
     nn_out: &mut BrainOutput,
     params: &SimParams,
 ) {
@@ -359,7 +359,7 @@ impl MctsCandidate {
 fn mcts_search(
     weights: &NetWeights,
     world: &MatchWorld,
-    nn_api: &aicomp_soccer_sim::api::TeamApi,
+    nn_api: &aia_comp_sim::api::TeamApi,
     params: &SimParams,
     rng: &mut StdRng,
     is_home_nn: bool,
@@ -550,9 +550,9 @@ fn mcts_search(
 /// Reverse-engineers which softmax group was chosen based on the move_to direction.
 fn expert_to_policy_target(
     expert_out: &BrainOutput,
-    api: &aicomp_soccer_sim::api::TeamApi,
+    api: &aia_comp_sim::api::TeamApi,
 ) -> [f32; OUTPUT_DIM] {
-    use aicomp_soccer_sim::player::PlayerId;
+    use aia_comp_sim::player::PlayerId;
     let mut target = [0.0f32; OUTPUT_DIM];
 
     let mut players = [bevy::prelude::Vec2::ZERO; 4];
@@ -1214,7 +1214,7 @@ fn evaluate_match(
 }
 
 fn discover_opponents() -> Vec<BrainInput> {
-    let saves = aicomp_soccer_sim::batch::soccer_saves_dir();
+    let saves = aia_comp_sim::batch::soccer_saves_dir();
     let mut opponents = Vec::new();
 
     let real_scripts = [

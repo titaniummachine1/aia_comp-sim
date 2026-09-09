@@ -8,5 +8,5 @@
 //! A getter is UNCERTAIN until someone compares it to a real-game reading, so
 //! this list shrinks only by measuring, never by assuming.
 fn main() {
-    println!("{}", aicomp_soccer_sim::api::fidelity::report());
+    println!("{}", aia_comp_sim::api::fidelity::report());
 }

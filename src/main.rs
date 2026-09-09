@@ -19,29 +19,29 @@
 
 use std::path::{Path, PathBuf};
 
-use aicomp_soccer_sim::batch::BrainInput;
-use aicomp_soccer_sim::brain::{BrainOutput, ChaseBallBrain, IdleBrain, TeamBrain, TeamId};
-use aicomp_soccer_sim::graph::load_team_graph;
-use aicomp_soccer_sim::graph_vm::RuntimeBrain;
-use aicomp_soccer_sim::keypress;
-use aicomp_soccer_sim::params::{default_params_path, SimParams};
-use aicomp_soccer_sim::player::PlayerId;
-use aicomp_soccer_sim::probe_brains::{
+use aia_comp_sim::batch::BrainInput;
+use aia_comp_sim::brain::{BrainOutput, ChaseBallBrain, IdleBrain, TeamBrain, TeamId};
+use aia_comp_sim::graph::load_team_graph;
+use aia_comp_sim::graph_vm::RuntimeBrain;
+use aia_comp_sim::keypress;
+use aia_comp_sim::params::{default_params_path, SimParams};
+use aia_comp_sim::player::PlayerId;
+use aia_comp_sim::probe_brains::{
     KickRoutineBrain, PerfectControllerBrain, Test1Brain, Test2Brain,
 };
-use aicomp_soccer_sim::scenario::MatchScenario;
-use aicomp_soccer_sim::team_threads::{
+use aia_comp_sim::scenario::MatchScenario;
+use aia_comp_sim::team_threads::{
     PersistentThinkBarrier, ResettableBrain, ThinkTimings,
 };
-use aicomp_soccer_sim::titanium::{
+use aia_comp_sim::titanium::{
     apply_1v1_freeze, apply_4v1_freeze, repark_1v1_inactive, repark_4v1_inactive,
     repark_kick_routine_inactive, repark_perfect_prediction_inactive, setup_1v1_harness,
     setup_4v1_harness, setup_kick_routine_harness, setup_perfect_prediction_harness,
     PERFECT_PREDICTION_CASES,
 };
 #[cfg(feature = "nn_train")]
-use aicomp_soccer_sim::train::TrainedBrain;
-use aicomp_soccer_sim::world::{MatchWorld, FIXED_DT};
+use aia_comp_sim::train::TrainedBrain;
+use aia_comp_sim::world::{MatchWorld, FIXED_DT};
 use bevy::picking::prelude::*;
 use bevy::prelude::*;
 use bevy::ui::{FocusPolicy, RelativeCursorPosition};
@@ -232,8 +232,8 @@ fn parse_viewer_args() -> ViewerArgs {
     let argv: Vec<String> = std::env::args().skip(1).collect();
     let mut fast = false;
     let mut speed_t = idle_budget_to_fill(FIXED_DT);
-    let mut home = aicomp_soccer_sim::batch::default_team_brain();
-    let mut away = aicomp_soccer_sim::batch::default_team_brain();
+    let mut home = aia_comp_sim::batch::default_team_brain();
+    let mut away = aia_comp_sim::batch::default_team_brain();
     let mut home_set = false;
     let mut away_set = false;
     let mut opening = TeamId::Home;
@@ -684,7 +684,7 @@ struct ViewerWorld {
     last_home: BrainOutput,
     last_away: BrainOutput,
     /// Last tick's DebugDrawLine / DebugDrawDisc submissions.
-    debug_draw: aicomp_soccer_sim::debug_draw::DebugDrawFrame,
+    debug_draw: aia_comp_sim::debug_draw::DebugDrawFrame,
 }
 
 /// Built-in brain or compiled Graph VM (O1). Graph load failure → chase fallback.
@@ -733,7 +733,7 @@ impl ResettableBrain for ActiveBrain {
 }
 
 impl TeamBrain for ActiveBrain {
-    fn think(&mut self, api: &aicomp_soccer_sim::api::TeamApi) -> BrainOutput {
+    fn think(&mut self, api: &aia_comp_sim::api::TeamApi) -> BrainOutput {
         match self {
             ActiveBrain::Runtime(g) => g.think(api),
             ActiveBrain::Chase(c) => c.think(api),
@@ -770,7 +770,7 @@ fn resolve_brain(input: &BrainInput) -> (ActiveBrain, PathBuf) {
             PathBuf::from("kick"),
         ),
         BrainInput::Aia => {
-            let path = aicomp_soccer_sim::batch::soccer_aia_graph_path();
+            let path = aia_comp_sim::batch::soccer_aia_graph_path();
             (load_graph_brain(&path), path)
         }
         BrainInput::Graph(path) => (load_graph_brain(path), path.clone()),
@@ -783,7 +783,7 @@ fn resolve_brain(input: &BrainInput) -> (ActiveBrain, PathBuf) {
             if path.is_file() {
                 return (load_graph_brain(&path), path);
             }
-            let aia = aicomp_soccer_sim::batch::soccer_aia_graph_path();
+            let aia = aia_comp_sim::batch::soccer_aia_graph_path();
             if aia.is_file() {
                 return (load_graph_brain(&aia), aia);
             }
@@ -831,9 +831,9 @@ fn note_away_load() {
 
 fn load_graph_brain(path: &Path) -> ActiveBrain {
     // Clear first so a previous load cannot be blamed on this graph.
-    let _ = aicomp_soccer_sim::graph_vm::take_recursion_limit_hit();
+    let _ = aia_comp_sim::graph_vm::take_recursion_limit_hit();
     let brain = load_graph_brain_inner(path);
-    let hit = aicomp_soccer_sim::graph_vm::take_recursion_limit_hit();
+    let hit = aia_comp_sim::graph_vm::take_recursion_limit_hit();
     if hit {
         error!(
             "recursion depth reached loading {} - the graph has a dependency              cycle and cannot be lowered",
@@ -852,7 +852,7 @@ fn load_graph_brain_inner(path: &Path) -> ActiveBrain {
                 path.display(),
                 g.nodes.len()
             );
-            ActiveBrain::Runtime(RuntimeBrain::compile(g))
+            ActiveBrain::Runtime(RuntimeBrain::compile_for(g, aia_comp_sim::mode::GameSpec::soccer()))
         }
         Err(e) => {
             warn!("graph load failed ({path:?}): {e} — using ChaseBallBrain");
@@ -2068,7 +2068,7 @@ fn step_locked_tick(
     scripts: &TeamScripts,
 ) -> f32 {
     let tick0 = std::time::Instant::now();
-    aicomp_soccer_sim::debug_draw::begin_frame();
+    aia_comp_sim::debug_draw::begin_frame();
     let ViewerWorld {
         world,
         brains,
@@ -2079,7 +2079,7 @@ fn step_locked_tick(
     let (home_api, away_api) = world.build_apis();
     // Tick lock: both brains must finish before physics.
     let (mut home_out, mut away_out, timings) = brains.think(home_api, away_api);
-    *debug_draw = aicomp_soccer_sim::debug_draw::snapshot();
+    *debug_draw = aia_comp_sim::debug_draw::snapshot();
     if one_v_one.scenario.is_scenario1() {
         apply_1v1_freeze(&mut home_out, &mut away_out, world, one_v_one.attack_home);
     } else if one_v_one.scenario.is_scenario_4v1() {

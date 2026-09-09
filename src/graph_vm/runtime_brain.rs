@@ -37,13 +37,26 @@ pub struct RuntimeBrain {
 }
 
 impl RuntimeBrain {
-    pub fn compile(graph: TeamGraph) -> Self {
-        Self::from_cached(Self::compile_cached(graph))
+    pub fn compile(graph: TeamGraph, spec: Option<crate::mode::GameSpec>) -> Self {
+        Self::from_cached(Self::compile_cached(graph, spec))
+    }
+
+    /// Compile for an explicit game spec (simulation path).
+    pub fn compile_for(graph: TeamGraph, spec: crate::mode::GameSpec) -> Self {
+        Self::compile(graph, Some(spec))
+    }
+
+    /// Compile without a game (pure VM — common nodes only).
+    pub fn compile_pure(graph: TeamGraph) -> Self {
+        Self::compile(graph, None)
     }
 
     /// Lower + O1 optimize once; reuse via [`Self::from_cached`] / [`CachedProgram`].
-    pub fn compile_cached(graph: TeamGraph) -> CachedProgram {
-        let mut compiled = Lowerer::compile(graph);
+    pub fn compile_cached(
+        graph: TeamGraph,
+        spec: Option<crate::mode::GameSpec>,
+    ) -> CachedProgram {
+        let mut compiled = Lowerer::compile(graph, spec);
         // O1: ConstFold → RelayRemoval → CSE → Fusion → RegAlloc.
         let pm = PassManager::o1();
         pm.run_all(&mut compiled.settle);
@@ -273,7 +286,7 @@ mod tests {
         let mut graph_brain = GraphBrain::new(graph.clone());
         let graph_out = graph_brain.think(&api);
 
-        let mut vm_brain = RuntimeBrain::compile(graph).with_trace();
+        let mut vm_brain = RuntimeBrain::compile_for(graph, crate::mode::GameSpec::soccer()).with_trace();
         let vm_out = vm_brain.think(&api);
 
         assert_eq!(graph_out, vm_out);
@@ -359,7 +372,7 @@ mod tests {
         let mut graph_brain = GraphBrain::new(graph.clone());
         let graph_out = graph_brain.think(&api);
 
-        let mut vm_brain = RuntimeBrain::compile(graph);
+        let mut vm_brain = RuntimeBrain::compile_for(graph, crate::mode::GameSpec::soccer());
         let vm_out = vm_brain.think(&api);
 
         assert_eq!(graph_out, vm_out);
@@ -385,7 +398,7 @@ mod tests {
 
         let graph = crate::graph::load_team_graph(&path).expect("load AIA.txt");
         let mut graph_brain = GraphBrain::new(graph.clone());
-        let mut vm_brain = RuntimeBrain::compile(graph).with_trace();
+        let mut vm_brain = RuntimeBrain::compile_for(graph, crate::mode::GameSpec::soccer()).with_trace();
         let mut away = IdleBrain;
         let mut world = MatchWorld::new_kickoff_opening(SimParams::default(), TeamId::Home);
 
@@ -435,7 +448,7 @@ mod tests {
 
         let graph = crate::graph::load_team_graph(&path).expect("load AIA.txt");
         let mut graph_brain = GraphBrain::new(graph.clone()).with_trace();
-        let mut vm_brain = RuntimeBrain::compile(graph).with_trace();
+        let mut vm_brain = RuntimeBrain::compile_for(graph, crate::mode::GameSpec::soccer()).with_trace();
         let mut away = IdleBrain;
         let mut world = MatchWorld::new_kickoff_opening(SimParams::default(), TeamId::Home);
 

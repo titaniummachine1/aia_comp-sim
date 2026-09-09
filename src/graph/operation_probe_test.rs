@@ -134,7 +134,7 @@ mod operation_probe_sim {
     fn operation_probe_compiles_without_panic() {
         let path = find_probe();
         let g = load_team_graph(&path).expect("load");
-        let compiled = Lowerer::compile(g);
+        let compiled = Lowerer::compile_for(g, crate::mode::GameSpec::soccer());
         let _ = ProgramBuilder.pack(&compiled);
     }
 }

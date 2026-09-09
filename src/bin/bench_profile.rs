@@ -7,9 +7,9 @@
 use std::env;
 use std::time::{Duration, Instant};
 
-use aicomp_soccer_sim::brain::{ChaseBallBrain, TeamBrain, TeamId};
-use aicomp_soccer_sim::params::{default_params_path, SimParams};
-use aicomp_soccer_sim::world::{MatchWorld, FIXED_DT};
+use aia_comp_sim::brain::{ChaseBallBrain, TeamBrain, TeamId};
+use aia_comp_sim::params::{default_params_path, SimParams};
+use aia_comp_sim::world::{MatchWorld, FIXED_DT};
 
 fn main() {
     let argv: Vec<String> = env::args().collect();

@@ -1566,7 +1566,7 @@ mod tests {
             return;
         }
         let graph = load_team_graph(&aia).expect("load AIA");
-        let cached = RuntimeBrain::compile_cached(graph);
+        let cached = RuntimeBrain::compile_cached(graph, Some(crate::mode::GameSpec::soccer()));
         let mut home = RuntimeBrain::from_cached(cached.clone());
         let mut away = RuntimeBrain::from_cached(cached);
 

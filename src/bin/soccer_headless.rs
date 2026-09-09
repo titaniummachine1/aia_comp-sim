@@ -14,13 +14,13 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use aicomp_soccer_sim::batch::{
+use aia_comp_sim::batch::{
     run_batch_parallel, run_match_job, reserved_worker_threads, BatchMatchResult, BrainInput,
     GraphEngine, MatchJob, ProgramCache,
 };
-use aicomp_soccer_sim::brain::TeamId;
-use aicomp_soccer_sim::params::{default_params_path, SimParams};
-use aicomp_soccer_sim::world::FIXED_DT;
+use aia_comp_sim::brain::TeamId;
+use aia_comp_sim::params::{default_params_path, SimParams};
+use aia_comp_sim::world::FIXED_DT;
 
 #[derive(Debug)]
 struct Args {

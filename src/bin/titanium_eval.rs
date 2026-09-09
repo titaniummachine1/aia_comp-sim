@@ -5,11 +5,11 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
 
-use aicomp_soccer_sim::batch::{
+use aia_comp_sim::batch::{
     run_batch_parallel, BrainInput, GraphEngine, MatchJob, BatchMatchResult,
 };
-use aicomp_soccer_sim::brain::TeamId;
-use aicomp_soccer_sim::params::SimParams;
+use aia_comp_sim::brain::TeamId;
+use aia_comp_sim::params::SimParams;
 
 fn main() {
     let argv: Vec<String> = env::args().skip(1).collect();

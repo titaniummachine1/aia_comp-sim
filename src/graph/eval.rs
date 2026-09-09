@@ -97,7 +97,17 @@ impl TeamBrain for GraphBrain {
             let Some(sid) = ctrl_sid else {
                 continue;
             };
-            out.commands[i] = ctx.eval_controller(sid);
+            let is_tennis = self
+                .graph
+                .nodes
+                .get(sid)
+                .map(|n| n.id == "TennisController")
+                .unwrap_or(false);
+            if is_tennis {
+                out.tennis_command = Some(ctx.eval_tennis_controller(sid));
+            } else {
+                out.commands[i] = ctx.eval_controller(sid);
+            }
         }
         // Faceoff spots come out of the same evaluation — real graphs compute
         // them rather than declaring constants.
@@ -191,6 +201,33 @@ impl<'a> EvalCtx<'a> {
             sprint,
             interact,
             shoot: false,
+        }
+    }
+
+    /// `TennisController` reference evaluation: `Vector31` = move/aim,
+    /// `Bool1` = swing hold, `Float1` = shot type dropdown, `Bool2` = sprint.
+    fn eval_tennis_controller(&mut self, node_sid: &str) -> crate::brain::TennisCommand {
+        let move_or_aim = self
+            .input_named(node_sid, "Vector31")
+            .map(|v| pitch_plane(v.as_vec()))
+            .unwrap_or(Vec2::ZERO);
+        let swing = self
+            .input_named(node_sid, "Bool1")
+            .map(|v| v.as_bool())
+            .unwrap_or(false);
+        let shot_type = self
+            .input_named(node_sid, "Float1")
+            .map(|v| v.as_float())
+            .unwrap_or(2.0);
+        let sprint = self
+            .input_named(node_sid, "Bool2")
+            .map(|v| v.as_bool())
+            .unwrap_or(false);
+        crate::brain::TennisCommand {
+            move_or_aim,
+            swing,
+            shot_type,
+            sprint,
         }
     }
 
@@ -335,6 +372,57 @@ impl<'a> EvalCtx<'a> {
             ),
             "SoccerGetVector3" => match self.api.get_vector3(&node.modifier) {
                 Some(Some(v)) => GraphValue::Vec(vec3_from_pitch(v)),
+                _ => GraphValue::Null,
+            },
+
+            // Tennis getters resolve through the tennis dense catalogs
+            // (labels are tennis-owned; the API snapshot must be a tennis
+            // snapshot for these to read real values).
+            "TennisGetBool" => GraphValue::Bool(
+                crate::tennis::api::bool_index(&node.modifier)
+                    .and_then(|i| self.api.get_bool_id(i))
+                    .unwrap_or(false),
+            ),
+            "TennisGetFloat" => GraphValue::Float(
+                crate::tennis::api::float_index(&node.modifier)
+                    .and_then(|i| self.api.get_float_id(i))
+                    .unwrap_or(0.0),
+            ),
+            "TennisGetTransform" => GraphValue::Transform(
+                crate::tennis::api::transform_index(&node.modifier)
+                    .and_then(|i| self.api.get_transform_id(i))
+                    .unwrap_or(Vec2::ZERO),
+            ),
+            "TennisGetVector3" => {
+                match crate::tennis::api::vector_index(&node.modifier)
+                    .and_then(|i| self.api.get_vector_id(i))
+                {
+                    Some(Some(v)) => GraphValue::Vec(vec3_from_pitch(v)),
+                    _ => GraphValue::Null,
+                }
+            }
+
+            // TennisAuto* helper gates — same approximations as the VM arms:
+            // pass-through targets; swing from the swing-range/must-wait
+            // sensors with a flat default shot.
+            "TennisAutoMove" | "TennisAutoAim" => {
+                let v = self
+                    .input_named(node_sid, "Vector31")
+                    .map(|v| v.as_vec())
+                    .unwrap_or_default();
+                GraphValue::Vec(v)
+            }
+            "TennisAutoSwing" => match port_name {
+                "Bool1" => {
+                    let in_range = crate::tennis::api::bool_index("Ball In Swing Range")
+                        .and_then(|i| self.api.get_bool_id(i))
+                        .unwrap_or(false);
+                    let must_wait = crate::tennis::api::bool_index("Must Wait For Bounce")
+                        .and_then(|i| self.api.get_bool_id(i))
+                        .unwrap_or(false);
+                    GraphValue::Bool(in_range && !must_wait)
+                }
+                "Float1" => GraphValue::Float(2.0),
                 _ => GraphValue::Null,
             },
 

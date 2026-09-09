@@ -24,13 +24,13 @@ use std::process::ExitCode;
 
 use bevy::prelude::Vec2;
 
-use aicomp_soccer_sim::batch::{BrainInput, ProgramCache};
-use aicomp_soccer_sim::brain::{BrainOutput, TeamBrain, TeamId};
-use aicomp_soccer_sim::graph_vm::RuntimeBrain;
-use aicomp_soccer_sim::match_state::MatchPhase;
-use aicomp_soccer_sim::params::{default_params_path, SimParams};
-use aicomp_soccer_sim::player::PlayerId;
-use aicomp_soccer_sim::world::{MatchWorld, FIXED_DT};
+use aia_comp_sim::batch::{BrainInput, ProgramCache};
+use aia_comp_sim::brain::{BrainOutput, TeamBrain, TeamId};
+use aia_comp_sim::graph_vm::RuntimeBrain;
+use aia_comp_sim::match_state::MatchPhase;
+use aia_comp_sim::params::{default_params_path, SimParams};
+use aia_comp_sim::player::PlayerId;
+use aia_comp_sim::world::{MatchWorld, FIXED_DT};
 
 /// Pin the opponent carrier on the centre spot, ball held, match in Play.
 /// Re-applied every tick: the point is a world that does not evolve, so the

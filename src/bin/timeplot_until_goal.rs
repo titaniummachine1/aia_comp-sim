@@ -17,18 +17,18 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use aicomp_soccer_sim::batch::BrainInput;
-use aicomp_soccer_sim::brain::{
+use aia_comp_sim::batch::BrainInput;
+use aia_comp_sim::brain::{
     ChaseBallBrain, IdleBrain, TeamBrain, TeamId,
 };
-use aicomp_soccer_sim::graph::load_team_graph;
-use aicomp_soccer_sim::graph_vm::RuntimeBrain;
-use aicomp_soccer_sim::params::{default_params_path, SimParams};
-use aicomp_soccer_sim::probe_brains::{
+use aia_comp_sim::graph::load_team_graph;
+use aia_comp_sim::graph_vm::RuntimeBrain;
+use aia_comp_sim::params::{default_params_path, SimParams};
+use aia_comp_sim::probe_brains::{
     KickRoutineBrain, PerfectControllerBrain, Test1Brain, Test2Brain,
 };
-use aicomp_soccer_sim::world::{MatchWorld, FIXED_DT};
-use aicomp_soccer_sim::{MatchPhase, TimePlotRecorder};
+use aia_comp_sim::world::{MatchWorld, FIXED_DT};
+use aia_comp_sim::{MatchPhase, TimePlotRecorder};
 
 #[derive(Debug)]
 struct Args {
@@ -94,8 +94,8 @@ AIA GAPS (stock AIA.txt still soft / blank in sim):
 
 fn parse_args(argv: &[String]) -> Result<Args, String> {
     let mut secs = 60.0f32;
-    let mut home = aicomp_soccer_sim::batch::default_team_brain();
-    let mut away = aicomp_soccer_sim::batch::default_team_brain();
+    let mut home = aia_comp_sim::batch::default_team_brain();
+    let mut away = aia_comp_sim::batch::default_team_brain();
     let mut opening = TeamId::Home;
     let mut until_goal = false;
     let mut goals = 1u32;
@@ -186,16 +186,16 @@ fn build_brain(input: &BrainInput) -> Result<Box<dyn TeamBrain>, String> {
         BrainInput::Perfect => Box::new(PerfectControllerBrain),
         BrainInput::Kick => Box::new(KickRoutineBrain::default()),
         BrainInput::Aia => {
-            let path = aicomp_soccer_sim::batch::soccer_aia_graph_path();
+            let path = aia_comp_sim::batch::soccer_aia_graph_path();
             let g = load_team_graph(&path).map_err(|e| format!("load AIA: {e}"))?;
-            Box::new(RuntimeBrain::compile(g))
+            Box::new(RuntimeBrain::compile_for(g, aia_comp_sim::mode::GameSpec::soccer()))
         }
-        BrainInput::Titanium => aicomp_soccer_sim::batch::build_default_titanium_brain()?,
+        BrainInput::Titanium => aia_comp_sim::batch::build_default_titanium_brain()?,
         #[cfg(feature = "nn_train")]
-        BrainInput::Trained => Box::new(aicomp_soccer_sim::train::TrainedBrain::default()),
+        BrainInput::Trained => Box::new(aia_comp_sim::train::TrainedBrain::default()),
         BrainInput::Graph(path) => {
             let g = load_team_graph(path).map_err(|e| format!("load {path:?}: {e}"))?;
-            Box::new(RuntimeBrain::compile(g))
+            Box::new(RuntimeBrain::compile_for(g, aia_comp_sim::mode::GameSpec::soccer()))
         }
     })
 }

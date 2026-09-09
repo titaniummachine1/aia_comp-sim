@@ -13,11 +13,11 @@
 use std::env;
 use std::process::ExitCode;
 
-use aicomp_soccer_sim::batch::{default_team_brain, soccer_aia_graph_path, BrainInput, ProgramCache};
-use aicomp_soccer_sim::brain::{ChaseBallBrain, IdleBrain, TeamBrain, TeamId};
-use aicomp_soccer_sim::graph_vm::RuntimeBrain;
-use aicomp_soccer_sim::params::{default_params_path, SimParams};
-use aicomp_soccer_sim::world::MatchWorld;
+use aia_comp_sim::batch::{default_team_brain, soccer_aia_graph_path, BrainInput, ProgramCache};
+use aia_comp_sim::brain::{ChaseBallBrain, IdleBrain, TeamBrain, TeamId};
+use aia_comp_sim::graph_vm::RuntimeBrain;
+use aia_comp_sim::params::{default_params_path, SimParams};
+use aia_comp_sim::world::MatchWorld;
 
 fn build(input: &BrainInput, cache: &ProgramCache) -> Result<Box<dyn TeamBrain>, String> {
     let path = match input {

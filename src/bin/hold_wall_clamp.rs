@@ -16,18 +16,18 @@
 
 use std::env;
 
-use aicomp_soccer_sim::batch::{BrainInput, ProgramCache};
-use aicomp_soccer_sim::brain::{TeamBrain, TeamId};
-use aicomp_soccer_sim::graph_vm::RuntimeBrain;
-use aicomp_soccer_sim::params::SimParams;
-use aicomp_soccer_sim::world::{MatchWorld, FIXED_DT};
+use aia_comp_sim::batch::{BrainInput, ProgramCache};
+use aia_comp_sim::brain::{TeamBrain, TeamId};
+use aia_comp_sim::graph_vm::RuntimeBrain;
+use aia_comp_sim::params::SimParams;
+use aia_comp_sim::world::{MatchWorld, FIXED_DT};
 
 fn brain(input: &BrainInput, cache: &ProgramCache) -> Box<dyn TeamBrain> {
     match input {
         BrainInput::Graph(p) => Box::new(RuntimeBrain::from_cached(
             cache.get_or_compile(p).expect("compile"),
         )),
-        _ => Box::new(aicomp_soccer_sim::brain::ChaseBallBrain::default()),
+        _ => Box::new(aia_comp_sim::brain::ChaseBallBrain::default()),
     }
 }
 

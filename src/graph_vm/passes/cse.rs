@@ -239,7 +239,7 @@ mod tests {
             return;
         }
 
-        let raw = Lowerer::compile(crate::graph::load_team_graph(&path).expect("load AIA"));
+        let raw = Lowerer::compile_for(crate::graph::load_team_graph(&path).expect("load AIA"), crate::mode::GameSpec::soccer());
         let total = |compiled: &crate::graph_vm::lower::CompileResult| {
             compiled.settle.instructions.len() + compiled.controllers.instructions.len()
         };

@@ -48,6 +48,7 @@ const SIDE_EFFECT_ONLY: &[&str] = &[
     "DebugDrawLine",
     "TimePlot",
     "ConstructSoccerProperties",
+    "ConstructTennisProperties",
     "Country",
     "Stat",
 ];
@@ -58,6 +59,12 @@ const APPROXIMATED: &[&str] = &[
     "Spherecast",
     // Rectangular test standing in for the engine's region shape.
     "Region",
+    // TennisAuto* helper gates: pass-through targets (the tennis world owns
+    // the legal-position clamp) and a swing policy from the swing-range /
+    // must-wait sensors with a flat default shot.
+    "TennisAutoSwing",
+    "TennisAutoMove",
+    "TennisAutoAim",
 ];
 
 /// Classify a node type. Anything not listed and not lowered is Unimplemented.
@@ -79,6 +86,12 @@ fn lock() -> std::sync::MutexGuard<'static, BTreeSet<String>> {
 
 /// Called by the lowerer whenever it stubs a node type to Null.
 pub fn record_unimplemented(node_id: &str) {
+    lock().insert(node_id.to_string());
+}
+
+/// Called by the lowerer when it implements a node as a documented
+/// approximation (e.g. the TennisAuto* helper gates).
+pub fn record_approximated(node_id: &str) {
     lock().insert(node_id.to_string());
 }
 

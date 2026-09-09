@@ -222,12 +222,262 @@ pub const SOCCER_GET_VECTOR3: &[&str] = &[
     "Loose Ball Intercept Position Teammate 4",
 ];
 
+/// Auto-generated TennisGet* dropdown labels (index -> label).
+/// Source: AIGamePyLibrary.data.DROPDOWN_OPTIONS ("Tennis v0.012 labels,
+/// live TennisGet*Gate.BuildItems order") — the same pinning rule as soccer:
+/// graph JSON stores the dropdown INDEX, so this table must match the
+/// builder's order exactly or every label after an insertion shifts.
+/// Regenerate: mirror scripts/gen_graph_dropdowns.py with the Tennis keys.
+pub const TENNIS_GET_BOOL: &[&str] = &[
+    "Is Playing",
+    "Is Home",
+    "Is Self Server For Set",
+    "Is Opponent Server For Set",
+    "Is Serve Phase",
+    "Is Self Actively Serving",
+    "Is Second Serve",
+    "Is Ad Court Serve",
+    "Is Ball Playable",
+    "Was Last Shot Topspin",
+    "Was Last Shot Slice",
+    "Was Last Shot Flat",
+    "Was Last Shot Lob",
+    "Was Last Shot Drop",
+    "Was Last Shot Curve Left",
+    "Was Last Shot Curve Right",
+    "Was Last Shot Trick",
+    "Is Self Charging",
+    "Is Opponent Charging",
+    "Is Self Winning",
+    "Is Opponent Winning",
+    "Is Tied",
+    "Is Deuce",
+    "Is Game Point",
+    "Is Break Point",
+    "Is Match Point",
+    "Ball On Self Side",
+    "Ball Incoming",
+    "Ball In Swing Range",
+    "Ball Has Bounced",
+    "Must Wait For Bounce",
+    "Ball Has Charged Effect",
+    "Self Scored Last Point",
+    "Opponent Scored Last Point",
+    "Self Has Advantage",
+];
+
+pub const TENNIS_GET_FLOAT: &[&str] = &[
+    "Shot: Topspin",
+    "Shot: Slice",
+    "Shot: Flat",
+    "Shot: Drop",
+    "Shot: Lob",
+    "Shot: Curve Left",
+    "Shot: Curve Right",
+    "Shot: Random",
+    "Shot: Last Self Shot",
+    "Shot: Last Opponent Shot",
+    "Shot: Most Used Self Shot",
+    "Shot: Most Used Opponent Shot",
+    "Shot: Most Scored Self Shot",
+    "Shot: Most Scored Opponent Shot",
+    "Shot: Ball",
+    "Self Swing Charge Pct",
+    "Opponent Swing Charge Pct",
+    "Self Stamina Pct",
+    "Opponent Stamina Pct",
+    "Deuce Fatigue",
+    "Rally Fatigue",
+    "Court Width",
+    "Court Depth",
+    "Net Height",
+    "Ball Speed",
+    "Ball Time To Ground",
+    "Ball Time To 2nd Bounce",
+    "Self Time To Destination",
+    "Serve Number",
+    "Self Points",
+    "Opponent Points",
+    "Self Set Score",
+    "Opponent Set Score",
+    "Self Aces",
+    "Opponent Aces",
+    "Self Faults",
+    "Opponent Faults",
+    "Self Double Faults",
+    "Opponent Double Faults",
+    "Self Fouls",
+    "Opponent Fouls",
+    "Self Outs",
+    "Opponent Outs",
+    "Self Charged Shots",
+    "Opponent Charged Shots",
+    "Current Simulation Time",
+    "Sim Tick",
+    "Delta Time",
+    "Fixed Delta Time",
+];
+
+pub const TENNIS_GET_VECTOR3: &[&str] = &[
+    "Ball Position",
+    "Ball Velocity",
+    "Predicted Bounce",
+    "Predicted 2nd Bounce",
+    "Center Of Half",
+    "Center Of Back",
+    "Serve Stance",
+    "Receive Stance",
+    "Legal Serve Target",
+    "Random Aim Target",
+    "Self Average Scoring Location",
+    "Opponent Average Scoring Location",
+    "Estimated Opponent Shot Location",
+    "Trick Drop Modifier",
+    "Trick Lob Modifier",
+    "Trick Curve Left Modifier",
+    "Trick Curve Right Modifier",
+    "Camera Forward",
+    "Camera Right",
+];
+
+pub const TENNIS_GET_TRANSFORM: &[&str] = &[
+    "Self",
+    "Opponent",
+    "Self Racket Center",
+    "Ball",
+    "Camera",
+];
+
+/// `TennisAutoSwing` mode dropdown (graph input, not a sensor).
+pub const TENNIS_AUTO_SWING: &[&str] = &["Normal Only", "Prefer Charge", "Random"];
+
+/// Tennis v0.14 live runtime label positions that are pinned by the committed
+/// capture digest (`tennis-sim/evidence/parity-v014-vm/runtime-items.md`).
+/// Counts: Bool 35, Float 51, Vector3 15, Transform 5. Everything not listed
+/// here is UNKNOWN in v0.14 — rejected, never invented (the C++ project's own
+/// admission boundary).
+pub mod tennis_v014 {
+    /// (label, pinned index) pairs admitted by the runtime capture.
+    pub const BOOL: &[(&str, usize)] = &[
+        ("Is Playing", 0),
+        ("Is Self Server For Set", 2),
+        ("Is Self Actively Serving", 5),
+        ("Was Last Shot Topspin", 9),
+        ("Is Break Point", 24),
+        ("Ball Incoming", 27),
+        ("Ball In Swing Range", 28),
+        ("Must Wait For Bounce", 30),
+        ("Self Has Advantage", 34),
+    ];
+    pub const FLOAT: &[(&str, usize)] = &[
+        ("Shot: Topspin", 0),
+        ("Shot: Flat", 2),
+        ("Shot: Drop", 3),
+        ("Self Swing Charge Pct", 15),
+        ("Court Width", 21),
+        ("Ball Time To Ground", 25),
+        ("Ball Time To 2nd Bounce", 26),
+        ("Self Time To Destination", 27),
+        ("Fixed Delta Time", 48),
+        ("Gravity", 50),
+    ];
+    pub const VECTOR3: &[(&str, usize)] = &[
+        ("Ball Position", 0),
+        ("Ball Velocity", 1),
+        ("Predicted Bounce", 2),
+        ("Predicted 2nd Bounce", 3),
+        ("Center Of Back", 5),
+        ("Serve Stance", 6),
+        ("Receive Stance", 7),
+        ("Center Of Legal Serve Area", 8),
+        ("Camera Forward", 13),
+        ("Camera Right", 14),
+    ];
+    pub const TRANSFORM: &[(&str, usize)] = &[
+        ("Self", 0),
+        ("Opponent", 1),
+        ("Self Racket Center", 2),
+        ("Ball", 3),
+        ("Camera", 4),
+    ];
+
+    /// Total runtime item counts (labels beyond the pinned positions exist in
+    /// the game but their order is not committed — rejected until captured).
+    pub const BOOL_COUNT: usize = 35;
+    pub const FLOAT_COUNT: usize = 51;
+    pub const VECTOR3_COUNT: usize = 15;
+    pub const TRANSFORM_COUNT: usize = 5;
+
+    /// The four documented LabelAliases: v0.12 spelling → v0.14 spelling.
+    /// These bridge graphs written against the builder order onto the
+    /// reordered runtime (`native/recovered_sensors_v014.hpp` lines 61-71).
+    pub const LABEL_ALIASES: &[(&str, &str)] = &[
+        ("Is Self Serving", "Is Self Actively Serving"),
+        ("Time To Destination", "Self Time To Destination"),
+        ("Time Ball To Ground", "Ball Time To Ground"),
+        ("Legal Serve Target", "Center Of Legal Serve Area"),
+    ];
+
+    /// v0.12 spelling → canonical runtime spelling, when an alias applies.
+    pub fn alias(label: &str) -> &str {
+        for (from, to) in LABEL_ALIASES {
+            if *from == label {
+                return to;
+            }
+        }
+        label
+    }
+
+    /// Is a v0.14 runtime label admitted by the capture?
+    pub fn is_admitted(label: &str) -> bool {
+        BOOL.iter().chain(FLOAT.iter()).chain(VECTOR3.iter()).chain(TRANSFORM.iter()).any(|(l, _)| *l == label)
+    }
+}
+
+/// Resolve a modifier for a specific game version.
+///
+/// - `TennisV012` (builder order): index → label via the full tables.
+/// - `TennisV014` (runtime order): the JSON index is interpreted against the
+///   v0.12 builder order (that is what builders write), the label is bridged
+///   through [`tennis_v014::alias`], and admitted only if the v0.14 capture
+///   pins it — otherwise the modifier is rejected (returned as-is is NOT an
+///   option: silent index confusion is the phantom-entry bug class).
+///   Callers treating an unchanged modifier as "unresolved" must handle this
+///   via [`tennis_v014::is_admitted`].
+/// - `SoccerV05`: current soccer tables.
+pub fn resolve_for_version(
+    version: crate::mode::GameVersion,
+    node_id: &str,
+    modifier: &str,
+) -> String {
+    use crate::mode::GameVersion;
+    let resolved = resolve(node_id, modifier);
+    match version {
+        GameVersion::SoccerV05 | GameVersion::TennisV012 => resolved.to_string(),
+        GameVersion::TennisV014 => {
+            let aliased = tennis_v014::alias(resolved);
+            aliased.to_string()
+        }
+    }
+}
+
+/// True when a resolved tennis label is admitted under the v0.14 runtime
+/// capture. Used to reject unmapped labels loudly instead of guessing.
+pub fn tennis_v014_admits(label: &str) -> bool {
+    tennis_v014::is_admitted(label)
+}
+
 pub fn resolve<'a>(node_id: &str, modifier: &'a str) -> &'a str {
     let opts: &[&str] = match node_id {
         "SoccerGetBool" => SOCCER_GET_BOOL,
         "SoccerGetFloat" => SOCCER_GET_FLOAT,
         "SoccerGetTransform" => SOCCER_GET_TRANSFORM,
         "SoccerGetVector3" => SOCCER_GET_VECTOR3,
+        "TennisGetBool" => TENNIS_GET_BOOL,
+        "TennisGetFloat" => TENNIS_GET_FLOAT,
+        "TennisGetTransform" => TENNIS_GET_TRANSFORM,
+        "TennisGetVector3" => TENNIS_GET_VECTOR3,
+        "TennisAutoSwing" => TENNIS_AUTO_SWING,
         "RelativePosition" => RELATIVE_POSITION,
         // Operation stays a Unity dropdown index in JSON; see [`OperationKind`].
         _ => return modifier,

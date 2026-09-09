@@ -23,10 +23,10 @@
 
 use bevy::prelude::Vec2;
 
-use aicomp_soccer_sim::brain::{BrainCommand, BrainOutput, TeamId};
-use aicomp_soccer_sim::match_state::MatchPhase;
-use aicomp_soccer_sim::params::SimParams;
-use aicomp_soccer_sim::world::{MatchWorld, FIXED_DT};
+use aia_comp_sim::brain::{BrainCommand, BrainOutput, TeamId};
+use aia_comp_sim::match_state::MatchPhase;
+use aia_comp_sim::params::SimParams;
+use aia_comp_sim::world::{MatchWorld, FIXED_DT};
 
 fn main() {
     let params = SimParams::default();

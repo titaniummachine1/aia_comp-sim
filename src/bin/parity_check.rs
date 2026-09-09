@@ -19,15 +19,15 @@
 use std::env;
 use std::process::ExitCode;
 
-use aicomp_soccer_sim::batch::{default_team_brain, soccer_aia_graph_path, BrainInput, ProgramCache};
-use aicomp_soccer_sim::brain::{BrainOutput, IdleBrain, TeamBrain, TeamId};
-use aicomp_soccer_sim::graph_vm::RuntimeBrain;
-use aicomp_soccer_sim::params::{default_params_path, SimParams};
-use aicomp_soccer_sim::world::{MatchWorld, FIXED_DT};
+use aia_comp_sim::batch::{default_team_brain, soccer_aia_graph_path, BrainInput, ProgramCache};
+use aia_comp_sim::brain::{BrainOutput, IdleBrain, TeamBrain, TeamId};
+use aia_comp_sim::graph_vm::RuntimeBrain;
+use aia_comp_sim::params::{default_params_path, SimParams};
+use aia_comp_sim::world::{MatchWorld, FIXED_DT};
 
 fn build(input: &BrainInput, cache: &ProgramCache) -> Result<Box<dyn TeamBrain>, String> {
     let path = match input {
-        BrainInput::Chase => return Ok(Box::new(aicomp_soccer_sim::brain::ChaseBallBrain::default())),
+        BrainInput::Chase => return Ok(Box::new(aia_comp_sim::brain::ChaseBallBrain::default())),
         BrainInput::Idle => return Ok(Box::new(IdleBrain)),
         BrainInput::Aia => soccer_aia_graph_path(),
         BrainInput::Graph(p) => p.clone(),
@@ -147,13 +147,13 @@ fn run() -> ExitCode {
         for t in 0..ticks {
             let (home_api, away_api) = world.build_apis();
             // Both candidates see the SAME world state this tick.
-            aicomp_soccer_sim::debug_draw::begin_frame();
+            aia_comp_sim::debug_draw::begin_frame();
             let out_a = a.think(&home_api);
-            let frame_a = aicomp_soccer_sim::debug_draw::snapshot();
-            aicomp_soccer_sim::debug_draw::begin_frame();
+            let frame_a = aia_comp_sim::debug_draw::snapshot();
+            aia_comp_sim::debug_draw::begin_frame();
             let out_b = b.think(&home_api);
-            let frame_b = aicomp_soccer_sim::debug_draw::snapshot();
-            aicomp_soccer_sim::debug_draw::begin_frame();
+            let frame_b = aia_comp_sim::debug_draw::snapshot();
+            aia_comp_sim::debug_draw::begin_frame();
             let out_away = opp.think(&away_api);
 
             if diverged_at.is_none() {
@@ -218,11 +218,11 @@ fn run() -> ExitCode {
         }
     }
 
-    let bad = aicomp_soccer_sim::graph_vm::diagnostics::unsound();
+    let bad = aia_comp_sim::graph_vm::diagnostics::unsound();
     if !bad.is_empty() {
         // Equivalence proven over Null inputs is not equivalence.
         println!("
-{}", aicomp_soccer_sim::graph_vm::diagnostics::banner().trim_end());
+{}", aia_comp_sim::graph_vm::diagnostics::banner().trim_end());
         println!("REFUSING to certify parity: results are unsound.");
         return ExitCode::from(3);
     }

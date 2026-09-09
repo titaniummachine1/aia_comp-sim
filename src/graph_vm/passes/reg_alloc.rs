@@ -143,7 +143,7 @@ mod tests {
             return;
         }
 
-        let raw = Lowerer::compile(crate::graph::load_team_graph(&path).expect("load AIA"));
+        let raw = Lowerer::compile_for(crate::graph::load_team_graph(&path).expect("load AIA"), crate::mode::GameSpec::soccer());
 
         let mut before = raw.clone();
         ConstFold.run(&mut before.settle);

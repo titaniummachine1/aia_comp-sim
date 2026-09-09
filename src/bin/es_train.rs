@@ -1,11 +1,11 @@
 use std::time::Instant;
 
-use aicomp_soccer_sim::batch::{build_brain, BrainInput, GraphEngine, ProgramCache};
-use aicomp_soccer_sim::brain::{BrainCommand, BrainOutput, TeamBrain, TeamId};
-use aicomp_soccer_sim::api::ApiFieldMask;
-use aicomp_soccer_sim::params::SimParams;
-use aicomp_soccer_sim::train::{NetWeights, TrainedBrain, INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM};
-use aicomp_soccer_sim::world::{MatchWorld, FIXED_DT};
+use aia_comp_sim::batch::{build_brain, BrainInput, GraphEngine, ProgramCache};
+use aia_comp_sim::brain::{BrainCommand, BrainOutput, TeamBrain, TeamId};
+use aia_comp_sim::api::ApiFieldMask;
+use aia_comp_sim::params::SimParams;
+use aia_comp_sim::train::{NetWeights, TrainedBrain, INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM};
+use aia_comp_sim::world::{MatchWorld, FIXED_DT};
 
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
@@ -59,7 +59,7 @@ struct BenchedBrain<'a> {
 }
 
 impl<'a> TeamBrain for BenchedBrain<'a> {
-    fn think(&mut self, api: &aicomp_soccer_sim::api::TeamApi) -> BrainOutput {
+    fn think(&mut self, api: &aia_comp_sim::api::TeamApi) -> BrainOutput {
         let mut out = self.inner.think(api);
         if self.active < 4 {
             let params = SimParams::default();
@@ -206,7 +206,7 @@ fn evaluate_candidate(
 }
 
 fn discover_opponents() -> Vec<BrainInput> {
-    let saves = aicomp_soccer_sim::batch::soccer_saves_dir();
+    let saves = aia_comp_sim::batch::soccer_saves_dir();
     let mut opponents = Vec::new();
 
     let real_scripts = [

@@ -79,7 +79,7 @@ impl ProgramCache {
         let graph = load_team_graph(path).map_err(|e| format!("load graph {path:?}: {e}"))?;
         // Clear first so a previous compile cannot be blamed on this graph.
         let _ = crate::graph_vm::take_recursion_limit_hit();
-        let cached = RuntimeBrain::compile_cached(graph);
+        let cached = RuntimeBrain::compile_cached(graph, Some(crate::mode::GameSpec::soccer()));
         if crate::graph_vm::take_recursion_limit_hit() {
             // HARD FAIL only for runaway chains that hit MAX_LOWER_DEPTH.
             // Unity-style feedback latches (ConditionalSet/Relay memory) are
@@ -304,7 +304,7 @@ pub fn build_default_titanium_brain() -> Result<Box<dyn TeamBrain>, String> {
         let path = saves.join(name);
         if path.is_file() {
             let g = load_team_graph(&path).map_err(|e| format!("load graph {path:?}: {e}"))?;
-            return Ok(Box::new(RuntimeBrain::compile(g)));
+            return Ok(Box::new(RuntimeBrain::compile(g, Some(crate::mode::GameSpec::soccer()))));
         }
     }
     Ok(match random_builtin() {
@@ -386,7 +386,7 @@ fn build_graph_brain(
                 Ok(Box::new(RuntimeBrain::from_cached(cached)))
             } else {
                 let g = load_team_graph(path).map_err(|e| format!("load graph {path:?}: {e}"))?;
-                Ok(Box::new(RuntimeBrain::compile(g)))
+                Ok(Box::new(RuntimeBrain::compile(g, Some(crate::mode::GameSpec::soccer()))))
             }
         }
     }

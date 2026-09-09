@@ -187,7 +187,7 @@ mod tests {
         }
 
         let graph = crate::graph::load_team_graph(&path).expect("load AIA");
-        let mut compiled = Lowerer::compile(graph);
+        let mut compiled = Lowerer::compile_for(graph, crate::mode::GameSpec::soccer());
         let count = |ir: &LoweredIR| {
             (
                 ir.instructions.len(),

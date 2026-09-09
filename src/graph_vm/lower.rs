@@ -44,9 +44,12 @@ pub enum ApiKind {
 
 #[derive(Debug, Clone)]
 pub struct ApiSlotTable {
+    /// Which game this slot space interns into. `None` = pure VM: a game
+    /// API exists to be interned against, so any `LoadApi` is an error.
+    pub mode: Option<crate::mode::GameSpec>,
     pub labels: Vec<String>,
     pub kinds: Vec<ApiKind>,
-    /// SoccerGet catalog index (`UNKNOWN_ID` if label not in catalog).
+    /// Game catalog index (`UNKNOWN_ID` if label not in the spec's catalog).
     pub dense_ids: Vec<u16>,
     label_to_slot: HashMap<(ApiKind, String), ApiSlot>,
 }
@@ -57,13 +60,46 @@ impl ApiSlotTable {
         if let Some(&slot) = self.label_to_slot.get(&key) {
             return slot;
         }
-        let dense = match kind {
-            ApiKind::Bool => crate::api::bool_index(label).unwrap_or(crate::api::UNKNOWN_ID),
-            ApiKind::Float => crate::api::float_index(label).unwrap_or(crate::api::UNKNOWN_ID),
-            ApiKind::Transform => {
+        let Some(spec) = self.mode else {
+            panic!(
+                "pure VM has no game API: interning {kind:?} sensor {label:?} requires a \
+                 GameSpec (simulation) — pure graphs must not touch mode-owned nodes"
+            );
+        };
+        // v0.14 runtime admission: labels the capture does not pin are
+        // rejected loudly (no invented aliases, no legacy-index guessing).
+        if spec.version == crate::mode::GameVersion::TennisV014 {
+            assert!(
+                crate::graph::dropdowns::tennis_v014_admits(label),
+                "label {label:?} is not admitted by the TennisV014 runtime capture \
+                 (partial ABI — pin it in a capture or load with TennisV012)"
+            );
+        }
+        let dense = match (spec.mode, kind) {
+            (crate::mode::GameMode::Soccer, ApiKind::Bool) => {
+                crate::api::bool_index(label).unwrap_or(crate::api::UNKNOWN_ID)
+            }
+            (crate::mode::GameMode::Soccer, ApiKind::Float) => {
+                crate::api::float_index(label).unwrap_or(crate::api::UNKNOWN_ID)
+            }
+            (crate::mode::GameMode::Soccer, ApiKind::Transform) => {
                 crate::api::transform_index(label).unwrap_or(crate::api::UNKNOWN_ID)
             }
-            ApiKind::Vector3 => crate::api::vector_index(label).unwrap_or(crate::api::UNKNOWN_ID),
+            (crate::mode::GameMode::Soccer, ApiKind::Vector3) => {
+                crate::api::vector_index(label).unwrap_or(crate::api::UNKNOWN_ID)
+            }
+            (crate::mode::GameMode::Tennis, ApiKind::Bool) => {
+                crate::tennis::api::bool_index(label).unwrap_or(crate::api::UNKNOWN_ID)
+            }
+            (crate::mode::GameMode::Tennis, ApiKind::Float) => {
+                crate::tennis::api::float_index(label).unwrap_or(crate::api::UNKNOWN_ID)
+            }
+            (crate::mode::GameMode::Tennis, ApiKind::Transform) => {
+                crate::tennis::api::transform_index(label).unwrap_or(crate::api::UNKNOWN_ID)
+            }
+            (crate::mode::GameMode::Tennis, ApiKind::Vector3) => {
+                crate::tennis::api::vector_index(label).unwrap_or(crate::api::UNKNOWN_ID)
+            }
         };
         let idx = self.labels.len();
         self.labels.push(label.to_string());
@@ -141,6 +177,10 @@ pub fn take_recursion_limit_hit() -> bool {
 #[derive(Debug)]
 pub struct Lowerer {
     graph: TeamGraph,
+    /// The game this graph runs in — `None` = pure VM (no game API attached;
+    /// mode-owned nodes are rejected at compile). There is no implicit
+    /// default: simulation requires an explicit [`GameSpec`].
+    spec: Option<crate::mode::GameSpec>,
     next_reg: u32,
     port_regs: HashMap<String, Reg>,
     call_stack: Vec<CallFrame>,
@@ -155,11 +195,55 @@ pub struct Lowerer {
 }
 
 impl Lowerer {
-    pub fn compile(graph: TeamGraph) -> CompileResult {
+    /// Lower a graph in **pure VM** mode: no game attached, mode-owned nodes
+    /// (`Soccer*` / `Tennis*`) are a hard error. Common nodes (math, vars,
+    /// functions, vectors, conditionals) run — the VM-as-programming-language
+    /// path for unit tests.
+    pub fn compile_pure(graph: TeamGraph) -> CompileResult {
+        Self::compile(graph, None)
+    }
+
+    /// Lower a graph for an explicit game spec. The spec is **mandatory for
+    /// simulation** — the dense API catalog a label interns into is
+    /// spec-owned, and a foreign-mode node must never silently resolve to
+    /// another game's label.
+    pub fn compile_for(graph: TeamGraph, spec: crate::mode::GameSpec) -> CompileResult {
+        Self::compile(graph, Some(spec))
+    }
+
+    pub fn compile(graph: TeamGraph, spec: Option<crate::mode::GameSpec>) -> CompileResult {
+        if let Some(spec) = spec {
+            let violations = crate::mode::validate_graph(spec, &graph);
+            assert!(
+                violations.is_empty(),
+                "graph is not valid for {spec:?}:\n{}",
+                violations
+                    .iter()
+                    .map(|(id, why)| format!("  {id}: {why}"))
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            );
+        } else {
+            let foreign: Vec<&str> = graph
+                .nodes
+                .values()
+                .map(|n| n.id.as_str())
+                .filter(|id| {
+                    id.starts_with("Soccer") || id.starts_with("Tennis")
+                })
+                .collect();
+            assert!(
+                foreign.is_empty(),
+                "pure VM has no game API: graph touches mode-owned nodes {:?}. \
+                 Attach a GameSpec (simulation) or remove those nodes.",
+                foreign
+            );
+        }
         let set_variable_sids = graph.set_variables.clone();
         let kickoff_positions = graph.kickoff_positions;
         let mut lowerer = Self {
             graph,
+            spec,
             next_reg: 0,
             port_regs: HashMap::new(),
             call_stack: Vec::new(),
@@ -169,6 +253,7 @@ impl Lowerer {
                 name_to_id: HashMap::new(),
             },
             apis: ApiSlotTable {
+                mode: None,
                 labels: Vec::new(),
                 kinds: Vec::new(),
                 dense_ids: Vec::new(),
@@ -178,6 +263,7 @@ impl Lowerer {
             lowering_stack: HashSet::new(),
             latch_vars: HashMap::new(),
         };
+        lowerer.apis.mode = lowerer.spec;
 
         for sid in &set_variable_sids {
             if let Some(node) = lowerer.graph.nodes.get(sid) {
@@ -217,7 +303,17 @@ impl Lowerer {
         let controllers_by_slot = lowerer.graph.controllers.clone();
         for (i, ctrl_sid) in controllers_by_slot.iter().enumerate() {
             if let Some(sid) = ctrl_sid {
-                lowerer.lower_controller(i, sid);
+                let is_tennis = lowerer
+                    .graph
+                    .nodes
+                    .get(sid)
+                    .map(|n| n.id == "TennisController")
+                    .unwrap_or(false);
+                if is_tennis {
+                    lowerer.lower_tennis_controller(i, sid);
+                } else {
+                    lowerer.lower_controller(i, sid);
+                }
             }
         }
         // Faceoff spots are graph OUTPUTS like a controller command is, not
@@ -299,6 +395,33 @@ impl Lowerer {
             kind: RegisterKind::Null,
             op: OpCode::EmitController,
             args: vec![move_to, sprint, interact],
+            immediates: vec![slot as u32],
+            source_sid: node_sid.to_string(),
+            source_port: "controller".to_string(),
+        });
+    }
+
+    /// `TennisController` ports: `Vector31` = move/aim target, `Bool1` =
+    /// swing hold, `Float1` = shot type dropdown, `Bool2` = sprint
+    /// (AIGamePyLibrary data.py port schema).
+    fn lower_tennis_controller(&mut self, slot: usize, node_sid: &str) {
+        let move_or_aim = self
+            .lower_input(node_sid, "Vector31")
+            .unwrap_or_else(|| self.emit_const_vec2(node_sid, "Vector31", Vec2::ZERO));
+        let swing = self
+            .lower_input(node_sid, "Bool1")
+            .unwrap_or_else(|| self.emit_const_bool(node_sid, "Bool1", false));
+        let shot_type = self
+            .lower_input(node_sid, "Float1")
+            .unwrap_or_else(|| self.emit_const_float(node_sid, "Float1", 2.0));
+        let sprint = self
+            .lower_input(node_sid, "Bool2")
+            .unwrap_or_else(|| self.emit_const_bool(node_sid, "Bool2", false));
+        self.ir.push(IrInst {
+            dest: None,
+            kind: RegisterKind::Null,
+            op: OpCode::EmitTennisController,
+            args: vec![move_or_aim, swing, shot_type, sprint],
             immediates: vec![slot as u32],
             source_sid: node_sid.to_string(),
             source_port: "controller".to_string(),
@@ -662,6 +785,70 @@ impl Lowerer {
                 let slot = self.apis.intern(&node.modifier, ApiKind::Vector3);
                 self.emit_load_api(node_sid, port_name, slot, RegisterKind::Vector)
             }
+            "TennisGetBool" => {
+                let slot = self.apis.intern(&node.modifier, ApiKind::Bool);
+                self.emit_load_api(node_sid, port_name, slot, RegisterKind::Bool)
+            }
+            "TennisGetFloat" => {
+                let slot = self.apis.intern(&node.modifier, ApiKind::Float);
+                self.emit_load_api(node_sid, port_name, slot, RegisterKind::Float)
+            }
+            "TennisGetTransform" => {
+                let slot = self.apis.intern(&node.modifier, ApiKind::Transform);
+                self.emit_load_api(node_sid, port_name, slot, RegisterKind::Vector)
+            }
+            "TennisGetVector3" => {
+                let slot = self.apis.intern(&node.modifier, ApiKind::Vector3);
+                self.emit_load_api(node_sid, port_name, slot, RegisterKind::Vector)
+            }
+            // TennisAuto* helper gates: documented approximations. AutoMove /
+            // AutoAim pass their target through — the tennis world clamps
+            // movement and aim to legal ground, which is where the game's own
+            // clamp actually lives. AutoSwing decides the swing from the
+            // swing-range / must-wait sensors and defaults to a flat shot.
+            "TennisAutoMove" | "TennisAutoAim" => {
+                crate::graph_vm::diagnostics::record_approximated(&node.id);
+                let v = self
+                    .lower_input(node_sid, "Vector31")
+                    .unwrap_or_else(|| self.emit_const_vec2(node_sid, "Vector31", Vec2::ZERO));
+                self.emit_move(node_sid, port_name, v, RegisterKind::Vector)
+            }
+            "TennisAutoSwing" => {
+                crate::graph_vm::diagnostics::record_approximated("TennisAutoSwing");
+                match port_name {
+                    "Bool1" => {
+                        let in_range = self
+                            .apis
+                            .intern("Ball In Swing Range", ApiKind::Bool);
+                        let r = self.emit_load_api(node_sid, "Ball In Swing Range", in_range, RegisterKind::Bool);
+                        let must_wait = self.apis.intern("Must Wait For Bounce", ApiKind::Bool);
+                        let w = self.emit_load_api(node_sid, "Must Wait For Bounce", must_wait, RegisterKind::Bool);
+                        let not_wait = self.fresh_reg(RegisterKind::Bool);
+                        self.ir.push(IrInst {
+                            dest: Some(not_wait),
+                            kind: RegisterKind::Bool,
+                            op: OpCode::Not,
+                            args: vec![w],
+                            immediates: vec![],
+                            source_sid: node_sid.to_string(),
+                            source_port: "swing-gate".to_string(),
+                        });
+                        let dst = self.fresh_reg(RegisterKind::Bool);
+                        self.ir.push(IrInst {
+                            dest: Some(dst),
+                            kind: RegisterKind::Bool,
+                            op: OpCode::And,
+                            args: vec![r, not_wait],
+                            immediates: vec![],
+                            source_sid: node_sid.to_string(),
+                            source_port: port_name.to_string(),
+                        });
+                        dst
+                    }
+                    "Float1" => self.emit_const_float(node_sid, port_name, 2.0),
+                    _ => self.emit_const_null(node_sid, port_name),
+                }
+            }
             "RelativePosition" => {
                 use crate::graph::dropdowns::{relative_position_mode, RelativePosMode};
                 match relative_position_mode(&node.modifier) {
@@ -959,6 +1146,7 @@ impl Lowerer {
             | "TimePlot"
             | "Region"
             | "ConstructSoccerProperties"
+            | "ConstructTennisProperties"
             | "Spherecast"
             | "Country"
             | "Stat" => self.emit_const_null(node_sid, port_name),
@@ -1368,7 +1556,7 @@ mod tests {
             ],
         };
         let graph = index_graph(raw, "add_test".into());
-        let compiled = Lowerer::compile(graph);
+        let compiled = Lowerer::compile_for(graph, crate::mode::GameSpec::soccer());
         assert!(!compiled.controllers.instructions.is_empty());
         let program = ProgramBuilder.pack(&compiled);
         let mut ctx = ExecutionContext::new(
@@ -1453,7 +1641,7 @@ mod tests {
             ],
         };
         let graph = index_graph(raw, "sqrt_test".into());
-        let compiled = Lowerer::compile(graph);
+        let compiled = Lowerer::compile_for(graph, crate::mode::GameSpec::soccer());
         let program = ProgramBuilder.pack(&compiled);
         let mut ctx = ExecutionContext::new(
             crate::api::TeamApi::empty(crate::brain::TeamId::Home),
@@ -1640,7 +1828,7 @@ mod tests {
         };
 
         let graph = index_graph(raw, "vm_draw_test".into());
-        let compiled = Lowerer::compile(graph);
+        let compiled = Lowerer::compile_for(graph, crate::mode::GameSpec::soccer());
         let has_draw = compiled
             .controllers
             .instructions
@@ -1763,7 +1951,7 @@ mod tests {
         let handle = std::thread::Builder::new()
             .stack_size(1 << 21) // 2 MB
             .spawn(move || {
-                let result = Lowerer::compile(graph);
+                let result = Lowerer::compile_for(graph, crate::mode::GameSpec::soccer());
                 assert!(
                     !take_recursion_limit_hit(),
                     "feedback cycle must lower via latch, not trip depth cap"

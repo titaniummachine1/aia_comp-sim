@@ -101,12 +101,46 @@ pub struct TeamGraph {
 }
 
 pub fn load_team_graph(path: &Path) -> Result<TeamGraph, String> {
-    let text = fs::read_to_string(path).map_err(|e| format!("read {path:?}: {e}"))?;
-    let raw: RawGraph = serde_json::from_str(&text).map_err(|e| format!("parse {path:?}: {e}"))?;
-    Ok(index_graph(raw, path.display().to_string()))
+    load_graph(path, None)
 }
 
+/// Load a graph for an explicit game spec (mode + version + variant).
+///
+/// `None` = pure parse+index (no game attached): node modifiers on mode-owned
+/// getter nodes stay unresolved, nothing is validated against a game — this
+/// is the "VM as a programming language" mode for unit tests. Passing a spec
+/// resolves dropdown indices per the version's tables and rejects any node
+/// the spec does not admit.
+pub fn load_graph(path: &Path, spec: Option<crate::mode::GameSpec>) -> Result<TeamGraph, String> {
+    let text = fs::read_to_string(path).map_err(|e| format!("read {path:?}: {e}"))?;
+    let raw: RawGraph = serde_json::from_str(&text).map_err(|e| format!("parse {path:?}: {e}"))?;
+    let graph = index_graph_spec(raw, spec.map(|s| s.version), path.display().to_string());
+    if let Some(spec) = spec {
+        let violations = crate::mode::validate_graph(spec, &graph);
+        if !violations.is_empty() {
+            return Err(format!(
+                "graph is not valid for {spec:?}:\n{}",
+                violations
+                    .iter()
+                    .map(|(id, why)| format!("  {id}: {why}"))
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            ));
+        }
+    }
+    Ok(graph)
+}
+
+/// Parse + index without a game spec (pure mode).
 pub fn index_graph(raw: RawGraph, path: String) -> TeamGraph {
+    index_graph_spec(raw, None, path)
+}
+
+pub fn index_graph_spec(
+    raw: RawGraph,
+    version: Option<crate::mode::GameVersion>,
+    path: String,
+) -> TeamGraph {
     let mut nodes = HashMap::new();
     let mut ports = HashMap::new();
     let mut controllers: [Option<String>; 4] = [None, None, None, None];
@@ -118,7 +152,7 @@ pub fn index_graph(raw: RawGraph, path: String) -> TeamGraph {
     let mut owned_debug_by_create: HashMap<String, Vec<String>> = HashMap::new();
 
     for n in raw.nodes {
-        let modifier = normalize_modifier(&n.id, &n.modifier);
+        let modifier = normalize_modifier_for(&n.id, &n.modifier, version);
         if let Some(slot) = controller_slot(&n.id) {
             controllers[slot] = Some(n.sid.clone());
         }
@@ -253,6 +287,14 @@ pub fn index_graph(raw: RawGraph, path: String) -> TeamGraph {
 }
 
 fn normalize_modifier(node_id: &str, value: &serde_json::Value) -> String {
+    normalize_modifier_for(node_id, value, None)
+}
+
+fn normalize_modifier_for(
+    node_id: &str,
+    value: &serde_json::Value,
+    version: Option<crate::mode::GameVersion>,
+) -> String {
     let raw = match value {
         serde_json::Value::String(s) => s.clone(),
         serde_json::Value::Number(n) => n.to_string(),
@@ -266,7 +308,10 @@ fn normalize_modifier(node_id: &str, value: &serde_json::Value) -> String {
         serde_json::Value::Null => String::new(),
         other => other.to_string(),
     };
-    dropdowns::resolve(node_id, &raw).to_string()
+    match version {
+        None => dropdowns::resolve(node_id, &raw).to_string(),
+        Some(v) => dropdowns::resolve_for_version(v, node_id, &raw),
+    }
 }
 
 fn controller_slot(id: &str) -> Option<usize> {
@@ -275,6 +320,8 @@ fn controller_slot(id: &str) -> Option<usize> {
         "SoccerController2" => Some(1),
         "SoccerController3" => Some(2),
         "SoccerController4" => Some(3),
+        // Tennis drives a single bot: its controller binds slot 0.
+        "TennisController" => Some(0),
         _ => None,
     }
 }
