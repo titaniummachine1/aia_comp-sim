@@ -400,10 +400,11 @@ mod tests {
             assert!((m.y - (i as f32 + 2.0)).abs() < 1e-4, "y {i}: {m:?}");
         }
         // Dynamic packed-array read cycles 7.5/8.5/9.5 with Mod(cnt,3),
-        // plus the select flag (+2 while cnt <= 12).
+        // plus the select flag (+1.0 while cnt <= 12 — the AST frontend
+        // merges `if` without else via select against the pre-if value).
         let expect = [7.5f32, 8.5, 9.5];
         for (i, m) in seen.iter().enumerate() {
-            let want = expect[(i + 1) % 3] + 2.0;
+            let want = expect[(i + 1) % 3] + 1.0;
             assert!(
                 (m.x - want).abs() < 1e-4,
                 "array decode tick {i}: got {} want {want}",
