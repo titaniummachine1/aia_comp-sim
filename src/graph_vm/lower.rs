@@ -981,7 +981,8 @@ impl Lowerer {
                     .unwrap_or_else(|| self.emit_const_null(node_sid, "Any1"));
                 self.emit_move(node_sid, port_name, value, RegisterKind::Null)
             }
-            "Operation" | "AbsFloat" | "Absolute" => {
+            "Operation" | "AbsFloat" | "Absolute"
+                if !node.modifier.trim().is_empty() => {
                 let a = self
                     .lower_input(node_sid, "Float1")
                     .unwrap_or_else(|| self.emit_const_float(node_sid, "Float1", 0.0));
@@ -1033,6 +1034,20 @@ impl Lowerer {
             "Magnitude" => self.unary_v(node_sid, port_name, OpCode::Magnitude),
             "Distance" => self.bin_v(node_sid, port_name, OpCode::Distance),
             "DotProduct" => self.bin_v(node_sid, port_name, OpCode::Dot),
+            "CrossProduct" => self.bin_v(node_sid, port_name, OpCode::Cross),
+            "RandomFloat" => {
+                let dst = self.fresh_reg(RegisterKind::Float);
+                self.ir.push(IrInst {
+                    dest: Some(dst),
+                    kind: RegisterKind::Float,
+                    op: OpCode::RandomF,
+                    args: vec![],
+                    immediates: vec![],
+                    source_sid: node_sid.to_string(),
+                    source_port: port_name.to_string(),
+                });
+                dst
+            }
             "Not" => {
                 let b = self
                     .lower_input(node_sid, "Bool1")
@@ -1149,13 +1164,22 @@ impl Lowerer {
             | "ConstructTennisProperties"
             | "Spherecast"
             | "Country"
-            | "Stat" => self.emit_const_null(node_sid, port_name),
+            | "Stat"
+            | "RandomColor"
+            | "ConditionalSetString" => self.emit_const_null(node_sid, port_name),
             // ANY node type we do not implement lands here and silently
             // evaluates to Null. That is the most dangerous failure mode in
             // the whole VM: the graph loads, the match runs, results look
             // plausible, and a decision was quietly made on nothing. Record
             // it so callers can report it loudly instead of inferring later
             // from a scoreline that felt wrong.
+            // Game-tolerated degenerate: Operation with an empty modifier
+            // (7 mined graphs). The game runs it — treat as constant 0 with
+            // an approximation record rather than a lowering panic.
+            "Operation" | "AbsFloat" | "Absolute" => {
+                crate::graph_vm::diagnostics::record_approximated("Operation(empty)");
+                self.emit_const_float(node_sid, port_name, 0.0)
+            }
             other => {
                 crate::graph_vm::diagnostics::record_unimplemented(other);
                 self.emit_const_null(node_sid, port_name)

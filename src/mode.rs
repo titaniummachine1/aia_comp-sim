@@ -156,6 +156,7 @@ pub const COMMON_NODES: &[&str] = &[
     "ClampFloat",
     "Lerp",
     "Operation",
+    "RandomFloat",
     "AddVector3",
     "SubtractVector3",
     "ScaleVector3",
@@ -163,6 +164,7 @@ pub const COMMON_NODES: &[&str] = &[
     "Magnitude",
     "Distance",
     "DotProduct",
+    "CrossProduct",
     "Not",
     "CompareFloats",
     "CompareBool",
@@ -170,6 +172,7 @@ pub const COMMON_NODES: &[&str] = &[
     "ConditionalSetFloat",
     "ConditionalSetFloatV2",
     "ConditionalSetVector3",
+    "ConditionalSetString",
     "IsNull",
     "Keypress",
     "DebugDrawLine",
@@ -180,6 +183,7 @@ pub const COMMON_NODES: &[&str] = &[
     "Country",
     "Stat",
     "Spherecast",
+    "RandomColor",
     "RelativePosition",
 ];
 

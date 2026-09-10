@@ -1,11 +1,11 @@
-//! AIComp team-graph loader + tick evaluator (MVP).
+﻿//! AIComp team-graph loader + tick evaluator (MVP).
 //!
 //! Implements constants, float math (incl. Power), SoccerGet*, RelativePosition,
-//! and SoccerController1–4. Variables / functions / sensors come later.
+//! and SoccerController1â€“4. Variables / functions / sensors come later.
 
-pub(crate) mod dropdowns;
+pub mod dropdowns;
 mod eval;
-pub(crate) mod load;
+pub mod load;
 pub(crate) mod pitch_vec;
 mod value;
 

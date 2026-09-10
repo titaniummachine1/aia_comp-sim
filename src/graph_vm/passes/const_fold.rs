@@ -144,20 +144,12 @@ fn try_fold(inst: &IrInst, known: &[Option<VmValue>]) -> Option<VmValue> {
         OpCode::Sub if args.len() >= 2 => Some(VmValue::Float(as_f(args[0]) - as_f(args[1]))),
         OpCode::Mul if args.len() >= 2 => Some(VmValue::Float(as_f(args[0]) * as_f(args[1]))),
         OpCode::Div if args.len() >= 2 => {
-            let b = as_f(args[1]);
-            Some(VmValue::Float(if b.abs() < 1e-12 {
-                0.0
-            } else {
-                as_f(args[0]) / b
-            }))
+            // IEEE semantics — the game returns +inf/-inf/nan for div-by-zero
+            // (author-confirmed); never guard.
+            Some(VmValue::Float(as_f(args[0]) / as_f(args[1])))
         }
         OpCode::Mod if args.len() >= 2 => {
-            let b = as_f(args[1]);
-            Some(VmValue::Float(if b.abs() < 1e-12 {
-                0.0
-            } else {
-                as_f(args[0]) % b
-            }))
+            Some(VmValue::Float(as_f(args[0]) % as_f(args[1])))
         }
         OpCode::Pow if args.len() >= 2 => {
             Some(VmValue::Float(as_f(args[0]).powf(as_f(args[1]))))

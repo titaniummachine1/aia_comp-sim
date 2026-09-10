@@ -125,8 +125,8 @@ fn exec_inst(inst: &Instruction, ctx: &mut ExecutionContext, names: &[String]) {
         OpCode::Add => bin_f(ctx, ops, |a, b| a + b),
         OpCode::Sub => bin_f(ctx, ops, |a, b| a - b),
         OpCode::Mul => bin_f(ctx, ops, |a, b| a * b),
-        OpCode::Div => bin_f(ctx, ops, |a, b| if b.abs() < 1e-12 { 0.0 } else { a / b }),
-        OpCode::Mod => bin_f(ctx, ops, |a, b| if b.abs() < 1e-12 { 0.0 } else { a % b }),
+        OpCode::Div => bin_f(ctx, ops, |a, b| a / b),
+        OpCode::Mod => bin_f(ctx, ops, |a, b| a % b),
         OpCode::Pow => bin_f(ctx, ops, |a, b| a.powf(b)),
         OpCode::Lerp => {
             if ops.len() >= 4 {
@@ -274,6 +274,28 @@ fn exec_inst(inst: &Instruction, ctx: &mut ExecutionContext, names: &[String]) {
                 let a = reg_v(ctx, ops[1] as usize);
                 let b = reg_v(ctx, ops[2] as usize);
                 ctx.frame.registers[dst] = VmValue::Float(a.dot(b));
+            }
+        }
+        OpCode::Cross => {
+            if ops.len() >= 3 {
+                let dst = ops[0] as usize;
+                let a = reg_v(ctx, ops[1] as usize);
+                let b = reg_v(ctx, ops[2] as usize);
+                ctx.frame.registers[dst] = VmValue::Vector(a.cross(b));
+            }
+        }
+        OpCode::RandomF => {
+            if ops.len() >= 1 {
+                let dst = ops[0] as usize;
+                // SplitMix64 step on the persistent per-think stream —
+                // deterministic per program, random-looking within a match.
+                ctx.state.rng = ctx.state.rng.wrapping_add(0x9e37_79b9_7f4a_7c15);
+                let mut z = ctx.state.rng;
+                z = (z ^ (z >> 30)).wrapping_mul(0xbf58_476d_1ce4_e5b9);
+                z = (z ^ (z >> 27)).wrapping_mul(0x94d0_49bb_1331_11eb);
+                z ^= z >> 31;
+                let unit = ((z >> 40) as f32) * 2f32.powi(-24);
+                ctx.frame.registers[dst] = VmValue::Float(unit);
             }
         }
         OpCode::Select => {

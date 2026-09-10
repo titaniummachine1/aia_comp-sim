@@ -54,6 +54,10 @@ impl ApiSnapshot {
 #[derive(Debug, Clone, Default)]
 pub struct RuntimeState {
     pub vars: Vec<VmValue>,
+    /// Persistent RandomFloat stream (SplitMix64 state; deterministic per
+    /// program — the game seeds it per match, which is a documented
+    /// approximation until wired from the world).
+    pub rng: u64,
 }
 
 #[derive(Debug, Clone, Default)]

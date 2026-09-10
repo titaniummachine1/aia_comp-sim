@@ -1,0 +1,873 @@
+{
+ "graphs": 82,
+ "node_types": {
+  "Float": 35402,
+  "ConditionalSetFloatV2": 15679,
+  "MultiplyFloats": 13732,
+  "CompareFloats": 12927,
+  "AddFloats": 7786,
+  "SubtractFloats": 7723,
+  "DivideFloats": 6437,
+  "CompareBool": 4703,
+  "ClampFloat": 3996,
+  "ConditionalSetVector3": 3341,
+  "Operation": 2832,
+  "ConstructVector3": 2286,
+  "Distance": 1765,
+  "String": 1652,
+  "TimePlot": 1472,
+  "Vector3Split": 1384,
+  "Not": 1002,
+  "TennisGetBool": 748,
+  "TennisGetVector3": 679,
+  "TennisGetFloat": 654,
+  "Color": 585,
+  "DebugDrawDisc": 558,
+  "AddVector3": 380,
+  "SetVariable": 360,
+  "ScaleVector3": 358,
+  "RelativePosition": 348,
+  "TennisGetTransform": 346,
+  "GetVariable": 337,
+  "SubtractVector3": 329,
+  "DotProduct": 227,
+  "Normalize": 212,
+  "Debug": 190,
+  "Region": 163,
+  "ConditionalSetBool": 134,
+  "IsNull": 115,
+  "TennisAutoMove": 83,
+  "TennisController": 81,
+  "Function": 78,
+  "ConstructTennisProperties": 71,
+  "Country": 71,
+  "TennisAutoAim": 70,
+  "Bool": 43,
+  "TennisAutoSwing": 41,
+  "CreateFunction": 32,
+  "Lerp": 27,
+  "Magnitude": 22,
+  "DebugDrawLine": 21,
+  "RandomFloat": 19,
+  "Keypress": 14,
+  "CrossProduct": 6,
+  "RandomColor": 4,
+  "Relay": 2,
+  "ConditionalSetString": 1
+ },
+ "top_edge_pairs": [
+  {
+   "from": "CompareFloats",
+   "to": "ConditionalSetFloatV2",
+   "count": 13057
+  },
+  {
+   "from": "ConditionalSetFloatV2",
+   "to": "ConditionalSetFloatV2",
+   "count": 12255
+  },
+  {
+   "from": "Float",
+   "to": "ConditionalSetFloatV2",
+   "count": 10479
+  },
+  {
+   "from": "Float",
+   "to": "MultiplyFloats",
+   "count": 8552
+  },
+  {
+   "from": "Float",
+   "to": "ClampFloat",
+   "count": 7923
+  },
+  {
+   "from": "Float",
+   "to": "CompareFloats",
+   "count": 7423
+  },
+  {
+   "from": "MultiplyFloats",
+   "to": "AddFloats",
+   "count": 7055
+  },
+  {
+   "from": "ConditionalSetFloatV2",
+   "to": "CompareFloats",
+   "count": 5217
+  },
+  {
+   "from": "SubtractFloats",
+   "to": "MultiplyFloats",
+   "count": 3961
+  },
+  {
+   "from": "AddFloats",
+   "to": "CompareFloats",
+   "count": 3858
+  },
+  {
+   "from": "CompareFloats",
+   "to": "CompareBool",
+   "count": 3855
+  },
+  {
+   "from": "Float",
+   "to": "AddFloats",
+   "count": 3842
+  },
+  {
+   "from": "CompareBool",
+   "to": "CompareBool",
+   "count": 3775
+  },
+  {
+   "from": "AddFloats",
+   "to": "ConditionalSetFloatV2",
+   "count": 3719
+  },
+  {
+   "from": "Float",
+   "to": "SubtractFloats",
+   "count": 3595
+  },
+  {
+   "from": "MultiplyFloats",
+   "to": "MultiplyFloats",
+   "count": 3572
+  },
+  {
+   "from": "DivideFloats",
+   "to": "CompareFloats",
+   "count": 3530
+  },
+  {
+   "from": "ConstructVector3",
+   "to": "ConditionalSetVector3",
+   "count": 3302
+  },
+  {
+   "from": "MultiplyFloats",
+   "to": "SubtractFloats",
+   "count": 3058
+  },
+  {
+   "from": "String",
+   "to": "TimePlot",
+   "count": 2975
+  },
+  {
+   "from": "Float",
+   "to": "ConstructVector3",
+   "count": 2783
+  },
+  {
+   "from": "ConditionalSetFloatV2",
+   "to": "MultiplyFloats",
+   "count": 2747
+  },
+  {
+   "from": "Distance",
+   "to": "MultiplyFloats",
+   "count": 2718
+  },
+  {
+   "from": "ConditionalSetVector3",
+   "to": "ConditionalSetVector3",
+   "count": 2707
+  },
+  {
+   "from": "SubtractFloats",
+   "to": "CompareFloats",
+   "count": 2689
+  },
+  {
+   "from": "Distance",
+   "to": "DivideFloats",
+   "count": 2658
+  },
+  {
+   "from": "Vector3Split",
+   "to": "SubtractFloats",
+   "count": 2606
+  },
+  {
+   "from": "ClampFloat",
+   "to": "DivideFloats",
+   "count": 2416
+  },
+  {
+   "from": "CompareBool",
+   "to": "ConditionalSetFloatV2",
+   "count": 2272
+  },
+  {
+   "from": "SubtractFloats",
+   "to": "ConditionalSetFloatV2",
+   "count": 2035
+  },
+  {
+   "from": "AddFloats",
+   "to": "DivideFloats",
+   "count": 1746
+  },
+  {
+   "from": "CompareFloats",
+   "to": "ConditionalSetVector3",
+   "count": 1737
+  },
+  {
+   "from": "Vector3Split",
+   "to": "MultiplyFloats",
+   "count": 1729
+  },
+  {
+   "from": "Float",
+   "to": "DivideFloats",
+   "count": 1626
+  },
+  {
+   "from": "ConstructVector3",
+   "to": "Distance",
+   "count": 1610
+  },
+  {
+   "from": "SubtractFloats",
+   "to": "DivideFloats",
+   "count": 1548
+  },
+  {
+   "from": "DivideFloats",
+   "to": "SubtractFloats",
+   "count": 1516
+  },
+  {
+   "from": "ConditionalSetFloatV2",
+   "to": "AddFloats",
+   "count": 1513
+  },
+  {
+   "from": "ClampFloat",
+   "to": "MultiplyFloats",
+   "count": 1453
+  },
+  {
+   "from": "RelativePosition",
+   "to": "Distance",
+   "count": 1436
+  }
+ ],
+ "distinct_edge_pairs": 384,
+ "feedback_cycles": {
+  "Adam": 225,
+  "Apex": 634,
+  "LeBlock James": 420,
+  "LeBlock_James": 420,
+  "Pixel_Heart (1)": 29,
+  "Pixel_Heart (2)": 22,
+  "Pixel_Heart": 19,
+  "Safe_Corner_v0.3": 154,
+  "Zudan6": 56,
+  "_Court-Weaver_8a4b6c1584e7": 4659,
+  "aia": 22,
+  "aia3": 20,
+  "bat": 27,
+  "controller": 38,
+  "ignore_ball31": 33,
+  "martico2432v7": 61,
+  "nqvxf22": 61,
+  "safe-corner-league-e12": 154,
+  "safe_corner_v02 (1)": 110,
+  "safe_corner_v02": 110,
+  "sim_titanium28": 1272,
+  "sim_titanium28alt": 795,
+  "sim_titanium30": 1272,
+  "sim_titanium31": 1320,
+  "sim_titanium32": 1322,
+  "sim_v2811alt": 466,
+  "sim_v2814": 466,
+  "sim_v288alt": 456,
+  "simop_v2811": 478,
+  "simop_v2811alt": 484,
+  "simop_v2814": 484,
+  "simop_v288": 468,
+  "simop_v288alt": 474,
+  "slicer": 23,
+  "titanium": 6,
+  "titanium10": 246,
+  "titanium11": 266,
+  "titanium12": 270,
+  "titanium13": 276,
+  "titanium14": 211,
+  "titanium15": 145,
+  "titanium16": 258,
+  "titanium2": 28,
+  "titanium28alt": 485,
+  "titanium3": 45,
+  "titanium31": 1335,
+  "titanium32": 807,
+  "titanium33": 2640,
+  "titanium34": 1062,
+  "titanium35": 1585,
+  "titanium36": 1538,
+  "titanium36_1": 1540,
+  "titanium37": 2066,
+  "titanium38": 2908,
+  "titanium39": 3224,
+  "titanium4": 88,
+  "titanium40": 3278,
+  "titanium41": 3340,
+  "titanium42": 3343,
+  "titanium43": 3346,
+  "titanium44": 1944,
+  "titanium45": 1990,
+  "titanium46": 3061,
+  "titanium46_upstreamtest": 3061,
+  "titanium47": 3205,
+  "titanium48": 3450,
+  "titanium49": 3467,
+  "titanium5": 81,
+  "titanium50": 3473,
+  "titanium51": 3474,
+  "titanium52": 3480,
+  "titanium53": 3479,
+  "titanium54": 3497,
+  "titanium6": 87,
+  "titanium7": 161,
+  "titanium8": 211,
+  "titanium9": 211,
+  "v1.3 BlockBall": 120,
+  "v1.5 BlockBall organized": 213,
+  "v1.5 BlockBall": 213,
+  "v1.8 BlockBall": 228,
+  "v1_PY_Martico2432": 296
+ },
+ "anomalies": {
+  "LeBlock James.txt: empty Operation modifier": 10,
+  "LeBlock_James.txt: empty Operation modifier": 10,
+  "titanium49.txt: string->color String->TimePlot": 10,
+  "titanium50.txt: string->color String->TimePlot": 10,
+  "titanium51.txt: string->color String->TimePlot": 10,
+  "titanium52.txt: string->color String->TimePlot": 10,
+  "titanium53.txt: string->color String->TimePlot": 10,
+  "titanium54.txt: string->color String->TimePlot": 10,
+  "titanium48.txt: string->color String->TimePlot": 9,
+  "titanium47.txt: string->color String->TimePlot": 8,
+  "titanium34.txt: string->color String->TimePlot": 7,
+  "titanium35.txt: string->color String->TimePlot": 7,
+  "titanium36.txt: string->color String->TimePlot": 7,
+  "titanium36_1.txt: string->color String->TimePlot": 7,
+  "titanium37.txt: string->color String->TimePlot": 7,
+  "titanium38.txt: string->color String->TimePlot": 7,
+  "titanium39.txt: string->color String->TimePlot": 7,
+  "titanium40.txt: string->color String->TimePlot": 7,
+  "titanium41.txt: string->color String->TimePlot": 7,
+  "titanium42.txt: string->color String->TimePlot": 7,
+  "titanium43.txt: string->color String->TimePlot": 7,
+  "titanium44.txt: string->color String->TimePlot": 7,
+  "titanium45.txt: string->color String->TimePlot": 7,
+  "titanium46.txt: string->color String->TimePlot": 7,
+  "titanium46_upstreamtest.txt: string->color String->TimePlot": 7,
+  "sim_titanium28.txt: string->color String->TimePlot": 6,
+  "sim_titanium28alt.txt: string->color String->TimePlot": 6,
+  "sim_titanium30.txt: string->color String->TimePlot": 6,
+  "sim_titanium31.txt: string->color String->TimePlot": 6,
+  "sim_titanium32.txt: string->color String->TimePlot": 6
+ },
+ "type_mismatch_edges": 336,
+ "empty_modifier_ops": 45,
+ "per_bot": [
+  {
+   "bot": "Adam",
+   "nodes": 371,
+   "feedback_cycles": 225,
+   "distinct_edges": 125
+  },
+  {
+   "bot": "Apex",
+   "nodes": 860,
+   "feedback_cycles": 634,
+   "distinct_edges": 118
+  },
+  {
+   "bot": "LeBlock James",
+   "nodes": 656,
+   "feedback_cycles": 420,
+   "distinct_edges": 164
+  },
+  {
+   "bot": "LeBlock_James",
+   "nodes": 656,
+   "feedback_cycles": 420,
+   "distinct_edges": 164
+  },
+  {
+   "bot": "Pixel_Heart (1)",
+   "nodes": 65,
+   "feedback_cycles": 29,
+   "distinct_edges": 28
+  },
+  {
+   "bot": "Pixel_Heart (2)",
+   "nodes": 59,
+   "feedback_cycles": 22,
+   "distinct_edges": 26
+  },
+  {
+   "bot": "Pixel_Heart",
+   "nodes": 48,
+   "feedback_cycles": 19,
+   "distinct_edges": 23
+  },
+  {
+   "bot": "Safe_Corner_v0.3",
+   "nodes": 214,
+   "feedback_cycles": 154,
+   "distinct_edges": 89
+  },
+  {
+   "bot": "Zudan6",
+   "nodes": 114,
+   "feedback_cycles": 56,
+   "distinct_edges": 55
+  },
+  {
+   "bot": "_Court-Weaver_8a4b6c1584e7",
+   "nodes": 4851,
+   "feedback_cycles": 4659,
+   "distinct_edges": 164
+  },
+  {
+   "bot": "aia",
+   "nodes": 57,
+   "feedback_cycles": 22,
+   "distinct_edges": 28
+  },
+  {
+   "bot": "aia3",
+   "nodes": 54,
+   "feedback_cycles": 20,
+   "distinct_edges": 26
+  },
+  {
+   "bot": "bat",
+   "nodes": 69,
+   "feedback_cycles": 27,
+   "distinct_edges": 34
+  },
+  {
+   "bot": "controller",
+   "nodes": 71,
+   "feedback_cycles": 38,
+   "distinct_edges": 30
+  },
+  {
+   "bot": "ignore_ball31",
+   "nodes": 48,
+   "feedback_cycles": 33,
+   "distinct_edges": 24
+  },
+  {
+   "bot": "martico2432v7",
+   "nodes": 119,
+   "feedback_cycles": 61,
+   "distinct_edges": 64
+  },
+  {
+   "bot": "nqvxf22",
+   "nodes": 119,
+   "feedback_cycles": 61,
+   "distinct_edges": 64
+  },
+  {
+   "bot": "safe-corner-league-e12",
+   "nodes": 214,
+   "feedback_cycles": 154,
+   "distinct_edges": 89
+  },
+  {
+   "bot": "safe_corner_v02 (1)",
+   "nodes": 163,
+   "feedback_cycles": 110,
+   "distinct_edges": 74
+  },
+  {
+   "bot": "safe_corner_v02",
+   "nodes": 163,
+   "feedback_cycles": 110,
+   "distinct_edges": 74
+  },
+  {
+   "bot": "sim_titanium28",
+   "nodes": 1863,
+   "feedback_cycles": 1272,
+   "distinct_edges": 119
+  },
+  {
+   "bot": "sim_titanium28alt",
+   "nodes": 1091,
+   "feedback_cycles": 795,
+   "distinct_edges": 108
+  },
+  {
+   "bot": "sim_titanium30",
+   "nodes": 1863,
+   "feedback_cycles": 1272,
+   "distinct_edges": 119
+  },
+  {
+   "bot": "sim_titanium31",
+   "nodes": 1930,
+   "feedback_cycles": 1320,
+   "distinct_edges": 122
+  },
+  {
+   "bot": "sim_titanium32",
+   "nodes": 1938,
+   "feedback_cycles": 1322,
+   "distinct_edges": 124
+  },
+  {
+   "bot": "sim_v2811alt",
+   "nodes": 669,
+   "feedback_cycles": 466,
+   "distinct_edges": 118
+  },
+  {
+   "bot": "sim_v2814",
+   "nodes": 699,
+   "feedback_cycles": 466,
+   "distinct_edges": 119
+  },
+  {
+   "bot": "sim_v288alt",
+   "nodes": 656,
+   "feedback_cycles": 456,
+   "distinct_edges": 114
+  },
+  {
+   "bot": "simop_v2811",
+   "nodes": 709,
+   "feedback_cycles": 478,
+   "distinct_edges": 124
+  },
+  {
+   "bot": "simop_v2811alt",
+   "nodes": 687,
+   "feedback_cycles": 484,
+   "distinct_edges": 123
+  },
+  {
+   "bot": "simop_v2814",
+   "nodes": 717,
+   "feedback_cycles": 484,
+   "distinct_edges": 126
+  },
+  {
+   "bot": "simop_v288",
+   "nodes": 696,
+   "feedback_cycles": 468,
+   "distinct_edges": 120
+  },
+  {
+   "bot": "simop_v288alt",
+   "nodes": 674,
+   "feedback_cycles": 474,
+   "distinct_edges": 119
+  },
+  {
+   "bot": "slicer",
+   "nodes": 57,
+   "feedback_cycles": 23,
+   "distinct_edges": 35
+  },
+  {
+   "bot": "titanium",
+   "nodes": 15,
+   "feedback_cycles": 6,
+   "distinct_edges": 11
+  },
+  {
+   "bot": "titanium10",
+   "nodes": 442,
+   "feedback_cycles": 246,
+   "distinct_edges": 111
+  },
+  {
+   "bot": "titanium11",
+   "nodes": 461,
+   "feedback_cycles": 266,
+   "distinct_edges": 112
+  },
+  {
+   "bot": "titanium12",
+   "nodes": 466,
+   "feedback_cycles": 270,
+   "distinct_edges": 112
+  },
+  {
+   "bot": "titanium13",
+   "nodes": 473,
+   "feedback_cycles": 276,
+   "distinct_edges": 112
+  },
+  {
+   "bot": "titanium14",
+   "nodes": 394,
+   "feedback_cycles": 211,
+   "distinct_edges": 101
+  },
+  {
+   "bot": "titanium15",
+   "nodes": 216,
+   "feedback_cycles": 145,
+   "distinct_edges": 73
+  },
+  {
+   "bot": "titanium16",
+   "nodes": 368,
+   "feedback_cycles": 258,
+   "distinct_edges": 82
+  },
+  {
+   "bot": "titanium2",
+   "nodes": 68,
+   "feedback_cycles": 28,
+   "distinct_edges": 36
+  },
+  {
+   "bot": "titanium28alt",
+   "nodes": 693,
+   "feedback_cycles": 485,
+   "distinct_edges": 127
+  },
+  {
+   "bot": "titanium3",
+   "nodes": 109,
+   "feedback_cycles": 45,
+   "distinct_edges": 37
+  },
+  {
+   "bot": "titanium31",
+   "nodes": 1946,
+   "feedback_cycles": 1335,
+   "distinct_edges": 128
+  },
+  {
+   "bot": "titanium32",
+   "nodes": 1227,
+   "feedback_cycles": 807,
+   "distinct_edges": 127
+  },
+  {
+   "bot": "titanium33",
+   "nodes": 3430,
+   "feedback_cycles": 2640,
+   "distinct_edges": 118
+  },
+  {
+   "bot": "titanium34",
+   "nodes": 1607,
+   "feedback_cycles": 1062,
+   "distinct_edges": 114
+  },
+  {
+   "bot": "titanium35",
+   "nodes": 2327,
+   "feedback_cycles": 1585,
+   "distinct_edges": 124
+  },
+  {
+   "bot": "titanium36",
+   "nodes": 2252,
+   "feedback_cycles": 1538,
+   "distinct_edges": 116
+  },
+  {
+   "bot": "titanium36_1",
+   "nodes": 2254,
+   "feedback_cycles": 1540,
+   "distinct_edges": 116
+  },
+  {
+   "bot": "titanium37",
+   "nodes": 2791,
+   "feedback_cycles": 2066,
+   "distinct_edges": 120
+  },
+  {
+   "bot": "titanium38",
+   "nodes": 3812,
+   "feedback_cycles": 2908,
+   "distinct_edges": 115
+  },
+  {
+   "bot": "titanium39",
+   "nodes": 4218,
+   "feedback_cycles": 3224,
+   "distinct_edges": 116
+  },
+  {
+   "bot": "titanium4",
+   "nodes": 171,
+   "feedback_cycles": 88,
+   "distinct_edges": 55
+  },
+  {
+   "bot": "titanium40",
+   "nodes": 4320,
+   "feedback_cycles": 3278,
+   "distinct_edges": 117
+  },
+  {
+   "bot": "titanium41",
+   "nodes": 4429,
+   "feedback_cycles": 3340,
+   "distinct_edges": 117
+  },
+  {
+   "bot": "titanium42",
+   "nodes": 4408,
+   "feedback_cycles": 3343,
+   "distinct_edges": 118
+  },
+  {
+   "bot": "titanium43",
+   "nodes": 4415,
+   "feedback_cycles": 3346,
+   "distinct_edges": 119
+  },
+  {
+   "bot": "titanium44",
+   "nodes": 2893,
+   "feedback_cycles": 1944,
+   "distinct_edges": 119
+  },
+  {
+   "bot": "titanium45",
+   "nodes": 3086,
+   "feedback_cycles": 1990,
+   "distinct_edges": 127
+  },
+  {
+   "bot": "titanium46",
+   "nodes": 4739,
+   "feedback_cycles": 3061,
+   "distinct_edges": 130
+  },
+  {
+   "bot": "titanium46_upstreamtest",
+   "nodes": 4744,
+   "feedback_cycles": 3061,
+   "distinct_edges": 129
+  },
+  {
+   "bot": "titanium47",
+   "nodes": 4999,
+   "feedback_cycles": 3205,
+   "distinct_edges": 138
+  },
+  {
+   "bot": "titanium48",
+   "nodes": 5316,
+   "feedback_cycles": 3450,
+   "distinct_edges": 142
+  },
+  {
+   "bot": "titanium49",
+   "nodes": 5347,
+   "feedback_cycles": 3467,
+   "distinct_edges": 143
+  },
+  {
+   "bot": "titanium5",
+   "nodes": 161,
+   "feedback_cycles": 81,
+   "distinct_edges": 49
+  },
+  {
+   "bot": "titanium50",
+   "nodes": 5355,
+   "feedback_cycles": 3473,
+   "distinct_edges": 143
+  },
+  {
+   "bot": "titanium51",
+   "nodes": 5357,
+   "feedback_cycles": 3474,
+   "distinct_edges": 143
+  },
+  {
+   "bot": "titanium52",
+   "nodes": 5365,
+   "feedback_cycles": 3480,
+   "distinct_edges": 143
+  },
+  {
+   "bot": "titanium53",
+   "nodes": 5363,
+   "feedback_cycles": 3479,
+   "distinct_edges": 143
+  },
+  {
+   "bot": "titanium54",
+   "nodes": 5383,
+   "feedback_cycles": 3497,
+   "distinct_edges": 143
+  },
+  {
+   "bot": "titanium6",
+   "nodes": 168,
+   "feedback_cycles": 87,
+   "distinct_edges": 54
+  },
+  {
+   "bot": "titanium7",
+   "nodes": 287,
+   "feedback_cycles": 161,
+   "distinct_edges": 103
+  },
+  {
+   "bot": "titanium8",
+   "nodes": 394,
+   "feedback_cycles": 211,
+   "distinct_edges": 101
+  },
+  {
+   "bot": "titanium9",
+   "nodes": 394,
+   "feedback_cycles": 211,
+   "distinct_edges": 101
+  },
+  {
+   "bot": "v1.3 BlockBall",
+   "nodes": 220,
+   "feedback_cycles": 120,
+   "distinct_edges": 101
+  },
+  {
+   "bot": "v1.5 BlockBall organized",
+   "nodes": 348,
+   "feedback_cycles": 213,
+   "distinct_edges": 132
+  },
+  {
+   "bot": "v1.5 BlockBall",
+   "nodes": 348,
+   "feedback_cycles": 213,
+   "distinct_edges": 132
+  },
+  {
+   "bot": "v1.8 BlockBall",
+   "nodes": 385,
+   "feedback_cycles": 228,
+   "distinct_edges": 131
+  },
+  {
+   "bot": "v1_PY_Martico2432",
+   "nodes": 344,
+   "feedback_cycles": 296,
+   "distinct_edges": 103
+  }
+ ]
+}

@@ -51,6 +51,8 @@ const SIDE_EFFECT_ONLY: &[&str] = &[
     "ConstructTennisProperties",
     "Country",
     "Stat",
+    "RandomColor",
+    "ConditionalSetString",
 ];
 
 /// Implemented, but as an acknowledged approximation of the engine.

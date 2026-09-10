@@ -43,6 +43,10 @@ pub enum OpCode {
     Magnitude,
     Distance,
     Dot,
+    /// 3D cross product (full XYZ, unlike the pitch-plane Dot).
+    Cross,
+    /// Seeded per-evaluation random float in [0,1) (VM stream).
+    RandomF,
     Select,
     Call,
     Return,
@@ -95,7 +99,8 @@ impl OpCode {
             }
             Eq | Ne | Lt | Gt | Le | Ge | And | Or | Not | Nor | Nand => OpEffect::Pure,
             ConstructVec | SplitVec | AddVec | SubVec | ScaleVec | ScaleAddVec | Normalize
-            | Magnitude | Distance | Dot | Select | Move | Operation | IsNull => OpEffect::Pure,
+            | Magnitude | Distance | Dot | Cross | RandomF | Select | Move | Operation
+            | IsNull => OpEffect::Pure,
             LoadApi | LoadVar | Keypress => OpEffect::ReadOnly,
             StoreVar => OpEffect::Write,
             Call | Return => OpEffect::Write,

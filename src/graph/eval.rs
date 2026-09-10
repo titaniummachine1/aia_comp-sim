@@ -426,6 +426,13 @@ impl<'a> EvalCtx<'a> {
                 _ => GraphValue::Null,
             },
 
+            "RandomColor" | "ConditionalSetString" => GraphValue::Null,
+            "CrossProduct" => {
+                let a = self.input_named(node_sid, "Vector31").map(|v| v.as_vec()).unwrap_or_default();
+                let b = self.input_named(node_sid, "Vector32").map(|v| v.as_vec()).unwrap_or_default();
+                GraphValue::Vec(a.cross(b))
+            }
+            "RandomFloat" => GraphValue::Float(0.0), // documented: no stream in the reference brain
             "RelativePosition" => {
                 let pos = self
                     .input_named(node_sid, "Transform1")
