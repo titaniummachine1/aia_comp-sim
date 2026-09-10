@@ -192,6 +192,23 @@ egative-curve-team-one crossed
     the serialized out words are zeroed placeholders, NOT a position.
     Always read 
 eturn_bool_word before trusting landing_f32_words.
+18. **Timeplot export (v0.14) = the panel's "Export JSON" button.** A
+    manual click writes `Saves\Tennis\Timeplots\timeplot_<ts>.json`
+    immediately (no menu-return/quit-flush needed; verified 2026-09-10
+    with the user clicking Export 4× during a live match). The file is
+    locale-comma JSON: comma between digits = decimal point, comma+space
+    = array separator (parse with `modhost\parse_timeplots.py`). Content:
+    `simTime` + `series[]` per TimePlot channel (`name`, `color`,
+    per-tick `x[]` sim-seconds at 0.019 steps, `y[]` values), cumulative
+    across the whole match so far. Exports carry ALL plotted channels
+    from BOTH bots (44 in the titanium54-vs-aia3 capture, incl.
+    `v49_FatActive`). Captures: `modhost\captures\timeplots-20260910\`.
+    This is the per-tick game-side ground truth for the sim-vs-game
+    channel diff (replaces the failed sim_probe.txt in-game approach).
+19. **Menu scoreboard can show a stale point after paritymod launch**
+    (0-15 before any play; cleared when the match starts) and the game
+    AUTO-RESTARTS a finished match after ~1 min if left unattended —
+    quit via menu promptly after the target point count.
 
 ## 6. Current state (commit where this doc was added)
 

@@ -74,16 +74,27 @@ results must be the same as in the game."** (Viewer/editor = QOL only.)
    (`probe_x = probe_x + 1`) doesn't accumulate. Real bug or real semantic
    difference; needs a minimal unit test (hand-built RawGraph → RuntimeBrain
    → settle ticks → var check).
-5. **Timeplot export mystery** (v0.14): 0 files ever, despite graceful
-   `CloseMainWindow()` shutdowns, `exportResults=true` +
-   `timeplotVisible=true` set in settings. Soccer game exports fine (July
-   files). Hypotheses: export needs menu-return after match end, or the
-   panel opened during play, or flush on the game's OWN exit (our quit =
-   `ExitProcess(0)` in paritymod — bypasses Unity teardown).
-   **User will manually test at home** (open in-game timeplot panel during a
-   match, quit via game menu, check `Saves\Tennis\Timeplots`). UI automation
-   toolkit ready: `pip install pyautogui` DONE (PIL 12.3 present); plan =
-   screenshot → Read (image) → annotated click plan → pyautogui click.
+5. **Timeplot export mystery (SOLVED 2026-09-10, user at home):** the
+   export trigger is the **"Export JSON" button in the timeplot panel** —
+   a manual click writes `timeplot_<date>_<time>.json` into
+   `Saves\Tennis\Timeplots` IMMEDIATELY. No menu-return, no graceful
+   quit, no flush-on-exit involved. Automated runs produced 0 files
+   because nothing ever clicked the button. Captures archived in
+   `modhost\captures\timeplots-20260910\` (4 files, 44 channels, up to
+   2609 ticks; titanium54 vs aia3 seed 7). Format: JSON with **locale
+   decimal COMMAS** — a comma between digits = decimal point, comma+space
+   = array separator; parser `modhost\parse_timeplots.py` handles it
+   (`series[].name/color/x[]/y[]`, `x` = per-tick sim seconds at 0.019
+   steps = FIXED_DT, top-level `simTime`). Channels include
+   `v49_FatActive` — game-side fatigue ground truth for the fatigue
+   wiring. This unblocks §4.3: per-tick game truth for any channel a bot
+   plots. Remaining to wire: UI-automate the panel-open + Export click
+   (pyautogui toolkit ready) for tournament runs; diff sim probe vs game
+   timeplot channel-by-channel. NOTE (user report, unfixed): scoreboard
+   can show a stale point (0-15) on the menu right after the paritymod
+   launches, cleared once the match actually starts; game also
+   AUTO-RESTARTS a finished match after ~a minute if left alone (quit
+   via menu promptly, or the tournament flow must handle restarts).
 6. **49 locked-out game matches** — rerun `game_tournament.py` (resumable);
    add a wait-for-process-exit loop before each launch (lock race caused
    `PermissionError` on the exe swap).
