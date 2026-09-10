@@ -88,6 +88,27 @@ against each other the results must be the same as in the game."**
 
 ## 6. Open work queue (after parity % lands)
 
+0. **SERVE PARITY BLOCKER (diagnosed 2026-09-10 late, fix next session).**
+   Sim matches are decided entirely by double faults: even titanium54 vs
+   stock = `faults:[8,0], double_faults:[4,0]` — 0 rallies. Traced serve:
+   strike at toss apex fires **backward/down** (`vel [-6.6,-18.2]`) —
+   `on_swing_release` uses the LIVE `cmd.move_or_aim` as serve aim, but the
+   bot's Vector31 at that tick is its movement/stance output. Game
+   semantics: `TennisController` has ONE `Vector31` = "move-to / on-hit
+   aim" (phase-dependent), and the player separately holds
+   `<ServeAimHint>k__BackingField` + `HasServeAimHint` (captured:
+   home aim (13.75,-4.5) = legal box, while moveDestination (-14.99,-10.97)
+   = stance). Hypothesis: the game latches the serve aim from the graph
+   output at serve announcement (or uses ServeAimHint), and the live
+   Vector31 during Toss is NOT the strike aim. Fix plan:
+   (a) pin the ServeAimHint lifecycle from a live capture (extend the
+   event probe to poll player fields across serve transitions —
+   `mine_serve.py` in %TEMP% found the transitions, per-tick player fields
+   need a capture-side addition);
+   (b) sim: latch serve aim at ServeSetup entry (validated into the legal
+   box), strike uses the latch, fallback `legal_serve_target`;
+   (c) verify: titanium54 vs stock must produce a real rally point;
+   (d) rerun the 10-pair sequence spot-check for real parity numbers.
 1. **Sim-vs-game channel diff** using auto-exported timeplots
    (`modhost\parse_timeplots.py`) — first real per-tick ground truth test.
 2. **Remote export API** (button-free): enumerate the TimePlot classes'
