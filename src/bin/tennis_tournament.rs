@@ -117,7 +117,7 @@ fn main() {
             use std::io::Write;
             let _ = writeln!(
                 w,
-                "{{\"tick\":{},\"phase\":\"{:?}\",\"ball\":[{:.4},{:.4},{:.4}],\"vel\":[{:.4},{:.4},{:.4}],\"bounces\":{},\"points\":[{},{}],\"games\":[{},{}],\"serve\":\"{:?}\",\"home\":[{:.3},{:.3}],\"away\":[{:.3},{:.3}],\"hs\":{},\"as\":{},\"hc\":{:.2},\"ac\":{:.2}}}",
+                "{{\"tick\":{},\"phase\":\"{:?}\",\"ball\":[{:.4},{:.4},{:.4}],\"vel\":[{:.4},{:.4},{:.4}],\"bounces\":{},\"points\":[{},{}],\"games\":[{},{}],\"serve\":\"{:?}\",\"home\":[{:.3},{:.3}],\"away\":[{:.3},{:.3}],\"hs\":{},\"as\":{},\"hc\":{:.2},\"ac\":{:.2},\"haim\":[{:.2},{:.2}],\"aaim\":[{:.2},{:.2}]}}",
                 world.tick,
                 world.phase,
                 world.ball.pos.x, world.ball.pos.y, world.ball.pos.z,
@@ -130,6 +130,8 @@ fn main() {
                 world.player(Side::Away).pos.x, world.player(Side::Away).pos.y,
                 world.player(Side::Home).holding as u8, world.player(Side::Away).holding as u8,
                 world.player(Side::Home).charge, world.player(Side::Away).charge,
+                world.last_cmd_aim[0].x, world.last_cmd_aim[0].y,
+                world.last_cmd_aim[1].x, world.last_cmd_aim[1].y,
             );
         }
 
