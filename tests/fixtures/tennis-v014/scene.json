@@ -1,8 +1,8 @@
 {
  "kind": "shot_fixture_context",
  "schema": "v014-shot-v1",
- "manager_object": "0x000002663217ca80",
- "ball_object": "0x0000026634a4ae00",
+ "manager_object": "0x000001ac9ecbea80",
+ "ball_object": "0x000001aca3c05e00",
  "manager_fields": {
   "court_length": {
    "managed_name": "courtLength",
@@ -210,7 +210,7 @@
    "encoding": 4,
    "required": true,
    "read_ok": true,
-   "value": "0x000002663217ca80"
+   "value": "0x000001ac9ecbea80"
   },
   "arcade_gravity": {
    "managed_name": "arcadeGravity",

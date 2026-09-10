@@ -112,14 +112,21 @@ Verified exact at q=0/0.5/1 for args 0–6 (e.g. flat 20 m q=1: vx=36.4 =
 
 ## 5. Discoveries & quirks (the stuff you'd never get from code reading)
 
-1. **Flat/Topspin do NOT arc around the net.** Straight-family flight time
-   is purely `d/speed` — no net-clearance stretch, even crossed-net
-   (verified: topspin 24 m crossed-net t = 1.176 = d/speed exactly). The
-   ball fires on its ballistic arc and **can hit the net** — that's why
-   net-aggressive bots (Court-Weaver) lose points with flat/topspin into
-   the net. The "aim anywhere and it lands there" guarantee ONLY holds
-   when the arc naturally clears the tape. (User-reported ✓ confirmed by
-   matrix.)
+1. **Net avoidance lives in the STEER chain, not the raw solve.** The raw
+   `ComputeShotVelocity` is net-blind for EVERY shot type — proven by the
+   net-lip fixture (aim 0.25 past the net, profile added 2026-09-10): raw
+   results cross at y≈0.4 (below tape) for all 7 args, unchanged
+   pure-t/tail/floor times. The post-chain `RebuildLaunchForAim` +
+   `SteerVelocityToAim` re-predicts against the net-colliding flight and
+   stretches/lofts until the arc clears the tape AND lands on the aim —
+   the steered output clears for all 7 args (top/slice/flat/drop converge
+   to the identical arc (5.889, 28.788): the target arc is
+   shot-independent). The in-game "flat/topspin eats the net" cases =
+   when the steer chain FAILS (no arc exists that both lands and clears)
+   and the raw net-blind velocity ships as-is. With pure aim and no
+   inaccuracy the ball lands exactly on the aim point — the pure-aimbot
+   contract. (Rust: steer uses the tape-failing predictor; seed stays
+   net-blind — verified 200/210 against the live matrix.)
 2. **The ball "bounces" before its center reaches y=0.** Floor plane =
    `courtY + radius` = **0.3100000024** (bit-exact in
    `floor-bounce-drop` capture: bounce counters increment with position

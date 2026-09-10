@@ -54,7 +54,7 @@ fn load_fixture() -> Vec<Value> {
 #[test]
 fn v014_compute_shot_velocity_matches_the_game() {
     let cases = load_fixture();
-    assert_eq!(cases.len(), 168, "full matrix captured");
+    assert_eq!(cases.len(), 210, "full matrix incl. net-lip profile");
 
     let mut total = 0usize;
     let mut within = 0usize;
