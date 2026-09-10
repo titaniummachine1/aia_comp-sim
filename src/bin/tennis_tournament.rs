@@ -91,10 +91,27 @@ fn main() {
 
     let mut completed_points = 0usize;
     let mut in_pause = false;
+    // Per-point winner log for exact outcome-parity comparison with the
+    // game's point_winners[] (0=home, 1=away). award_point resets points on
+    // a game win, so winners are detected from per-step deltas: a games
+    // increment marks a game-winning point; otherwise a points increment.
+    let mut point_winners: Vec<u8> = Vec::new();
     while world.end.is_none() && world.tick < max_ticks && completed_points < points {
+        let prev_points = world.score.points;
+        let prev_games = world.score.games;
         let home_cmd = home.as_mut().and_then(|b| b.command_for(&world));
         let away_cmd = away.as_mut().and_then(|b| b.command_for(&world));
         world.step([home_cmd, away_cmd]);
+
+        if world.score.games[0] > prev_games[0] {
+            point_winners.push(0);
+        } else if world.score.games[1] > prev_games[1] {
+            point_winners.push(1);
+        } else if world.score.points[0] > prev_points[0] {
+            point_winners.push(0);
+        } else if world.score.points[1] > prev_points[1] {
+            point_winners.push(1);
+        }
 
         if let Some(w) = trace_out.as_mut() {
             use std::io::Write;
@@ -126,8 +143,9 @@ fn main() {
         },
     });
 
+    let winners_json = serde_json::to_string(&point_winners).unwrap_or_default();
     println!(
-        "{{\"home\":\"{}\",\"away\":\"{}\",\"seed\":{},\"ticks\":{},\"points_played\":{},\"score_pts\":[{},{}],\"games\":[{},{}],\"aces\":[{},{}],\"faults\":[{},{}],\"double_faults\":[{},{}],\"finished\":{},\"winner\":\"{}\",\"home_unimplemented\":{},\"home_approximated\":{}}}",
+        "{{\"home\":\"{}\",\"away\":\"{}\",\"seed\":{},\"ticks\":{},\"points_played\":{},\"score_pts\":[{},{}],\"games\":[{},{}],\"point_winners\":{},\"aces\":[{},{}],\"faults\":[{},{}],\"double_faults\":[{},{}],\"finished\":{},\"winner\":\"{}\",\"home_unimplemented\":{},\"home_approximated\":{}}}",
         home_name,
         away_name,
         seed,
@@ -135,6 +153,7 @@ fn main() {
         completed_points,
         world.score.points[0], world.score.points[1],
         world.score.games[0], world.score.games[1],
+        winners_json,
         world.score.aces[0], world.score.aces[1],
         world.score.faults[0], world.score.faults[1],
         world.score.double_faults[0], world.score.double_faults[1],

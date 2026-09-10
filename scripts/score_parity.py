@@ -16,10 +16,10 @@ p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
 rows = [json.loads(l) for l in io.open(p, encoding="utf-8") if l.strip()]
 
 counts = Counter = Counter(r.get("parity", "no-verdict") for r in rows)
-agree = counts.get("agree", 0)
+agree = sum(v for k, v in counts.items() if k.startswith("agree"))
 disagree = counts.get("disagree", 0)
 unknown = sum(v for k, v in counts.items()
-              if k not in ("agree", "disagree"))
+              if not k.startswith("agree") and k != "disagree")
 total = agree + disagree
 print(f"OUTCOME PARITY: {agree}/{total} = {100*agree/total:.1f}% "
       if total else "no comparisons", end="")

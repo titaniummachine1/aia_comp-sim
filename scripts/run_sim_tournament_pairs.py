@@ -103,21 +103,29 @@ def main() -> None:
                     sim = json.loads(line)
                     rec["sim_pts"] = sim["score_pts"]
                     rec["sim_games"] = sim["games"]
-                    # Match outcome: games won, current-game points as tiebreak.
-                    sg = sim["games"]
-                    sp = sim["score_pts"]
-                    if sg[0] != sg[1]:
-                        sim_leader = "home" if sg[0] > sg[1] else "away"
-                    else:
-                        sim_leader = "home" if sp[0] > sp[1] else (
-                            "away" if sp[1] > sp[0] else "tie")
-                    rec["sim_leader"] = sim_leader
-                    if g_leader == sim_leader:
+                    rec["sim_winners"] = sim.get("point_winners", [])
+                    # Exact metric: per-point winner sequence equality.
+                    g_seq = [w for w in (r.get("state") or {}).get(
+                        "point_winners", []) if w != 4294967295]
+                    s_seq = rec["sim_winners"]
+                    if g_seq and g_seq == s_seq:
                         agree += 1
-                        rec["parity"] = "agree"
+                        rec["parity"] = "agree-seq"
                     else:
-                        disagree += 1
-                        rec["parity"] = "disagree"
+                        # Fallback: match leader (games, then live points).
+                        hg, ag, hp, ap = match_result(s_seq)
+                        if hg != ag:
+                            sim_leader = "home" if hg > ag else "away"
+                        else:
+                            sim_leader = "home" if hp > ap else (
+                                "away" if ap > hp else "tie")
+                        rec["sim_leader"] = sim_leader
+                        if g_leader == sim_leader:
+                            agree += 1
+                            rec["parity"] = "agree-leader"
+                        else:
+                            disagree += 1
+                            rec["parity"] = "disagree"
                 else:
                     err = [
                         l for l in proc.stderr.strip().splitlines()
