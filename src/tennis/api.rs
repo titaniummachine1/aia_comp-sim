@@ -194,8 +194,8 @@ pub fn build_team_api(world: &super::world::TennisWorld, side: super::court::Sid
     setf(&mut api, "Opponent Swing Charge Pct", world.charge_pct(opponent));
     setf(&mut api, "Self Stamina Pct", 1.0);
     setf(&mut api, "Opponent Stamina Pct", 1.0);
-    setf(&mut api, "Deuce Fatigue", 0.0);
-    setf(&mut api, "Rally Fatigue", 0.0);
+    setf(&mut api, "Deuce Fatigue", world.deuce_fatigue() as f32);
+    setf(&mut api, "Rally Fatigue", world.rally_fatigue() as f32);
     setf(&mut api, "Court Width", TENNIS_COURT_WIDTH);
     setf(&mut api, "Court Depth", TENNIS_COURT_DEPTH);
     setf(&mut api, "Net Height", TENNIS_NET_HEIGHT);
@@ -282,3 +282,37 @@ use super::params::{
     COURT_LENGTH as TENNIS_COURT_DEPTH, COURT_SINGLES_WIDTH as TENNIS_COURT_WIDTH,
     NET_HEIGHT as TENNIS_NET_HEIGHT,
 };
+
+#[cfg(test)]
+mod fatigue_sensor_tests {
+    use super::super::court::Side;
+    use super::super::world::TennisWorld;
+    use super::*;
+
+    #[test]
+    fn fatigue_sensors_report_world_state() {
+        let mut world = TennisWorld::new(7);
+        world.rally_hits = 24;
+        world.score.points = [4, 5];
+        let api = build_team_api(&world, Side::Home);
+        let rally = api.get_float_id(float_index("Rally Fatigue").unwrap()).unwrap();
+        let deuce = api.get_float_id(float_index("Deuce Fatigue").unwrap()).unwrap();
+        assert_eq!(rally, 13.0);
+        assert_eq!(deuce, 1.0);
+        let active = world.active_fatigue();
+        assert_eq!(active, 14);
+
+        let mut fresh = TennisWorld::new(7);
+        assert_eq!(fresh.rally_hits, 0);
+        fresh.score.points = [1, 2];
+        let api = build_team_api(&fresh, Side::Away);
+        assert_eq!(
+            api.get_float_id(float_index("Rally Fatigue").unwrap()).unwrap(),
+            0.0
+        );
+        assert_eq!(
+            api.get_float_id(float_index("Deuce Fatigue").unwrap()).unwrap(),
+            0.0
+        );
+    }
+}

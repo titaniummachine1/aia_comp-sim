@@ -332,12 +332,7 @@ impl TennisWorld {
         let shot = resolve_shot_type(cmd.shot_type, &mut self.vm_rng[Self::idx(side)]);
         // --- Anti-stalemate fatigue (recovered v0.12 formulas) ---
         self.rally_hits += 1;
-        let extra_deuce: i32 = if self.score.points[0] >= 3 && self.score.points[1] >= 3 {
-            (self.score.points[0] + self.score.points[1]).wrapping_sub(6) as i32
-        } else {
-            0
-        };
-        let active = super::params::fatigue_points(self.rally_hits, extra_deuce as i32);
+        let active = super::params::fatigue_points(self.rally_hits, self.extra_deuce());
         let q_fatigued = super::params::fatigued_charge(q, active);
         let mut target = if cmd.move_or_aim == Vec2::ZERO {
             if serving_this_contact {
@@ -600,14 +595,28 @@ impl TennisWorld {
             .unwrap_or(-1.0)
     }
 
-    /// Active fatigue points for the next strike (sensors + tests).
-    pub fn active_fatigue(&self) -> i32 {
-        let extra_deuce = if self.score.points[0] >= 3 && self.score.points[1] >= 3 {
-            self.score.points[0] + self.score.points[1] - 6
+    /// Extra deuce points beyond 3/3 (fatigue deuce component input).
+    pub fn extra_deuce(&self) -> i32 {
+        if self.score.points[0] >= 3 && self.score.points[1] >= 3 {
+            (self.score.points[0] + self.score.points[1] - 6) as i32
         } else {
             0
-        };
-        super::params::fatigue_points(self.rally_hits, extra_deuce as i32)
+        }
+    }
+
+    /// Active fatigue points for the next strike (sensors + tests).
+    pub fn active_fatigue(&self) -> i32 {
+        super::params::fatigue_points(self.rally_hits, self.extra_deuce())
+    }
+
+    /// Rally-side fatigue component (for the `Rally Fatigue` sensor).
+    pub fn rally_fatigue(&self) -> i32 {
+        super::params::rally_fatigue_points(self.rally_hits)
+    }
+
+    /// Deuce-side fatigue component (for the `Deuce Fatigue` sensor).
+    pub fn deuce_fatigue(&self) -> i32 {
+        super::params::deuce_fatigue_points(self.extra_deuce())
     }
 
     pub fn is_charging(&self, side: Side) -> bool {

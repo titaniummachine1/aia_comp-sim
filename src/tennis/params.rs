@@ -226,3 +226,40 @@ mod measured_constants_tests {
         assert_eq!(SERVE_CLOCK, 15.0);
     }
 }
+
+#[cfg(test)]
+mod fatigue_tests {
+    use super::*;
+
+    #[test]
+    fn rally_component_grace_then_linear() {
+        assert_eq!(rally_fatigue_points(0), 0);
+        assert_eq!(rally_fatigue_points(11), 0);
+        assert_eq!(rally_fatigue_points(12), 1);
+        assert_eq!(rally_fatigue_points(24), 13);
+    }
+
+    #[test]
+    fn deuce_component_grace_then_linear() {
+        assert_eq!(deuce_fatigue_points(0), 0);
+        assert_eq!(deuce_fatigue_points(2), 0);
+        assert_eq!(deuce_fatigue_points(3), 1);
+        assert_eq!(deuce_fatigue_points(6), 4);
+    }
+
+    #[test]
+    fn active_points_sum_components() {
+        assert_eq!(fatigue_points(0, 0), 0);
+        assert_eq!(fatigue_points(12, 3), 2);
+        assert_eq!(fatigue_points(24, 6), 17);
+    }
+
+    #[test]
+    fn charge_multiplier_floors_at_55_pct() {
+        assert!((fatigued_charge(0.8, 0) - 0.8).abs() < 1e-6);
+        assert!((fatigued_charge(1.0, 1) as f64 - 0.975).abs() < 1e-6);
+        assert_eq!(fatigued_charge(1.0, 18), FATIGUE_POWER_FLOOR);
+        assert!((fatigued_charge(0.5, 18) as f64 - 0.5 * 0.55).abs() < 1e-6);
+        assert!((fatigued_charge(0.3, 3) as f64 - 0.2775).abs() < 1e-6);
+    }
+}
