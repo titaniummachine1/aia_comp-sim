@@ -52,77 +52,58 @@ against each other the results must be the same as in the game."**
 - Sim tournament (82 bots vs titanium54, sim-side): **83 results, 0
   failures** (`e99a892`).
 
-## 4. In flight RIGHT NOW (2026-09-10 evening)
+## 4. In flight RIGHT NOW (2026-09-10 late evening)
 
-**4-way parallel game tournament, points=8, running via scheduled tasks
-`aia_tour_w1..w4`:**
-- 83 bots sharded by global sorted-list index `% 4`; seeds = 171000 + global
-  index (serial-run-compatible; `run_sim_tournament_pairs.py` replays
-  whatever seeds the rows carry).
-- Per-shard results: `modhost\game_tournament_results_w1..w4.jsonl`
-  (rows carry UTC `match_started`/`match_ended` + `point_winners`).
-- Logs: `modhost\tour_p8_w{k}.log/.err.log`; RAM: `ram_watch.csv`.
-- Legacy serial artifacts: `game_tournament_results_points4.jsonl.bak`
-  (points=4 era, no winner log — kept for reference only).
+**A. Parallel game tournament (status: 70/83 rows recorded — running).**
+4-way parallel, points=8, scheduled tasks `aia_tour_w1..w4`:
+- Rows: `modhost\game_tournament_results_w1..w4.jsonl` (17/14/19/20)
+- Logs: `modhost\tour_p8_w{k}.log`; RAM: `ram_watch.csv`
+- When done: merge rows (dedupe away+seed) → `python scripts\run_sim_tournament_pairs.py titanium54` (replays 8-point matches, exact attribution via `match_result()` walking point winners) → `python scripts\score_parity.py` → EXACT outcome parity %.
+- Sim bin now emits `point_winners[]` (delta-based, reset-safe) and scoring compares winner SEQUENCES first, leader fallback (`3c37ed9`).
+- Legacy serial artifacts: `game_tournament_results_points4.jsonl.bak`.
 
-**When it finishes:**
-1. Merge shard rows (dedupe by away+seed).
-2. `python scripts\run_sim_tournament_pairs.py titanium54` (replays 8-point
-   matches, exact attribution via `match_result()` walking point winners).
-3. `python scripts\score_parity.py` → EXACT outcome parity %.
+**B. SERVE PARITY BLOCKER (diagnosed — fix is the top simulator task).**
+Sim matches are decided entirely by double faults: even titanium54 vs
+stock = `faults:[8,0], double_faults:[4,0]` — 0 rallies. Traced serve:
+strike at toss apex fires **backward/down** (`vel [-6.6,-18.2]`) —
+`on_swing_release` uses the LIVE `cmd.move_or_aim` as serve aim, but the
+bot's Vector31 at that tick is its movement/stance output. Game
+semantics: `TennisController` has ONE `Vector31` = "move-to / on-hit aim"
+(phase-dependent), and the player separately holds
+`<ServeAimHint>k__BackingField` + `HasServeAimHint` (captured: home aim
+(13.75,-4.5) = legal box, while moveDestination (-14.99,-10.97) = stance).
+Hypothesis: the game latches the serve aim from the graph output at serve
+announcement; the live Vector31 during Toss is NOT the strike aim.
+Fix plan: (a) pin the ServeAimHint lifecycle from a live capture (extend
+the event probe to poll player fields across serve transitions);
+(b) sim: latch serve aim at ServeSetup entry (validated into the legal
+box), strike uses the latch, fallback `legal_serve_target`;
+(c) verify: titanium54 vs stock must produce a real rally point;
+(d) rerun the sequence spot-check for real parity numbers.
 
-## 5. Done this session (so nobody redoes it)
+## 6. Open work queue (SIMULATOR session — top-down)
 
-- Fatigue wired end-to-end (formulas + world + sensors + pinned tests).
-- Per-point winner logging in the parity probe (both exe variants rebuilt;
-  natural build recipe reconstructed: `-DV014_NATURAL_TRACE`).
-- Tournament driver: sharding, process-exit wait (fixes exe-swap
-  PermissionError race), per-instance env paths, mtime-filtered copy2
-  timeplot sweep, UTC match windows.
-- **Timeplot export mystery closed**: two triggers — the panel's Export
-  JSON button (instant write) AND graceful-quit flush when the panel is
-  visible (that's why unattended runs now produce files). Panel visibility
-  persists across sessions. Plots are flowing automatically in this run.
-- Scoring pipeline exactness (`e409ec9`); sim tournament rerun (`e99a892`).
-- `docs/RE_PLAYBOOK.md` written (cross-game methodology).
-
-## 6. Open work queue (after parity % lands)
-
-0. **SERVE PARITY BLOCKER (diagnosed 2026-09-10 late, fix next session).**
-   Sim matches are decided entirely by double faults: even titanium54 vs
-   stock = `faults:[8,0], double_faults:[4,0]` — 0 rallies. Traced serve:
-   strike at toss apex fires **backward/down** (`vel [-6.6,-18.2]`) —
-   `on_swing_release` uses the LIVE `cmd.move_or_aim` as serve aim, but the
-   bot's Vector31 at that tick is its movement/stance output. Game
-   semantics: `TennisController` has ONE `Vector31` = "move-to / on-hit
-   aim" (phase-dependent), and the player separately holds
-   `<ServeAimHint>k__BackingField` + `HasServeAimHint` (captured:
-   home aim (13.75,-4.5) = legal box, while moveDestination (-14.99,-10.97)
-   = stance). Hypothesis: the game latches the serve aim from the graph
-   output at serve announcement (or uses ServeAimHint), and the live
-   Vector31 during Toss is NOT the strike aim. Fix plan:
-   (a) pin the ServeAimHint lifecycle from a live capture (extend the
-   event probe to poll player fields across serve transitions —
-   `mine_serve.py` in %TEMP% found the transitions, per-tick player fields
-   need a capture-side addition);
-   (b) sim: latch serve aim at ServeSetup entry (validated into the legal
-   box), strike uses the latch, fallback `legal_serve_target`;
-   (c) verify: titanium54 vs stock must produce a real rally point;
-   (d) rerun the 10-pair sequence spot-check for real parity numbers.
-1. **Sim-vs-game channel diff** using auto-exported timeplots
+1. **Serve blocker (§4B) — the #1 task.** Fix, then verify:
+   titanium54 vs stock must rally; rerun the 10-pair sequence spot-check.
+2. **Finish the parity measurement** (§4A): merge shards →
+   `run_sim_tournament_pairs.py titanium54` → `score_parity.py` → post %.
+3. **Sim-vs-game channel diff** using auto-exported timeplots
    (`modhost\parse_timeplots.py`) — first real per-tick ground truth test.
-2. **Remote export API** (button-free): enumerate the TimePlot classes'
+4. **Remote export API** (button-free): enumerate the TimePlot classes'
    methods via the probe's class dump (`Gates\TimePlot.cs` etc. — names
    found in global-metadata.dat strings), wire an `export` parity_cmd.
    Currently optional (quit-flush works) but is the robust end state.
-3. `T_latch_x` SetVariable/GetVariable accumulation stuck at 0.0 in sim —
-   needs a minimal unit test (RawGraph → RuntimeBrain → settle → var check).
-4. Slice crossed-net **+0.05 s** fit term in the solver.
-5. Getter-items capture (failed twice) → sensor label ABI (35/51/15/5 v0.14
+5. Slice crossed-net **+0.05 s** fit term in the solver.
+6. Getter-items capture (failed twice) → sensor label ABI (35/51/15/5 v0.14
    tables) + `Ball Incoming`-false-on-first-bounce quirk verification.
-6. Sim tournament rerun for the 49 locked-out bots is MOOT (this run covers
-   all 83); but if a shard dies, rerun it — resumable per shard file.
 7. Bevy non-headless viewer (QOL, user-approved deferral).
+
+## 6b. COMPILER — separate session/repo (do NOT mix with simulator work)
+
+The graph compiler lives in its OWN repo: `C:\gitProjects\aia_graphc`
+(git, root commit `1008c97`). Its handoff is `aia_graphc\README.md` +
+`aia_graphc\PROGRESS.md`. The sim repo's only tie-in is the CI test
+`runtime_brain::tests::graphc_poc_demo_replays` (replays a compiled bot).
 
 ## 7. Key commands
 
