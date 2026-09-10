@@ -121,6 +121,8 @@ pub struct TennisWorld {
     /// Per-point rerolled random aim target (`Random Aim Target` sensor).
     random_aim: Vec3,
     pub end: Option<EndReason>,
+    /// Shots played in the current rally (both sides) — drives fatigue.
+    pub rally_hits: i32,
 }
 
 impl TennisWorld {
@@ -152,6 +154,7 @@ impl TennisWorld {
             last_was_ace: false,
             random_aim: Vec3::ZERO,
             end: None,
+            rally_hits: 0,
         };
         w.setup_serve();
         w
@@ -327,7 +330,16 @@ impl TennisWorld {
         }
         let serving_this_contact = self.phase == Phase::Toss && self.score.server() == side;
         let shot = resolve_shot_type(cmd.shot_type, &mut self.vm_rng[Self::idx(side)]);
-        let target = if cmd.move_or_aim == Vec2::ZERO {
+        // --- Anti-stalemate fatigue (recovered v0.12 formulas) ---
+        self.rally_hits += 1;
+        let extra_deuce: i32 = if self.score.points[0] >= 3 && self.score.points[1] >= 3 {
+            (self.score.points[0] + self.score.points[1]).wrapping_sub(6) as i32
+        } else {
+            0
+        };
+        let active = super::params::fatigue_points(self.rally_hits, extra_deuce as i32);
+        let q_fatigued = super::params::fatigued_charge(q, active);
+        let mut target = if cmd.move_or_aim == Vec2::ZERO {
             if serving_this_contact {
                 court::legal_serve_target(self.score.receiver(), self.score.ad_court())
             } else {
@@ -336,9 +348,21 @@ impl TennisWorld {
         } else {
             cmd.move_or_aim
         };
+        // Aim scatter: two Unity RNG draws (lateral, then depth) at active
+        // fatigue, scaled by the recovered rates and court size.
+        if active > 0 {
+            let lateral = self.unity.range(-1.0, 1.0)
+                * (FATIGUE_LATERAL * COURT_SINGLES_WIDTH * active as f32);
+            let longitudinal = self.unity.range(-1.0, 1.0)
+                * (FATIGUE_DEPTH * COURT_LENGTH * active as f32);
+            let attack = Vec2::new(-side.sign(), 0.0); // toward the opponent
+            let right = Vec2::new(0.0, -attack.x); // cross((0,1,0), attack).xz
+            target.x += right.x * lateral + attack.x * longitudinal;
+            target.y += right.y * lateral + attack.y * longitudinal;
+        }
         let from = self.ball.pos;
         let target3 = Vec3::new(target.x, BOUNCE_FLOOR_Y, target.y);
-        let vel = solve_shot(from, target3, shot.game_arg(), q, &self.flight);
+        let vel = solve_shot(from, target3, shot.game_arg(), q_fatigued, &self.flight);
         self.ball = BallState::new(from, vel, shot.game_arg(), q);
         self.players[i].last_aim = target;
         self.last_shot[Self::idx(side)] = Some(shot);
@@ -364,6 +388,7 @@ impl TennisWorld {
         self.serve_taped = false;
         self.serve_bounced = false;
         self.last_was_ace = false;
+        self.rally_hits = 0;
         self.ball = BallState::new(
             Vec3::new(
                 self.players[Self::idx(server)].pos.x,
@@ -573,6 +598,16 @@ impl TennisWorld {
         self.last_shot[Self::idx(side)]
             .map(|s| s as usize as f32)
             .unwrap_or(-1.0)
+    }
+
+    /// Active fatigue points for the next strike (sensors + tests).
+    pub fn active_fatigue(&self) -> i32 {
+        let extra_deuce = if self.score.points[0] >= 3 && self.score.points[1] >= 3 {
+            self.score.points[0] + self.score.points[1] - 6
+        } else {
+            0
+        };
+        super::params::fatigue_points(self.rally_hits, extra_deuce as i32)
     }
 
     pub fn is_charging(&self, side: Side) -> bool {

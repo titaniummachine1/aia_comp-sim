@@ -102,6 +102,48 @@ pub const CURVE_BASE_SOFT_SHOTS: f32 = 5.2;
 pub const CURVE_DECAY_CURVE_SHOTS: f32 = 0.75;
 pub const CURVE_DECAY_OTHER: f32 = 2.4;
 
+// --- Fatigue (v0.12 model constants; the anti-stalemate mechanism) ---
+pub const FATIGUE_LATERAL: f32 = 0.03;
+pub const FATIGUE_DEPTH: f32 = 0.012;
+pub const FATIGUE_POWER_LOSS: f32 = 0.025;
+pub const FATIGUE_RALLY_GRACE: i32 = 12;
+pub const FATIGUE_DEUCE_GRACE: i32 = 2;
+/// Minimum charge multiplier under fatigue (power floors at 55%).
+pub const FATIGUE_POWER_FLOOR: f32 = 0.55;
+
+/// `reference_fatigue_points`: active fatigue points for this hit.
+pub fn fatigue_points(rally_shots: i32, extra_deuce: i32) -> i32 {
+    max0(extra_deuce - FATIGUE_DEUCE_GRACE.max(0))
+        + max0(rally_shots - FATIGUE_RALLY_GRACE.max(1) + 1)
+}
+
+/// Deuce-side component alone (for the `Deuce Fatigue` sensor).
+pub fn deuce_fatigue_points(extra_deuce: i32) -> i32 {
+    max0(extra_deuce - FATIGUE_DEUCE_GRACE.max(0))
+}
+
+/// Rally-side component alone (for the `Rally Fatigue` sensor).
+pub fn rally_fatigue_points(rally_shots: i32) -> i32 {
+    max0(rally_shots - FATIGUE_RALLY_GRACE.max(1) + 1)
+}
+
+fn max0(v: i32) -> i32 {
+    if v < 0 {
+        0
+    } else {
+        v
+    }
+}
+
+/// `reference_fatigue` power term: charge multiplier under `active` fatigue.
+pub fn fatigued_charge(q: f32, active: i32) -> f32 {
+    if active <= 0 {
+        q
+    } else {
+        (q * (1.0 - FATIGUE_POWER_LOSS * active as f32).max(FATIGUE_POWER_FLOOR)).clamp(0.0, 1.0)
+    }
+}
+
 // --- Clocks ---
 /// Between-point hold before the next serve setup (v0.12 point_pause).
 pub const POINT_PAUSE: f32 = 1.15;
