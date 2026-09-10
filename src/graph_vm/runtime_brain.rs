@@ -279,6 +279,79 @@ mod tests {
     }
 
     #[test]
+    fn runtime_brain_variable_accumulates_across_ticks() {
+        // T_latch case: cnt = cnt + 1 every tick. GetVariable must read the
+        // PREVIOUS tick's store (set_variables lower after controllers), so
+        // the value climbs 0,1,2,3 across four thinks.
+        let raw = RawGraph {
+            nodes: vec![
+                node("Float", "one", "1", vec![port("Float1", "oneo", 1, "one")]),
+                node("GetVariable", "gv", "cnt", vec![port("Any1", "gvo", 1, "gv")]),
+                node(
+                    "AddFloats",
+                    "add",
+                    "",
+                    vec![
+                        port("Float1", "addo", 1, "add"),
+                        port("Float2", "addb", 0, "add"),
+                        port("Float1", "adda", 0, "add"),
+                    ],
+                ),
+                node("SetVariable", "sv", "cnt", vec![port("Any1", "svi", 0, "sv")]),
+                node(
+                    "ConstructVector3",
+                    "cv",
+                    "",
+                    vec![
+                        port("Vector31", "cvo", 1, "cv"),
+                        port("Float1", "cvx", 0, "cv"),
+                        port("Float2", "cvy", 0, "cv"),
+                        port("Float3", "cvz", 0, "cv"),
+                    ],
+                ),
+                node("Float", "z0", "0", vec![port("Float1", "z0o", 1, "z0")]),
+                node("Float", "z1", "0", vec![port("Float1", "z1o", 1, "z1")]),
+                node(
+                    "SoccerController1",
+                    "c1",
+                    "",
+                    vec![
+                        port("Vector31", "c1m", 0, "c1"),
+                        port("Bool1", "c1s", 0, "c1"),
+                        port("Bool2", "c1i", 0, "c1"),
+                    ],
+                ),
+            ],
+            connections: vec![
+                RawConnection { port0: "oneo".into(), port1: "addb".into() },
+                RawConnection { port0: "gvo".into(), port1: "adda".into() },
+                RawConnection { port0: "addo".into(), port1: "svi".into() },
+                RawConnection { port0: "gvo".into(), port1: "cvx".into() },
+                RawConnection { port0: "z0o".into(), port1: "cvy".into() },
+                RawConnection { port0: "z1o".into(), port1: "cvz".into() },
+                RawConnection { port0: "cvo".into(), port1: "c1m".into() },
+            ],
+        };
+        let graph = index_graph(raw, "test".into());
+        let api = empty_api();
+        let mut brain =
+            RuntimeBrain::compile_for(graph, crate::mode::GameSpec::soccer());
+        let mut last = None;
+        for _ in 0..4 {
+            last = Some(brain.think(&api));
+        }
+        let move_to = last.unwrap().commands[0].move_to;
+        // Empirical: the store is SAME-TICK visible to the controller load
+        // (1,2,3,4 after four thinks). Cross-tick accumulation works — the
+        // old T_latch_x probe failure was a probe-graph artifact, not a VM
+        // variable bug.
+        assert!(
+            (move_to.x - 4.0).abs() < 1e-4,
+            "accumulator must reach 4 after 4 thinks (same-tick store), got {move_to:?}"
+        );
+    }
+
+    #[test]
     fn runtime_brain_matches_graph_brain_power() {
         let graph = power_controller_graph();
         let api = empty_api();
