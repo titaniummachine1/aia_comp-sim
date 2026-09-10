@@ -161,4 +161,51 @@ mod e2e_tests {
             "owned bots touch unimplemented node types: {unsound:?}"
         );
     }
+
+    /// graphc-compiled tennis demo (aia_graphc/examples/demo_tennis.py):
+    /// AST frontend -> description IR -> graphc-rs save. Must load under the
+    /// tennis spec, compile on the shared VM, and drive the world — the
+    /// TennisGet* sensors + TennisController path end to end.
+    #[test]
+    fn graphc_tennis_demo_replays() {
+        let path = std::path::PathBuf::from(
+            r"C:\gitProjects\aia_graphc\examples\graphc_demo_tennis.txt",
+        );
+        if !path.exists() {
+            eprintln!("skip: graphc tennis demo not compiled at {path:?}");
+            return;
+        }
+        let graph = load_graph(&path, Some(GameSpec::tennis_builder()))
+            .expect("load graphc tennis demo");
+        diagnostics::clear();
+        let mut home = Some(BrainSide {
+            brain: TennisBrain::compile(graph),
+            team: TeamId::Home,
+        });
+        let mut away: Option<BrainSide> = None;
+        let mut world = TennisWorld::new(20260907);
+        let mut commands_seen = 0;
+        let mut aims = Vec::new();
+        for _ in 0..1200 {
+            let cmd = home
+                .as_mut()
+                .map(|b| b.command_for(&world))
+                .unwrap_or(None);
+            if let Some(cmd) = cmd {
+                commands_seen += 1;
+                if aims.last() != Some(&cmd.move_or_aim) {
+                    aims.push(cmd.move_or_aim);
+                }
+            }
+            world.step([cmd, None]);
+        }
+        assert!(world.tick > 0, "world must step");
+        assert!(commands_seen > 0, "graphc tennis bot must produce commands");
+        println!("graphc tennis demo distinct aims: {aims:?}");
+        let unsound = diagnostics::unsound();
+        assert!(
+            unsound.is_empty(),
+            "graphc tennis bot touches unimplemented node types: {unsound:?}"
+        );
+    }
 }
