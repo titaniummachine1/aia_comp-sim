@@ -117,7 +117,7 @@ fn main() {
             use std::io::Write;
             let _ = writeln!(
                 w,
-                "{{\"tick\":{},\"phase\":\"{:?}\",\"ball\":[{:.4},{:.4},{:.4}],\"vel\":[{:.4},{:.4},{:.4}],\"bounces\":{},\"points\":[{},{}],\"games\":[{},{}],\"serve\":\"{:?}\"}}",
+                "{{\"tick\":{},\"phase\":\"{:?}\",\"ball\":[{:.4},{:.4},{:.4}],\"vel\":[{:.4},{:.4},{:.4}],\"bounces\":{},\"points\":[{},{}],\"games\":[{},{}],\"serve\":\"{:?}\",\"home\":[{:.3},{:.3}],\"away\":[{:.3},{:.3}],\"hs\":{},\"as\":{},\"hc\":{:.2},\"ac\":{:.2}}}",
                 world.tick,
                 world.phase,
                 world.ball.pos.x, world.ball.pos.y, world.ball.pos.z,
@@ -126,6 +126,10 @@ fn main() {
                 world.score.points[0], world.score.points[1],
                 world.score.games[0], world.score.games[1],
                 world.score.server(),
+                world.player(Side::Home).pos.x, world.player(Side::Home).pos.y,
+                world.player(Side::Away).pos.x, world.player(Side::Away).pos.y,
+                world.player(Side::Home).holding as u8, world.player(Side::Away).holding as u8,
+                world.player(Side::Home).charge, world.player(Side::Away).charge,
             );
         }
 

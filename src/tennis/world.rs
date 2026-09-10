@@ -305,6 +305,31 @@ impl TennisWorld {
                     p.charge = 0.0;
                 }
                 p.charge = (p.charge + FIXED_DT / CHARGE_WINDUP).min(1.0);
+                // Game auto-contact (`TennisAutoSwing`): a held swing strikes
+                // as soon as the ball is in the racket zone — hold duration
+                // sets the charge. (Brains that hold while in range and
+                // release when it exits could never connect otherwise.)
+                // Toss strike: server only, on descent (game: strike at the
+                // toss apex). Skipped when striking would be a foul
+                // (receiver pre-serve-bounce).
+                let tossing = self.phase == Phase::Toss && self.score.server() == side;
+                let foul_risk = self.serve_in_flight
+                    && !self.serve_bounced
+                    && self.score.receiver() == side;
+                let in_toss_window = !tossing || self.ball.vel.y < 0.0;
+                let striking_phase = self.phase == Phase::Rally || tossing;
+                if striking_phase
+                    && !foul_risk
+                    && in_toss_window
+                    && self.ball_in_strike_range(side)
+                {
+                    let q = p.charge;
+                    let cmd = cmds[i];
+                    p.holding = false;
+                    self.on_swing_release(i, cmd, q);
+                    p.recover = SWING_SECONDS + RECOVER_SECONDS;
+                    p.charge = 0.0;
+                }
             } else if p.holding {
                 // Release this tick â€” contact is resolved in the phase steps.
                 p.holding = false;
@@ -546,7 +571,9 @@ impl TennisWorld {
         self.serve_in_flight = false;
         self.serve_bounced = true;
         self.strike_lock = None;
-        self.ball.bounces = 0;
+        // Keep `ball.bounces` (now 1): the game's `Ball Has Bounced` sensor
+        // must read true after the serve bounce or receiver brains never
+        // return serve, and the next bounce resolves the point (bounces 2).
     }
 
     fn on_rally_bounce(&mut self) {
