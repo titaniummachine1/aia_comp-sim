@@ -128,6 +128,10 @@ pub struct TennisWorld {
     /// output, NOT the strike aim. Validated into the legal diagonal box at
     /// latch time; `None` → `legal_serve_target` fallback at the strike.
     serve_aim_latch: Option<Vec2>,
+    /// Side that struck the ball most recently; cleared on bounce. Blocks
+    /// double hits (a swing-pulse re-striking the just-served/just-hit ball
+    /// mid-flight — the game never produces those faults).
+    strike_lock: Option<Side>,
 }
 
 impl TennisWorld {
@@ -161,6 +165,7 @@ impl TennisWorld {
             end: None,
             rally_hits: 0,
             serve_aim_latch: None,
+            strike_lock: None,
         };
         w.setup_serve();
         w
@@ -320,6 +325,12 @@ impl TennisWorld {
         if !self.ball_in_strike_range(side) {
             return;
         }
+        // No double hits: the striker may not re-strike their own shot while
+        // it is still in flight (swing-pulse bots must not reset the ball —
+        // the game never produces these faults).
+        if self.strike_lock == Some(side) {
+            return;
+        }
         // Only the server may strike the tossed ball. A receiver swinging at
         // it fouls (v0.14 OnBallStruck pre-bounce receiver → server point).
         if self.phase == Phase::Toss && self.score.server() != side {
@@ -335,12 +346,19 @@ impl TennisWorld {
             return;
         }
         let serving_this_contact = self.phase == Phase::Toss && self.score.server() == side;
+        self.do_strike(i, cmd, q, serving_this_contact);
+    }
+
+    /// Strike core: aim, fatigue scatter, launch. `serving` marks the toss
+    /// strike (serve-in-flight flags + phase → Rally).
+    fn do_strike(&mut self, i: usize, cmd: TennisCommand, q: f32, serving: bool) {
+        let side = if i == 0 { Side::Home } else { Side::Away };
         let shot = resolve_shot_type(cmd.shot_type, &mut self.vm_rng[Self::idx(side)]);
         // --- Anti-stalemate fatigue (recovered v0.12 formulas) ---
         self.rally_hits += 1;
         let active = super::params::fatigue_points(self.rally_hits, self.extra_deuce());
         let q_fatigued = super::params::fatigued_charge(q, active);
-        let mut target = if serving_this_contact {
+        let mut target = if serving {
             // Serve strike uses the ServeAimHint latched at ServeSetup
             // entry — the live Vector31 here is the stance/move output
             // (using it fires the serve backward into the server's own
@@ -371,10 +389,11 @@ impl TennisWorld {
         self.ball = BallState::new(from, vel, shot.game_arg(), q);
         self.players[i].last_aim = target;
         self.last_shot[Self::idx(side)] = Some(shot);
+        self.strike_lock = Some(side);
         if q >= 0.75 && matches!(shot, ShotType::Topspin | ShotType::Flat) {
             self.score.record_charged(side);
         }
-        if serving_this_contact {
+        if serving {
             self.serve_in_flight = true;
             self.serve_taped = false;
             self.serve_bounced = false;
@@ -397,6 +416,7 @@ impl TennisWorld {
         // The strike aim is latched fresh each ServeSetup phase (see
         // step_serve_setup) — clear any previous point's latch here.
         self.serve_aim_latch = None;
+        self.strike_lock = None;
         self.ball = BallState::new(
             Vec3::new(
                 self.players[Self::idx(server)].pos.x,
@@ -453,9 +473,23 @@ impl TennisWorld {
         self.phase_t = 0.0;
     }
 
-    fn step_toss(&mut self, _cmds: &[TennisCommand; 2]) {
+    fn step_toss(&mut self, cmds: &[TennisCommand; 2]) {
         let _ = self.flight.step(&mut self.ball, FIXED_DT, false);
         let server = self.score.server();
+        // Auto-strike the serve (game `TennisAutoSwing`): as the tossed ball
+        // descends into the racket zone the serve fires with the latched
+        // ServeAimHint, whatever the server brain's swing output — bots that
+        // hold (or never press) swing still serve, like in the game.
+        if self.ball.vel.y < 0.0 {
+            let i = Self::idx(server);
+            let racket = self.players[i].racket_center();
+            if self.ball.pos.distance(racket) <= STRIKE_RADIUS {
+                let q = self.players[i].charge;
+                let cmd = cmds[i];
+                self.do_strike(i, cmd, q, true);
+                return;
+            }
+        }
         // Recatch when the tossed ball falls back below hand height (v0.14).
         if self.ball.vel.y < 0.0 && self.ball.pos.y < PLAYER_GROUND_Y + 1.05 {
             // Never tossed in time: re-arm (serve clock policy).
@@ -511,12 +545,14 @@ impl TennisWorld {
         }
         self.serve_in_flight = false;
         self.serve_bounced = true;
+        self.strike_lock = None;
         self.ball.bounces = 0;
     }
 
     fn on_rally_bounce(&mut self) {
         // Second bounce on the same side kills the point: the side that did
         // NOT last strike wins. First bounce out of court: last striker loses.
+        self.strike_lock = None;
         let landing = Vec2::new(self.ball.pos.x, self.ball.pos.z);
         let striker = self.last_striker();
         let in_court = court::is_in_court_xz(landing.x, landing.y);
