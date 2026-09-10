@@ -40,53 +40,75 @@ against each other the results must be the same as in the game."**
 
 ## 3. Current numbers
 
-- lib tests: **159 green** (fatigue sensors wired + pinned tests, `d36455b`)
+- lib tests: **162 green** (`bf1b69f`+)
 - Shot-solver parity vs live 210-case matrix: **200/210 ≤0.25 m/s**
   (excluded 10 = fallback rows)
 - Landing parity vs NthLanding matrix: **8/10** (one ~0.55 m curve residual
   = predictor doesn't zero curve on bounce — open fit)
-- **Outcome parity: exact measurement in progress.** The noisy 71.9%
-  (23/32, `722f5db`) is superseded: probe now logs per-point winners
-  (`point_winners[]` in `parity_state.json`, smoke-tested: [0,0] for a 2-0
-  home match), scoring scripts rewritten (`e409ec9`).
+- **Outcome parity (exact, 2026-09-11): 25/78 = 32.1%** (24 agree-leader +
+  1 agree-seq, 53 disagree; no unknowns) — first exact measurement with
+  serves that actually land (`7e9245c`). Before the serve session the sim
+  was all double faults (no rallies at all). Remaining gap = rally aim
+  semantics (see §4C).
 - Sim tournament (82 bots vs titanium54, sim-side): **83 results, 0
   failures** (`e99a892`).
 
-## 4. In flight RIGHT NOW (2026-09-10 late evening)
+## 4. In flight RIGHT NOW (2026-09-11, after the serve session)
 
-**A. Parallel game tournament (status: 70/83 rows recorded — running).**
-4-way parallel, points=8, scheduled tasks `aia_tour_w1..w4`:
-- Rows: `modhost\game_tournament_results_w1..w4.jsonl` (17/14/19/20)
-- Logs: `modhost\tour_p8_w{k}.log`; RAM: `ram_watch.csv`
-- When done: merge rows (dedupe away+seed) → `python scripts\run_sim_tournament_pairs.py titanium54` (replays 8-point matches, exact attribution via `match_result()` walking point winners) → `python scripts\score_parity.py` → EXACT outcome parity %.
-- Sim bin now emits `point_winners[]` (delta-based, reset-safe) and scoring compares winner SEQUENCES first, leader fallback (`3c37ed9`).
-- Legacy serial artifacts: `game_tournament_results_points4.jsonl.bak`.
+**A. Game tournament: DONE, 82 unique rows (77 done+success).**
+4-way parallel run completed (`game_tournament_results_w1..w4.jsonl`),
+merged (dedupe home+away+seed, keep stateful rows) into
+`modhost\game_tournament_results.jsonl`. 5 pairings have NO state: the
+GAME itself wedges vs Pixel_Heart / sim_probe / controller (>55 min, score
+stalls) and titanium34 / ignore_ball31 needed >20 min (re-run with
+`--timeout 3300` in flight as tasks `aia_tour_fix2_w3/w4`, results
+`game_tournament_results_fix2_w*.jsonl` — re-merge + re-score when they
+land). Scoring excludes stateless rows automatically (`state.done` filter).
 
-**B. SERVE PARITY BLOCKER (diagnosed — fix is the top simulator task).**
-Sim matches are decided entirely by double faults: even titanium54 vs
-stock = `faults:[8,0], double_faults:[4,0]` — 0 rallies. Traced serve:
-strike at toss apex fires **backward/down** (`vel [-6.6,-18.2]`) —
-`on_swing_release` uses the LIVE `cmd.move_or_aim` as serve aim, but the
-bot's Vector31 at that tick is its movement/stance output. Game
-semantics: `TennisController` has ONE `Vector31` = "move-to / on-hit aim"
-(phase-dependent), and the player separately holds
-`<ServeAimHint>k__BackingField` + `HasServeAimHint` (captured: home aim
-(13.75,-4.5) = legal box, while moveDestination (-14.99,-10.97) = stance).
-Hypothesis: the game latches the serve aim from the graph output at serve
-announcement; the live Vector31 during Toss is NOT the strike aim.
-Fix plan: (a) pin the ServeAimHint lifecycle from a live capture (extend
-the event probe to poll player fields across serve transitions);
-(b) sim: latch serve aim at ServeSetup entry (validated into the legal
-box), strike uses the latch, fallback `legal_serve_target`;
-(c) verify: titanium54 vs stock must produce a real rally point;
-(d) rerun the sequence spot-check for real parity numbers.
+**B. SERVE PARITY — FIXED this session (4 commits, all verified).**
+1. `9b8af82` Serve aim latch (ServeAimHint model): strike aim latched at
+   ServeSetup entry, in-box candidates honored, else `legal_serve_target`.
+   The live Vector31 during Toss is the stance output — was the
+   all-double-fault blocker.
+2. `9796aab` Serve auto-strike (TennisAutoSwing): the toss serve fires on
+   descent into the racket zone with the latch, whatever the bot's swing
+   output (bots that hold/never press still serve). Plus double-hit
+   strike lock until bounce (swing-pulse bots no longer reset their own
+   serve in flight).
+3. `bf1b69f` General auto-contact: a held swing strikes as soon as the
+   ball is in the racket zone (charge = hold duration; toss on descent,
+   server only; skipped when striking would foul). "Release-on-range-exit"
+   brain patterns can never connect otherwise. Plus `Ball Has Bounced`
+   stays true after the serve bounce (bounce count no longer reset).
+4. `7e9245c` Rally aim latch: only opponent-court Vector31 outputs count
+   as strike aims; positioning/chase outputs (own half, ball position —
+   what brains emit while receiving) never overwrite the latch; deep
+   default fallback. Returns became real shots; mixed sequences.
+
+**C. TOP REMAINING PARITY BLOCKER — rally aim semantics (32.1% → ?).**
+Trace evidence (`--trace` on tennis_tournament, per-tick brain aims):
+titanium54's Vector31 during receive = its own position / the ball
+position (pure positioning). The sim's dud-return chain is fixed by the
+latch, but WHERE the game aims a return (and the default deep aim
+(13.75,-4.5) captured at serve time) is still un-pinned. Next moves:
+(a) extend the event probe to poll Vector31/ServeAimHint/moveDestination
+    across a RECEIVE transition in a live game (needs one free instance);
+(b) sweep the latch model variants in-sim against the 78-row game set
+    (default target candidates: deep corner (13.75,-4.5), center-of-back,
+    opponent position) and score each with score_parity.py;
+(c) auto-contact charge for never-holding bots is currently the bot's
+    charge (0 → 85% speed) — game truth unknown, sweep it too.
+Note: sim matches are now long (8 pts ≈ 1-8k ticks); the pairs replay
+takes ~5 min. `score_parity.py` chokes on a BOM — never empty
+sim_pairs_results.jsonl with PowerShell `Set-Content` (use python).
 
 ## 6. Open work queue (SIMULATOR session — top-down)
 
-1. **Serve blocker (§4B) — the #1 task.** Fix, then verify:
-   titanium54 vs stock must rally; rerun the 10-pair sequence spot-check.
-2. **Finish the parity measurement** (§4A): merge shards →
-   `run_sim_tournament_pairs.py titanium54` → `score_parity.py` → post %.
+1. **Rally aim semantics (§4C)** — the 32.1% → ? lever. Live receive
+   capture (probe) + latch-variant sweep vs the 78-row game set.
+2. **Re-merge + re-score** when `aia_tour_fix2_w4` lands (titanium34 +
+   ignore_ball31 rows; w3's three pairings wedge the game itself — treat
+   as permanent no-verdict).
 3. **Sim-vs-game channel diff** using auto-exported timeplots
    (`modhost\parse_timeplots.py`) — first real per-tick ground truth test.
 4. **Remote export API** (button-free): enumerate the TimePlot classes'
@@ -149,12 +171,15 @@ python scripts\score_parity.py
 
 ## 9. Suggested first five moves for the next session
 
-1. Read `RE_PLAYBOOK.md` §0/§5 + this file; check `ram_watch.csv` and
-   `tour_p8_w*.log` — is the tournament done?
-2. If done: merge shards → `run_sim_tournament_pairs.py titanium54` →
-   `score_parity.py` → post the exact parity %.
-3. If not: check per-shard resumes (`--shard k --shards 4 --results ...`
-   with env overrides), rerun only unfinished shards.
+1. Read `RE_PLAYBOOK.md` §0/§5 + this file; check
+   `game_tournament_results_fix2_w4.jsonl` — did titanium34 +
+   ignore_ball31 land with state?
+2. If yes: re-merge (`merge_tour_shards.py` equivalent incl. fix2 files,
+   keep stateful rows) → `run_sim_tournament_pairs.py titanium54` →
+   `score_parity.py` → updated exact %.
+3. Work §6.1: rally-aim latch variant sweep (cheap, in-sim, 78-row set)
+   while the probe capture for the live receive transition is prepared.
 4. Channel diff: sim probe values vs auto-exported timeplots, channel by
    channel (44 channels available).
-5. Work the open queue §6 top-down; commit after every landed item.
+5. Commit after every landed item; never empty sim_pairs_results.jsonl
+   via PowerShell (BOM — see §4A note).
