@@ -1,133 +1,109 @@
-# SESSION HANDOFF — aia_comp-sim tennis parity (2026-09-10)
+# SESSION HANDOFF — aia_comp-sim tennis parity (updated 2026-09-10, evening)
 
-**Read this + `docs/TENNIS_V014_PARITY_NOTES.md` first.** Everything below is
-verified against the repos on disk. Goal framing from the user, verbatim:
-**"We don't clone the game 1:1 — if we play any 2 AIs against each other the
-results must be the same as in the game."** (Viewer/editor = QOL only.)
+**Read this + `docs/TENNIS_V014_PARITY_NOTES.md`; generic method now lives in
+`docs/RE_PLAYBOOK.md` (read it first for anything new).** Goal framing from
+the user, verbatim: **"We don't clone the game 1:1 — if we play any 2 AIs
+against each other the results must be the same as in the game."**
+(Viewer/editor = QOL only; Bevy non-headless viewer deferred by user.)
 
 ## 1. Locations (canonical)
 
 | Thing | Path |
 |---|---|
-| **Rust sim repo** (git, GitHub `titaniummachine1/aia_comp-sim`) | `C:\gitProjects\aia_comp-sim` (standalone — user moved it out of AIA_tennis deliberately; do NOT move back) |
-| Capture tooling + modded game | `C:\gitProjects\AIA_tennis\modhost\` (v0.14 install in `modhost\v0.14\`) |
+| **Rust sim repo** (git, GitHub `titaniummachine1/aia_comp-sim`) | `C:\gitProjects\aia_comp-sim` (standalone — do NOT move back into AIA_tennis) |
+| Capture tooling + modded game | `C:\gitProjects\AIA_tennis\modhost\` (v0.14 install in `modhost\v0.14\`; parallel workers in `modhost\v0.14_w2..w4\`) |
 | Mined fixtures + replay tests | `aia_comp-sim\tests\fixtures\tennis-v014\` |
 | Deep game-knowledge doc | `aia_comp-sim\docs\TENNIS_V014_PARITY_NOTES.md` |
+| RE methodology doc | `aia_comp-sim\docs\RE_PLAYBOOK.md` |
 | Version/disclaimer doc | `aia_comp-sim\docs\GAME_VERSIONS.md` |
 | Bot saves (82) | `%USERPROFILE%\AppData\LocalLow\Unicorn One\AIComp\Saves\Tennis\` |
-| Probe build (w64devkit gcc) | `%TEMP%\opencode\w64devkit\bin\gcc.exe`; script `modhost\build_paritymod_event.ps1` (defines `-DV014_METADATA -DV014_EVENT_CAPTURE -DPARITYMOD`, link `-lkernel32 -lgcc`); natural exe backed up as `Aialanders-paritymod-natural.exe` |
+| Probe builds | `modhost\build_paritymod_event.ps1` (event); natural = same sources with `-DV014_METADATA -DV014_NATURAL_TRACE -DPARITYMOD` (no script yet — command in git history `89953cf` context); backups in `modhost\paritymod\` |
 
 ## 2. Golden rules (user-enforced)
 
 1. **Never trigger a Bevy/dep rebuild** — crate-only builds, no feature or
    profile flips, no folder renames. Background any long build with a log.
 2. **Mode-first VM**: no implicit soccer default. `Lowerer::compile(graph,
-   Option<GameSpec>)`; `compile_pure` for unit tests (mode-owned nodes are
-   hard errors); simulation requires explicit `GameSpec`
-   (`tennis_v014()` = latest default, `tennis_builder()` = v0.012 builder
-   order for all on-disk graphs). Mode gate: `src/mode.rs`.
-3. Do not redistribute game binaries (user handles the legacy-zip repo
-   themselves; I declined that task — don't revisit).
-4. Only kill `Aialanders.exe` processes whose path is inside
-   `modhost\v0.14\` (`modctl.game_pids_in_gamedir()` does this).
+   Option<GameSpec>)`; `compile_pure` for unit tests; simulation requires
+   explicit `GameSpec` (`tennis_v014()` = latest default,
+   `tennis_builder()` = v0.012 builder order for on-disk graphs).
+   Mode gate: `src/mode.rs`.
+3. Do not redistribute game binaries.
+4. Only kill `Aialanders.exe` processes whose path is inside a
+   `modhost\v0.14*` dir (`modctl.game_pids_in_gamedir()` — env-aware now).
+5. **Agent shells kill child processes** — long runs go through
+   **scheduled tasks** (`schtasks /Create /Run`, `/TR` max 261 chars →
+   use .cmd launcher files, see `modhost\worker_w*.cmd`).
+6. Game is **multi-instance**: up to 4 concurrent instances, one game dir
+   each (env `MODHOST_GAMEDIR`/`MODHOST_PARITY_EXE`); saves dir shared;
+   ~2 GB commit per instance — monitor free RAM (`modhost\ram_watch.csv`).
 
 ## 3. Current numbers
 
-- lib tests: **154 green** (as of handoff; fatigue WIP is compiling)
+- lib tests: **159 green** (fatigue sensors wired + pinned tests, `d36455b`)
 - Shot-solver parity vs live 210-case matrix: **200/210 ≤0.25 m/s**
-  (excluded 10 = fallback rows; direction comes from live LastHitter state)
+  (excluded 10 = fallback rows)
 - Landing parity vs NthLanding matrix: **8/10** (one ~0.55 m curve residual
   = predictor doesn't zero curve on bounce — open fit)
-- **Outcome parity vs game tournament: 71.9% (23/32)** — NOISY: game side
-  only recorded post-reset points snapshot; shut-out games can't be
-  attributed. To make it exact: probe rebuild must add `games` + per-point
-  winners to `parity_state.json`, then rerun matches with 8+ points, then
-  rerun `scripts\run_sim_tournament_pairs.py` + `scripts\score_parity.py`.
-- Game tournament: 81 recorded, 49 skipped on a file-lock race (resumable —
-  `game_tournament.py` skips bots already recorded; delete
-  `game_tournament_results.jsonl` rows or just rerun).
+- **Outcome parity: exact measurement in progress.** The noisy 71.9%
+  (23/32, `722f5db`) is superseded: probe now logs per-point winners
+  (`point_winners[]` in `parity_state.json`, smoke-tested: [0,0] for a 2-0
+  home match), scoring scripts rewritten (`e409ec9`).
+- Sim tournament (82 bots vs titanium54, sim-side): **83 results, 0
+  failures** (`e99a892`).
 
-## 4. In-flight / half-done (pick up here)
+## 4. In flight RIGHT NOW (2026-09-10 evening)
 
-1. **Fatigue WIP (compile OK, tests green, not committed, not finished):**
-   `src\tennis\params.rs` has the exact recovered formulas
-   (`fatigue_points`, `deuce_fatigue_points`, `rally_fatigue_points`,
-   `fatigued_charge`, constants 0.03/0.012/0.025, grace 12/2, floor 0.55).
-   `world.rs` applies them at strike: rally_hits counter, aim scatter via
-   two Unity RNG draws (lateral then depth; right = cross((0,1,0),attack)
-   → (0,0,∓1) on z; attack = ∓x sign), charge multiplied by
-   `max(0.55, 1−0.025·active)`.
-   **TODO**: wire sensors (`Rally Fatigue` = `rally_fatigue_points`,
-   `Deuce Fatigue` = `deuce_fatigue_points(extra)`; currently hardcoded 0.0
-   in `tennis/api.rs`), add pinned tests, commit. This is the
-   anti-stalemate mechanism the user explicitly wants honored.
-2. **Sim tournament rerun** (post node fixes: `RandomFloat`, `CrossProduct`,
-   `ConditionalSetString`, `RandomColor`, empty-Operation): background run
-   was started then aborted; old JSONL has stale rows — DELETE
-   `data\tennis\sim_tournament.jsonl` before rerunning
-   `scripts\run_sim_tournament.py titanium54 7 4`.
-3. **Game probe channel diff**: probe graph `sim_probe.txt` (built by
-   `scripts\build_interpreter_probe.py`) ran in-game twice but produced
-   **0 timeplot files** (see #6) — the sim-vs-game semantic diff is still
-   blocked on that. Sim-side values are in `probe_sim.json`.
-4. **`T_latch_x` stuck at 0.0 in sim** — SetVariable/GetVariable chain
-   (`probe_x = probe_x + 1`) doesn't accumulate. Real bug or real semantic
-   difference; needs a minimal unit test (hand-built RawGraph → RuntimeBrain
-   → settle ticks → var check).
-5. **Timeplot export mystery (SOLVED 2026-09-10, user at home):** the
-   export trigger is the **"Export JSON" button in the timeplot panel** —
-   a manual click writes `timeplot_<date>_<time>.json` into
-   `Saves\Tennis\Timeplots` IMMEDIATELY. No menu-return, no graceful
-   quit, no flush-on-exit involved. Automated runs produced 0 files
-   because nothing ever clicked the button. Captures archived in
-   `modhost\captures\timeplots-20260910\` (4 files, 44 channels, up to
-   2609 ticks; titanium54 vs aia3 seed 7). Format: JSON with **locale
-   decimal COMMAS** — a comma between digits = decimal point, comma+space
-   = array separator; parser `modhost\parse_timeplots.py` handles it
-   (`series[].name/color/x[]/y[]`, `x` = per-tick sim seconds at 0.019
-   steps = FIXED_DT, top-level `simTime`). Channels include
-   `v49_FatActive` — game-side fatigue ground truth for the fatigue
-   wiring. This unblocks §4.3: per-tick game truth for any channel a bot
-   plots. Remaining to wire: UI-automate the panel-open + Export click
-   (pyautogui toolkit ready) for tournament runs; diff sim probe vs game
-   timeplot channel-by-channel. NOTE (user report, unfixed): scoreboard
-   can show a stale point (0-15) on the menu right after the paritymod
-   launches, cleared once the match actually starts; game also
-   AUTO-RESTARTS a finished match after ~a minute if left alone (quit
-   via menu promptly, or the tournament flow must handle restarts).
-6. **49 locked-out game matches** — rerun `game_tournament.py` (resumable);
-   add a wait-for-process-exit loop before each launch (lock race caused
-   `PermissionError` on the exe swap).
-7. **Slice crossed-net +0.05 s term** — only slice rows at the crossed-net
-   profile sit above the tail; open fit in the solver.
-8. **Getter-items capture** failed both runs → sensor label ABI (35/51/15/5
-   v0.14 tables) + the `Ball Incoming`-turns-false-on-first-bounce quirk
-   (implemented, UNVERIFIED) remain to be pinned from a live capture.
+**4-way parallel game tournament, points=8, running via scheduled tasks
+`aia_tour_w1..w4`:**
+- 83 bots sharded by global sorted-list index `% 4`; seeds = 171000 + global
+  index (serial-run-compatible; `run_sim_tournament_pairs.py` replays
+  whatever seeds the rows carry).
+- Per-shard results: `modhost\game_tournament_results_w1..w4.jsonl`
+  (rows carry UTC `match_started`/`match_ended` + `point_winners`).
+- Logs: `modhost\tour_p8_w{k}.log/.err.log`; RAM: `ram_watch.csv`.
+- Legacy serial artifacts: `game_tournament_results_points4.jsonl.bak`
+  (points=4 era, no winner log — kept for reference only).
 
-## 5. Big recent discoveries (full list in the notes doc §5)
+**When it finishes:**
+1. Merge shard rows (dedupe by away+seed).
+2. `python scripts\run_sim_tournament_pairs.py titanium54` (replays 8-point
+   matches, exact attribution via `match_result()` walking point winners).
+3. `python scripts\score_parity.py` → EXACT outcome parity %.
 
-- **Raw `ComputeShotVelocity` is net-blind for ALL shots** (net-lip fixture,
-  aim 0.25 past the net, 210 cases). Net avoidance lives in the
-  Rebuild/Steer chain (steer re-predicts with tape-failing policy →
-  stretches/lofts). "Flat/topspin eats the net" = steer-chain FAILURE cases.
-- **Div/Mod must be IEEE** — the author confirmed n/0=+inf, −n/0=−inf,
-  0/0=nan; the v0.15 fix only sanitizes DebugDraw inputs to 0 (that bug =
-  the LeBlock black screen we reproduced). Both my interpreter AND the
-  const-fold pass had guards — FIXED (verify: `tests\graph_vm_div_probe.rs`).
-- **Fatigue = anti-stalemate**: `active = max(0,extra_deuce−2) +
-  max(0,rally_shots−11)`, extra_deuce = points≥3/≥3 ? sum−6 : 0; two Unity
-  RNG draws per fatigued hit; aim scatter ±(0.03·12·active) lateral,
-  ±(0.012·28·active) depth; charge × max(0.55, 1−0.025·active).
-- **Game re-serializes loaded graphs** on exit (aia3.txt rewritten 12:59).
-- **TimePlot** ports: String1=channel, Float1=value, sink-only; my VM
-  `OpCode::TimePlot` → `debug_draw::plot(name, v)`; `tennis_probe` bin
-  drains per tick → `probe_sim.json` (Python json accepts inf/NaN).
-- **Corpus stats** (`scripts\analyze_graphs.py` →
-  `data\tennis\graph_corpus_report.json`): 53 node types, 384 distinct edge
-  pairs, all 82 graphs contain feedback cycles, 336 type-mismatch edges,
-  45 empty Operation modifiers.
+## 5. Done this session (so nobody redoes it)
 
-## 6. Key commands
+- Fatigue wired end-to-end (formulas + world + sensors + pinned tests).
+- Per-point winner logging in the parity probe (both exe variants rebuilt;
+  natural build recipe reconstructed: `-DV014_NATURAL_TRACE`).
+- Tournament driver: sharding, process-exit wait (fixes exe-swap
+  PermissionError race), per-instance env paths, mtime-filtered copy2
+  timeplot sweep, UTC match windows.
+- **Timeplot export mystery closed**: two triggers — the panel's Export
+  JSON button (instant write) AND graceful-quit flush when the panel is
+  visible (that's why unattended runs now produce files). Panel visibility
+  persists across sessions. Plots are flowing automatically in this run.
+- Scoring pipeline exactness (`e409ec9`); sim tournament rerun (`e99a892`).
+- `docs/RE_PLAYBOOK.md` written (cross-game methodology).
+
+## 6. Open work queue (after parity % lands)
+
+1. **Sim-vs-game channel diff** using auto-exported timeplots
+   (`modhost\parse_timeplots.py`) — first real per-tick ground truth test.
+2. **Remote export API** (button-free): enumerate the TimePlot classes'
+   methods via the probe's class dump (`Gates\TimePlot.cs` etc. — names
+   found in global-metadata.dat strings), wire an `export` parity_cmd.
+   Currently optional (quit-flush works) but is the robust end state.
+3. `T_latch_x` SetVariable/GetVariable accumulation stuck at 0.0 in sim —
+   needs a minimal unit test (RawGraph → RuntimeBrain → settle → var check).
+4. Slice crossed-net **+0.05 s** fit term in the solver.
+5. Getter-items capture (failed twice) → sensor label ABI (35/51/15/5 v0.14
+   tables) + `Ball Incoming`-false-on-first-bounce quirk verification.
+6. Sim tournament rerun for the 49 locked-out bots is MOOT (this run covers
+   all 83); but if a shard dies, rerun it — resumable per shard file.
+7. Bevy non-headless viewer (QOL, user-approved deferral).
+
+## 7. Key commands
 
 ```
 # build/test (crate-only!)
@@ -135,48 +111,48 @@ cd C:\gitProjects\aia_comp-sim
 cargo test --lib
 cargo test --test tennis_v014_solver_parity -- --nocapture   # 200/210
 cargo test --test tennis_v014_landing_parity -- --nocapture  # 8/10
-cargo run --bin tennis_viewer -- --home titanium54 --away Zudan6 --seed 7
-cargo run --bin tennis_probe -- --ticks 300 --out probe_sim.json
 cargo run --bin tennis_tournament -- --home titanium54 --away aia3 --seed 7 --points 4
 
-# game mining / matches
+# game matches (single instance, manual)
 cd C:\gitProjects\AIA_tennis\modhost
-python capture_fixtures.py --home titanium54 --away aia3 --seed N   # fixture matrix
-python game_tournament.py --home titanium54 --points 8             # sweep (resumable)
 python modctl.py launch --home X --away Y --seed N --points P
-python modctl.py quit      # ExitProcess — skips timeplot flush!
-# graceful quit that preserves Unity teardown:
-(Get-Process Aialanders).CloseMainWindow()
+python modctl.py wait --timeout 900
+python modctl.py quit
 
-# UI automation (user-approved; visualize before clicking)
-python -c "import pyautogui, PIL; pyautogui.screenshot('screen.png')"
+# parallel tournament (running; see §4)
+schtasks /Run /TN aia_tour_w2   # etc.
+Get-Content tour_p8_w1.log -Tail 3
+
+# parity scoring after merge
+cd C:\gitProjects\aia_comp-sim
+python scripts\run_sim_tournament_pairs.py titanium54
+python scripts\score_parity.py
 ```
 
-## 7. Pitfalls hit this session (don't repeat)
+## 8. Pitfalls hit this session (don't repeat)
 
 - PowerShell `python -c "..."` breaks on nested quotes — write scripts to
-  `%TEMP%\opencode\*.py` and run them.
-- `git add -A src` after manual edits mixes unrelated fixes — stage
-  deliberately, one logical commit per fix.
-- The game holds `probe-startup.jsonl` while running — stop processes
-  before deleting.
-- Probe runs with raw inf channels can hang the v0.14 game (user's system
-  felt crashed) — probe graph now CLAMPS plotted values to ±1e30.
-- Settings files written by PowerShell get a UTF-8 BOM — the game may
-  reject them; strip BOM (fixed already; keep `python -c` writes as
-  `newline=''`, encoding utf-8 without BOM).
-- `emit_rust_fixtures.py` RUST path resolves relative to modhost → points
-  to `C:\gitProjects\aia_comp-sim` (fixed + asserted — don't revert).
+  `%TEMP%\opencode\*.py` and run them. `${k}` needed inside -f strings.
+- The opencode shell tool kills the whole process tree on command exit —
+  NEVER launch long runs as its children; scheduled tasks only.
+- `schtasks /TR` caps at 261 chars → .cmd launcher files.
+- `git add -A` mixes unrelated fixes — stage deliberately.
+- Game holds trace/log files while running — stop processes first.
+- Probe with raw inf channels can hang the game — clamp to ±1e30.
+- Settings files need UTF-8 without BOM.
+- `emit_rust_fixtures.py` RUST path fixed (resolves to
+  `C:\gitProjects\aia_comp-sim`) — asserted, don't revert.
+- First serial-run sweep misattributed stale timeplots to Adam — fixed by
+  mtime filtering + UTC windows; Adam folder contents are suspect.
 
-## 8. Suggested first five moves for the next session
+## 9. Suggested first five moves for the next session
 
-1. Read `docs/TENNIS_V014_PARITY_NOTES.md` §4/§5, then this file.
-2. `cargo test --lib` (must be green) → commit the fatigue WIP with sensor
-   wiring + tests.
-3. Rerun sim tournament (clean JSONL first) → confirm 82/82 load post-fixes.
-4. Probe rebuild: add `games` + per-point winners to
-   `parity_write_snapshot` (natural exe; read score class fields like the
-   clamp fixtures do), rerun `game_tournament.py --points 8`, rerun
-   `run_sim_tournament_pairs.py` + `score_parity.py` → exact parity %.
-5. When the user is home: the manual timeplot-panel test (§4.5), then wire
-   the export trigger into `game_tournament.py`.
+1. Read `RE_PLAYBOOK.md` §0/§5 + this file; check `ram_watch.csv` and
+   `tour_p8_w*.log` — is the tournament done?
+2. If done: merge shards → `run_sim_tournament_pairs.py titanium54` →
+   `score_parity.py` → post the exact parity %.
+3. If not: check per-shard resumes (`--shard k --shards 4 --results ...`
+   with env overrides), rerun only unfinished shards.
+4. Channel diff: sim probe values vs auto-exported timeplots, channel by
+   channel (44 channels available).
+5. Work the open queue §6 top-down; commit after every landed item.
