@@ -352,6 +352,67 @@ mod tests {
     }
 
     #[test]
+    fn graphc_poc_demo_replays() {
+        // Compiled by aia_graphc/examples/demo_soccer.py (standalone compiler
+        // repo): counter latch + packed-array dynamic read + select flag.
+        let path = std::path::PathBuf::from(
+            r"C:\gitProjects\aia_graphc\examples\graphc_demo_soccer.txt",
+        );
+        if !path.exists() {
+            eprintln!("skip: graphc demo not compiled at {path:?}");
+            return;
+        }
+        let graph = crate::graph::load_graph(
+            &path,
+            Some(crate::mode::GameSpec::soccer()),
+        )
+        .expect("load graphc demo");
+        let mut brain = RuntimeBrain::compile_for(
+            graph.clone(),
+            crate::mode::GameSpec::soccer(),
+        )
+        .with_trace();
+        println!(
+            "graphc demo: set_variables={:?} var_count_from_loader={}",
+            graph.set_variables.len(),
+            brain.program.variable_count
+        );
+        let api = empty_api();
+        let mut seen = Vec::new();
+        for tick in 0..3 {
+            let out = brain.think(&api);
+            seen.push(out.commands[0].move_to);
+            if let Some(tr) = brain.take_trace() {
+                let commits: Vec<String> = tr
+                    .passes
+                    .iter()
+                    .flatten()
+                    .map(|c| format!("{}={:?}", c.name, c.value))
+                    .collect();
+                println!("tick {tick}: var_commits={commits:?}");
+                brain = brain.with_trace();
+            }
+        }
+        println!("graphc demo move_to per tick: {seen:?}");
+        // Counter latch: y climbs 2,3,4... (same-tick store visibility: the
+        // first think reads 0, stores 1, and later loads see it immediately).
+        for (i, m) in seen.iter().enumerate() {
+            assert!((m.y - (i as f32 + 2.0)).abs() < 1e-4, "y {i}: {m:?}");
+        }
+        // Dynamic packed-array read cycles 7.5/8.5/9.5 with Mod(cnt,3),
+        // plus the select flag (+2 while cnt <= 12).
+        let expect = [7.5f32, 8.5, 9.5];
+        for (i, m) in seen.iter().enumerate() {
+            let want = expect[(i + 1) % 3] + 2.0;
+            assert!(
+                (m.x - want).abs() < 1e-4,
+                "array decode tick {i}: got {} want {want}",
+                m.x
+            );
+        }
+    }
+
+    #[test]
     fn runtime_brain_matches_graph_brain_power() {
         let graph = power_controller_graph();
         let api = empty_api();

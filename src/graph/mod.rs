@@ -14,7 +14,8 @@ mod operation_probe_test;
 
 pub use eval::GraphBrain;
 pub use load::{
-    index_graph, load_team_graph, RawConnection, RawGraph, RawNode, RawPort, TeamGraph,
+    index_graph, load_graph, load_team_graph, RawConnection, RawGraph, RawNode, RawPort,
+    TeamGraph,
 };
 pub use value::GraphValue;
 
