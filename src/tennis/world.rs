@@ -132,6 +132,15 @@ pub struct TennisWorld {
     /// double hits (a swing-pulse re-striking the just-served/just-hit ball
     /// mid-flight — the game never produces those faults).
     strike_lock: Option<Side>,
+    /// Raw command aims per side ([0]=Home, [1]=Away) — diagnostics for the
+    /// aim-semantics investigation (trace only).
+    pub last_cmd_aim: [Vec2; 2],
+    /// Latched rally strike aim per side. Only opponent-court outputs count
+    /// as shot aims: positioning/chase outputs (own half, ball position —
+    /// what brains emit while receiving) must not become strike targets, or
+    /// every return duds. Mirrors the game's latched on-hit aim (same
+    /// mechanism as the captured deep `ServeAimHint` at serve time).
+    rally_aim_latch: [Option<Vec2>; 2],
 }
 
 impl TennisWorld {
@@ -166,6 +175,8 @@ impl TennisWorld {
             rally_hits: 0,
             serve_aim_latch: None,
             strike_lock: None,
+            last_cmd_aim: [Vec2::ZERO; 2],
+            rally_aim_latch: [None; 2],
         };
         w.setup_serve();
         w
@@ -266,7 +277,17 @@ impl TennisWorld {
             commands[1].unwrap_or_else(|| self.stock_command(Side::Away)),
         ];
 
+        // Latch rally aims BEFORE step_players so a strike this tick uses
+        // this tick's opponent-court output.
+        for i in 0..2 {
+            let side = if i == 0 { Side::Home } else { Side::Away };
+            let aim = cmds[i].move_or_aim;
+            if aim.x * side.other().sign() > 0.0 {
+                self.rally_aim_latch[i] = Some(aim);
+            }
+        }
         self.step_players(&cmds);
+        self.last_cmd_aim = [cmds[0].move_or_aim, cmds[1].move_or_aim];
         match self.phase {
             Phase::ServeSetup => self.step_serve_setup(&cmds),
             Phase::Toss => self.step_toss(&cmds),
@@ -391,10 +412,11 @@ impl TennisWorld {
             self.serve_aim_latch.unwrap_or_else(|| {
                 court::legal_serve_target(self.score.receiver(), self.score.ad_court())
             })
-        } else if cmd.move_or_aim == Vec2::ZERO {
-            court::default_aim_target(side)
         } else {
-            cmd.move_or_aim
+            // Rally strike: latched opponent-court aim (positioning targets
+            // never overwrite it); deep default when never latched.
+            self.rally_aim_latch[Self::idx(side)]
+                .unwrap_or_else(|| court::default_aim_target(side))
         };
         // Aim scatter: two Unity RNG draws (lateral, then depth) at active
         // fatigue, scaled by the recovered rates and court size.
