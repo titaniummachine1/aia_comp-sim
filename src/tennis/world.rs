@@ -123,6 +123,11 @@ pub struct TennisWorld {
     pub end: Option<EndReason>,
     /// Shots played in the current rally (both sides) — drives fatigue.
     pub rally_hits: i32,
+    /// Serve aim latched at ServeSetup entry (v0.14 `ServeAimHint`
+    /// semantics): the live `Vector31` during Toss is the bot's stance/move
+    /// output, NOT the strike aim. Validated into the legal diagonal box at
+    /// latch time; `None` → `legal_serve_target` fallback at the strike.
+    serve_aim_latch: Option<Vec2>,
 }
 
 impl TennisWorld {
@@ -155,6 +160,7 @@ impl TennisWorld {
             random_aim: Vec3::ZERO,
             end: None,
             rally_hits: 0,
+            serve_aim_latch: None,
         };
         w.setup_serve();
         w
@@ -334,12 +340,16 @@ impl TennisWorld {
         self.rally_hits += 1;
         let active = super::params::fatigue_points(self.rally_hits, self.extra_deuce());
         let q_fatigued = super::params::fatigued_charge(q, active);
-        let mut target = if cmd.move_or_aim == Vec2::ZERO {
-            if serving_this_contact {
+        let mut target = if serving_this_contact {
+            // Serve strike uses the ServeAimHint latched at ServeSetup
+            // entry — the live Vector31 here is the stance/move output
+            // (using it fires the serve backward into the server's own
+            // court: the all-double-fault blocker).
+            self.serve_aim_latch.unwrap_or_else(|| {
                 court::legal_serve_target(self.score.receiver(), self.score.ad_court())
-            } else {
-                court::default_aim_target(side)
-            }
+            })
+        } else if cmd.move_or_aim == Vec2::ZERO {
+            court::default_aim_target(side)
         } else {
             cmd.move_or_aim
         };
@@ -384,6 +394,9 @@ impl TennisWorld {
         self.serve_bounced = false;
         self.last_was_ace = false;
         self.rally_hits = 0;
+        // The strike aim is latched fresh each ServeSetup phase (see
+        // step_serve_setup) — clear any previous point's latch here.
+        self.serve_aim_latch = None;
         self.ball = BallState::new(
             Vec3::new(
                 self.players[Self::idx(server)].pos.x,
@@ -398,7 +411,25 @@ impl TennisWorld {
         self.phase_t = 0.0;
     }
 
-    fn step_serve_setup(&mut self, _cmds: &[TennisCommand; 2]) {
+    fn step_serve_setup(&mut self, cmds: &[TennisCommand; 2]) {
+        // Latch the serve aim at ServeSetup entry (v0.14 ServeAimHint
+        // lifecycle): a candidate inside the legal diagonal box is honored;
+        // anything else (stance targets, movement output) falls back to the
+        // box center so the strike always aims at a legal serve.
+        let server = self.score.server();
+        if self.serve_aim_latch.is_none() {
+            let receiver = self.score.receiver();
+            let ad = self.score.ad_court();
+            let candidate = cmds[Self::idx(server)].move_or_aim;
+            let latched = if candidate != Vec2::ZERO
+                && court::is_serve_in(receiver, ad, candidate.x, candidate.y)
+            {
+                candidate
+            } else {
+                court::legal_serve_target(receiver, ad)
+            };
+            self.serve_aim_latch = Some(latched);
+        }
         // Receiver must be settled (receiver_delay 0.6) before the toss.
         if self.phase_t >= 0.6 {
             self.toss();
@@ -432,7 +463,7 @@ impl TennisWorld {
             return;
         }
         // Ball hanging in the strike window: server may swing (handled by
-        // on_swing_release via the Toss phase). Serve clock timeout â†’ re-serve.
+        // on_swing_release via the Toss phase). Serve clock timeout → re-serve.
         if self.phase_t >= SERVE_CLOCK {
             let _ = server;
             self.setup_serve();
