@@ -1,0 +1,78 @@
+{"away":"Adam","seed":"171000","game":"away","sim":"away","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"Apex","seed":"171001","game":"home","sim":"home","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"Zudan6","seed":"171008","game":"away","sim":"away","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"bat","seed":"171012","game":"home","sim":"home","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"nqvxf22","seed":"171016","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"sim_titanium31","seed":"171024","game":"away","sim":"home","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"sim_v288alt","seed":"171028","game":"home","sim":"home","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"simop_v288","seed":"171032","game":"away","sim":"home","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium10","seed":"171036","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium14","seed":"171040","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium28alt","seed":"171044","game":"home","sim":"home","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium33","seed":"171048","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium36_1","seed":"171052","game":"away","sim":"tie","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium4","seed":"171056","game":"home","sim":"home","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium43","seed":"171060","game":"away","sim":"away","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium46_upstreamtest","seed":"171064","game":"away","sim":"away","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium5","seed":"171068","game":"home","sim":"tie","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium53","seed":"171072","game":"home","sim":"tie","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium8","seed":"171076","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"v1.5 BlockBall organized","seed":"171080","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"Apex","seed":"171001","game":"home","sim":"home","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"Pixel_Heart (1)","seed":"171005","game":"home","sim":"home","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"_Court-Weaver_8a4b6c1584e7","seed":"171009","game":"away","sim":"tie","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"safe-corner-league-e12","seed":"171017","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"sim_titanium28","seed":"171021","game":"away","sim":"home","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"sim_titanium32","seed":"171025","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"simop_v2811","seed":"171029","game":"tie","sim":"home","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"simop_v288alt","seed":"171033","game":"tie","sim":"home","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium11","seed":"171037","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium15","seed":"171041","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium3","seed":"171045","game":"home","sim":"home","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium37","seed":"171053","game":"away","sim":"tie","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium40","seed":"171057","game":"away","sim":"away","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium44","seed":"171061","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium47","seed":"171065","game":"away","sim":"tie","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium50","seed":"171069","game":"away","sim":"tie","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium9","seed":"171077","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"v1.8 BlockBall","seed":"171081","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"LeBlock James","seed":"171002","game":"away","sim":"home","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"Pixel_Heart (2)","seed":"171006","game":"home","sim":"home","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"aia","seed":"171010","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"safe_corner_v02","seed":"171018","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"sim_titanium28alt","seed":"171022","game":"home","sim":"home","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"sim_v2811alt","seed":"171026","game":"home","sim":"home","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"simop_v2811alt","seed":"171030","game":"home","sim":"home","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"slicer","seed":"171034","game":"away","sim":"home","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium12","seed":"171038","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium16","seed":"171042","game":"home","sim":"home","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium31","seed":"171046","game":"away","sim":"away","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium35","seed":"171050","game":"tie","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium38","seed":"171054","game":"away","sim":"home","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium41","seed":"171058","game":"away","sim":"away","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium45","seed":"171062","game":"away","sim":"away","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium48","seed":"171066","game":"away","sim":"tie","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium51","seed":"171070","game":"away","sim":"tie","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium6","seed":"171074","game":"home","sim":"tie","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"v1.3 BlockBall","seed":"171078","game":"home","sim":"home","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"v1_PY_Martico2432","seed":"171082","game":"home","sim":"home","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"LeBlock_James","seed":"171003","game":"away","sim":"home","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"Safe_Corner_v0.3","seed":"171007","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"aia3","seed":"171011","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"martico2432v7","seed":"171015","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"safe_corner_v02 (1)","seed":"171019","game":"home","sim":"home","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"sim_titanium30","seed":"171023","game":"away","sim":"home","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"sim_v2814","seed":"171027","game":"tie","sim":"home","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"simop_v2814","seed":"171031","game":"home","sim":"home","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium","seed":"171035","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium13","seed":"171039","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium2","seed":"171043","game":"home","sim":"home","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium32","seed":"171047","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium36","seed":"171051","game":"away","sim":"away","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium39","seed":"171055","game":"away","sim":"away","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium42","seed":"171059","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium46","seed":"171063","game":"away","sim":"away","verdict":"AGREE","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium49","seed":"171067","game":"away","sim":"tie","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium52","seed":"171071","game":"away","sim":"tie","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"titanium7","seed":"171075","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}
+{"away":"v1.5 BlockBall","seed":"171079","game":"home","sim":"away","verdict":"disagree","variant":"middle","latch":"side","min_charge":"0"}

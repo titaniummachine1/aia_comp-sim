@@ -27,7 +27,7 @@ print(f" (unknown {unknown})")
 for k, v in sorted(counts.items()):
     print(f"  {k}: {v}")
 for r in rows:
-    if r.get("parity") != "agree":
+    if not str(r.get("parity", "")).startswith("agree"):
         print(" ", r.get("away"), r.get("game_games"), r.get("game_leader"),
               "->", r.get("sim_games"), r.get("sim_leader"),
               r.get("parity", r.get("error")))

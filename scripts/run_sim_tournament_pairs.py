@@ -19,9 +19,26 @@ SAVES = os.path.join(
     "AppData", "LocalLow", "Unicorn One", "AIComp", "Saves", "Tennis",
 )
 GAME_RESULTS = r"C:\gitProjects\AIA_tennis\modhost\game_tournament_results.jsonl"
+SERVER_TABLE = r"C:\gitProjects\AIA_tennis\modhost\reset_sweep.jsonl"
 OUT = os.path.join(ROOT, "data", "tennis", "sim_pairs_results.jsonl")
 
 BIN = ["cargo", "run", "-q", "--bin", "tennis_tournament", "--"]
+
+
+def load_server_table():
+    """(home, away, seed) -> 0/1 setup server measured in the game."""
+    table = {}
+    try:
+        for l in io.open(SERVER_TABLE, encoding="utf-8", errors="replace"):
+            if not l.strip():
+                continue
+            r = json.loads(l)
+            srv = r.get("setup_serving_team")
+            if srv in (0, 1):
+                table[(r.get("home"), r.get("away"), int(r.get("seed")))] = srv
+    except FileNotFoundError:
+        pass
+    return table
 
 
 def match_result(winners, pts_to_win=4):
@@ -76,6 +93,18 @@ def main() -> None:
     print(f"game pairs to replay: {len(pairs)} (home={home})")
 
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
+    server_table = load_server_table()
+    print(f"server table: {len(server_table)} measured start states")
+    done = set()
+    try:
+        for l in io.open(OUT, encoding="utf-8", errors="replace"):
+            if l.strip():
+                r = json.loads(l)
+                done.add((r.get("home"), r.get("away"), str(r.get("seed")),
+                          r.get("first_server", "sim-default")))
+    except FileNotFoundError:
+        pass
+    print(f"resume: skipping {len(done)} existing rows")
     agree = disagree = unknown = 0
     with io.open(OUT, "a", encoding="utf-8") as out:
         for r in pairs:
@@ -85,6 +114,20 @@ def main() -> None:
                    "game_leader": g_leader, "game_games": g_games,
                    "game_pts": [(r.get("state") or {}).get("home_points", 0),
                                 (r.get("state") or {}).get("away_points", 0)]}
+            # Same start state as the game: force the measured first server.
+            srv = server_table.get((home, bot, int(seed)))
+            env = dict(os.environ)
+            if srv == 0:
+                env["AIA_FIRST_SERVER"] = "home"
+            elif srv == 1:
+                env["AIA_FIRST_SERVER"] = "away"
+            else:
+                env.pop("AIA_FIRST_SERVER", None)
+            rec["first_server"] = ("home" if srv == 0 else
+                                   ("away" if srv == 1 else "sim-default"))
+            if (home, bot, seed, rec["first_server"]) in done:
+                print(f"  {bot:28} already scored — skipped")
+                continue
             if g_leader is None:
                 rec["parity"] = "unknown-game-side"
                 unknown += 1
@@ -96,7 +139,7 @@ def main() -> None:
                 proc = subprocess.run(
                     BIN + ["--home", home, "--away", bot, "--seed", seed,
                            "--points", "8", "--max-ticks", "120000"],
-                    capture_output=True, text=True, timeout=300,
+                    capture_output=True, text=True, timeout=300, env=env,
                 )
                 line = proc.stdout.strip().splitlines()[-1] if proc.stdout.strip() else ""
                 if proc.returncode == 0 and line.startswith("{"):

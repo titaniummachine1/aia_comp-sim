@@ -206,11 +206,17 @@ impl<'a> EvalCtx<'a> {
 
     /// `TennisController` reference evaluation: `Vector31` = move/aim,
     /// `Bool1` = swing hold, `Float1` = shot type dropdown, `Bool2` = sprint.
+    /// `aim` mirrors the VM's aim-request walk (`Controller <-
+    /// `TennisAutoMove(Vector32) <- TennisAutoAim`); `None` when the graph
+    /// has no aim path.
     fn eval_tennis_controller(&mut self, node_sid: &str) -> crate::brain::TennisCommand {
         let move_or_aim = self
             .input_named(node_sid, "Vector31")
             .map(|v| pitch_plane(v.as_vec()))
             .unwrap_or(Vec2::ZERO);
+        let aim = self
+            .aim_request_port(node_sid)
+            .map(|src| pitch_plane(self.eval_port(&src).as_vec()));
         let swing = self
             .input_named(node_sid, "Bool1")
             .map(|v| v.as_bool())
@@ -228,7 +234,33 @@ impl<'a> EvalCtx<'a> {
             swing,
             shot_type,
             sprint,
+            aim,
         }
+    }
+
+    /// Walk `Controller(Vector31) <- TennisAutoMove(Vector32) <-
+    /// TennisAutoAim(Vector31)` to the request's source output port.
+    fn aim_request_port(&mut self, controller_sid: &str) -> Option<String> {
+        let mut cur_sid = controller_sid.to_string();
+        let mut cur_port = "Vector31";
+        for _ in 0..8 {
+            let in_sid = self.graph.input_port_sid(&cur_sid, cur_port)?;
+            let src_out = self.graph.input_source.get(&in_sid)?.clone();
+            let pref = self.graph.ports.get(&src_out)?.clone();
+            let src_node = self.graph.nodes.get(&pref.node_sid)?.clone();
+            match src_node.id.as_str() {
+                "TennisAutoMove" => {
+                    cur_sid = src_node.sid.clone();
+                    cur_port = "Vector32";
+                }
+                "TennisAutoAim" => {
+                    cur_sid = src_node.sid.clone();
+                    cur_port = "Vector31";
+                }
+                _ => return Some(src_out),
+            }
+        }
+        None
     }
 
     fn exec_debug_draw(&mut self, node_sid: &str) {

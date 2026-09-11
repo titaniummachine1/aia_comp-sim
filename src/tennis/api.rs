@@ -147,17 +147,15 @@ pub fn build_team_api(world: &super::world::TennisWorld, side: super::court::Sid
     set(&mut api, "Is Break Point", world.score.is_break_point() && side == receiver);
     set(&mut api, "Is Match Point", world.score.is_match_point(side));
     set(&mut api, "Ball On Self Side", world.ball.pos.x * side.sign() > 0.0);
-    // v0.14 quirk (replicated): `Ball Incoming` goes false at the FIRST
-    // bounce, not when the ball's direction changes. True only while the
-    // ball is un-bounced since the last strike and moving toward this side.
+    // Measured + user-confirmed v0.14 rule: `Ball Incoming` is true only
+    // while the OPPONENT has just struck and the ball is still un-bounced
+    // (incoming to us); it goes false the moment the first bounce occurs.
+    // (The old direction/position heuristic over-fired ~3.5x vs native
+    // timeplots and poisoned hold/charge decisions downstream.)
     set(
         &mut api,
         "Ball Incoming",
-        world.ball.bounces == 0
-            && !world.ball_held
-            && (world.ball.pos.x * side.sign() < 0.0
-                || world.ball.vel.x * side.sign() > 0.0
-                || (world.serve_in_flight && server == opponent)),
+        world.hit_by_side() == Some(opponent) && world.ball.bounces == 0 && !world.ball_held,
     );
     set(&mut api, "Ball In Swing Range", world_reaches(world, side));
     set(&mut api, "Ball Has Bounced", world.ball.bounces > 0 && !world.ball_held);

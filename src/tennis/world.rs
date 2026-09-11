@@ -123,15 +123,24 @@ pub struct TennisWorld {
     pub end: Option<EndReason>,
     /// Shots played in the current rally (both sides) — drives fatigue.
     pub rally_hits: i32,
-    /// Serve aim latched at ServeSetup entry (v0.14 `ServeAimHint`
-    /// semantics): the live `Vector31` during Toss is the bot's stance/move
-    /// output, NOT the strike aim. Validated into the legal diagonal box at
+    /// Serve aim latched on Toss entry (v0.14 `ServeAimHint`
+    /// semantics): the live wires during ServeSetup are the bot's stance /
+    /// rally-default output, NOT the strike aim (game truth: titanium54's
+    /// final_aim reads best-point junk at setup entry, switches to the
+    /// serve branch (7.0, 0.0) once serving goes live, all serves land
+    /// (7.0077, 0.0)). Validated into the legal diagonal box at
     /// latch time; `None` → `legal_serve_target` fallback at the strike.
     serve_aim_latch: Option<Vec2>,
     /// Side that struck the ball most recently; cleared on bounce. Blocks
     /// double hits (a swing-pulse re-striking the just-served/just-hit ball
     /// mid-flight — the game never produces those faults).
     strike_lock: Option<Side>,
+    /// Last striker, tracked exactly (set on every strike, cleared only at
+    /// point setup). Unlike `strike_lock` this survives the bounce: drives
+    /// `Ball Incoming` (true iff the OPPONENT struck last and the ball is
+    /// still un-bounced) and out-of-arena attribution (position heuristic
+    /// is fallback only).
+    hit_by: Option<Side>,
     /// Raw command aims per side ([0]=Home, [1]=Away) — diagnostics for the
     /// aim-semantics investigation (trace only).
     pub last_cmd_aim: [Vec2; 2],
@@ -141,14 +150,34 @@ pub struct TennisWorld {
     /// every return duds. Mirrors the game's latched on-hit aim (same
     /// mechanism as the captured deep `ServeAimHint` at serve time).
     rally_aim_latch: [Option<Vec2>; 2],
+    /// Aim model: when true (`AIA_AIM_MODEL=separate`), rally + serve
+    /// latches read the pre-gate aim request (`TennisCommand.aim`,
+    /// resolved through `Controller <- AutoMove(V32) <- AutoAim`) while
+    /// movement keeps using `move_or_aim`. When false (default), both
+    /// latches read `move_or_aim` (legacy behavior for graphs without an
+    /// aim path and for all pre-change replays).
+    separate_aim: bool,
+    /// Swing gate: when true (`AIA_SWING_MODEL=hold`), the world holds the
+    /// swing through the approach whenever the phase allows (see
+    /// step_players), reproducing the game's 0.6-1.2 s approach holds.
+    /// Independent from `separate_aim` for clean variant scoring.
+    swing_hold_gate: bool,
 }
 
 impl TennisWorld {
     pub fn new(seed: u64) -> Self {
         // First server: vm stream draw mod 2 (v0.12 model policy).
+        // Override for calibration: AIA_FIRST_SERVER=home/away forces the
+        // opener (the game's load-side assignment is still unpinned: it
+        // strongly favors the left/home player across restarts with rare
+        // flips, matching neither a fair coin nor seed parity).
         let mut home_rng = SplitMix64::new(seed ^ 0x83a2_f347);
         let away_rng = SplitMix64::new(seed ^ 0x157c_c26d);
-        let first_server = home_rng.below(2) as usize;
+        let first_server = match std::env::var("AIA_FIRST_SERVER").as_deref() {
+            Ok("home") => 0,
+            Ok("away") => 1,
+            _ => home_rng.below(2) as usize,
+        };
         let unity = UnityRandom::new(seed as u32);
         let mut w = Self {
             seed,
@@ -175,11 +204,24 @@ impl TennisWorld {
             rally_hits: 0,
             serve_aim_latch: None,
             strike_lock: None,
+            hit_by: None,
             last_cmd_aim: [Vec2::ZERO; 2],
             rally_aim_latch: [None; 2],
+            separate_aim: std::env::var("AIA_AIM_MODEL").as_deref() == Ok("separate"),
+            swing_hold_gate: std::env::var("AIA_SWING_MODEL").as_deref() == Ok("hold"),
         };
         w.setup_serve();
         w
+    }
+
+    /// Aim source for the latches: the pre-gate request when the separate
+    /// aim model is on and the graph provides one, else the legacy wire.
+    fn latch_candidate(&self, cmd: &TennisCommand) -> Vec2 {
+        if self.separate_aim {
+            cmd.aim.unwrap_or(cmd.move_or_aim)
+        } else {
+            cmd.move_or_aim
+        }
     }
 
     /// Side helpers: index 0 = Home, 1 = Away.
@@ -202,6 +244,12 @@ impl TennisWorld {
 
     pub fn last_point_winner(&self) -> Option<Side> {
         self.last_point_winner
+    }
+
+    /// Tracked last striker (exact; survives the bounce, unlike
+    /// `strike_lock`). Sensor bridge for `Ball Incoming`.
+    pub fn hit_by_side(&self) -> Option<Side> {
+        self.hit_by
     }
 
     /// Deterministic stock returner for a side without a brain.
@@ -245,6 +293,10 @@ impl TennisWorld {
                     swing,
                     shot_type: 2.0, // Flat
                     sprint: true,
+                    // Stock has no AutoAim path; its move_or_aim already
+                    // carries the deliberate aim (deep/serve-target), so the
+                    // legacy latch path applies.
+                    aim: None,
                 }
             }
         }
@@ -277,13 +329,42 @@ impl TennisWorld {
             commands[1].unwrap_or_else(|| self.stock_command(Side::Away)),
         ];
 
+        // Latch the serve aim here, BEFORE step_players: on the first Toss
+        // tick the server's swing release strikes the just-tossed ball
+        // inside step_players, flipping phase to Rally before the phase
+        // dispatch below ever sees Toss (step_toss only handles a hanging
+        // toss). This tick's cmds were computed with phase == Toss visible,
+        // so `Is Self Actively Serving` is true and the aim wire carries
+        // the serve branch (titanium54: (7.0, 0.0); game lands (7.0077,
+        // 0.0)). A candidate inside the legal diagonal box is honored;
+        // anything else falls back to the box center. `is_none` pins the
+        // first Toss tick — the strike-tick wire has already flipped back
+        // to the rally default and must not overwrite.
+        if self.phase == Phase::Toss && self.serve_aim_latch.is_none() {
+            let server = self.score.server();
+            let receiver = self.score.receiver();
+            let ad = self.score.ad_court();
+            let candidate = self.latch_candidate(&cmds[Self::idx(server)]);
+            let latched = if candidate != Vec2::ZERO
+                && court::is_serve_in(receiver, ad, candidate.x, candidate.y)
+            {
+                candidate
+            } else {
+                court::legal_serve_target(receiver, ad)
+            };
+            self.serve_aim_latch = Some(latched);
+        }
+
         // Latch rally aims BEFORE step_players so a strike this tick uses
         // this tick's opponent-court output.
+        let side_gate = std::env::var("AIA_RALLY_LATCH").as_deref() == Ok("side");
         for i in 0..2 {
             let side = if i == 0 { Side::Home } else { Side::Away };
-            let aim = cmds[i].move_or_aim;
+            let aim = self.latch_candidate(&cmds[i]);
             if aim.x * side.other().sign() > 0.0 {
-                self.rally_aim_latch[i] = Some(aim);
+                if !side_gate || self.ball.pos.x * side.sign() > 0.0 {
+                    self.rally_aim_latch[i] = Some(aim);
+                }
             }
         }
         self.step_players(&cmds);
@@ -320,7 +401,23 @@ impl TennisWorld {
                 p.pos += d / dist * step;
             }
             // Swing charge model: hold builds charge, release swings.
-            if cmds[i].swing && p.recover <= 0.0 {
+            // `TennisAutoSwing` gate (`AIA_SWING_MODEL=hold`): the game
+            // holds the swing through the approach (54% of ticks, 0.6-1.2 s
+            // holds measured in native timeplots) and releases at contact —
+            // the graph never chooses to hold (AutoSwing has no Bool input,
+            // only the swing/shake decision outputs). The gate holds when
+            // the phase allows swinging: server setup/toss (pre-charge) and
+            // rallies; receivers join once the serve is live-and-bounced.
+            // Without the gate, the live `in_range && !must_wait` flicker
+            // wipes charge every tick and no strike ever charges (sim
+            // ChargePct was pegged 0 vs 0.28 game mean).
+            let gate_hold = self.swing_hold_gate
+                && p.recover <= 0.0
+                && (self.phase == Phase::Rally
+                    || (self.score.server() == side
+                        && (self.phase == Phase::ServeSetup || self.phase == Phase::Toss)));
+            let swinging = cmds[i].swing || gate_hold;
+            if swinging && p.recover <= 0.0 {
                 if !p.holding {
                     p.holding = true;
                     p.charge = 0.0;
@@ -403,7 +500,8 @@ impl TennisWorld {
         // --- Anti-stalemate fatigue (recovered v0.12 formulas) ---
         self.rally_hits += 1;
         let active = super::params::fatigue_points(self.rally_hits, self.extra_deuce());
-        let q_fatigued = super::params::fatigued_charge(q, active);
+        let q_floored = q.max(charge_floor());
+        let q_fatigued = super::params::fatigued_charge(q_floored, active);
         let mut target = if serving {
             // Serve strike uses the ServeAimHint latched at ServeSetup
             // entry — the live Vector31 here is the stance/move output
@@ -415,8 +513,29 @@ impl TennisWorld {
         } else {
             // Rally strike: latched opponent-court aim (positioning targets
             // never overwrite it); deep default when never latched.
-            self.rally_aim_latch[Self::idx(side)]
-                .unwrap_or_else(|| court::default_aim_target(side))
+            // Sweep gate (no rebuild per variant): AIA_RALLY_DEFAULT =
+            //   middle (default_aim_target ±13.44,0) | corner (±13.75,∓4.5)
+            //   | back (opponent center_of_back ±10.5,0) | opp (opponent pos)
+            //   | open (mirror-z of opponent pos).
+            // AIA_MIN_CHARGE = float floor for never-holding bots (q=0 → 85%).
+            let latched = self.rally_aim_latch[Self::idx(side)];
+            let fallback = rally_fallback_target(self, side);
+            // AIA_RALLY_LATCH=off: no latch — strike-tick live aim when it is
+            // opponent-court, else fallback. Tests whether latching itself
+            // (vs strike-tick aim) is the parity lever.
+            // AIA_RALLY_LATCH=side: latch only while the ball is on the
+            // striker's own half (receive-transition gate) — positioning
+            // blips emitted while the ball is away never overwrite.
+            if std::env::var("AIA_RALLY_LATCH").as_deref() == Ok("off") {
+                let live = self.latch_candidate(&cmd);
+                if live.x * side.other().sign() > 0.0 {
+                    live
+                } else {
+                    fallback
+                }
+            } else {
+                latched.unwrap_or(fallback)
+            }
         };
         // Aim scatter: two Unity RNG draws (lateral, then depth) at active
         // fatigue, scaled by the recovered rates and court size.
@@ -437,6 +556,7 @@ impl TennisWorld {
         self.players[i].last_aim = target;
         self.last_shot[Self::idx(side)] = Some(shot);
         self.strike_lock = Some(side);
+        self.hit_by = Some(side);
         if q >= 0.75 && matches!(shot, ShotType::Topspin | ShotType::Flat) {
             self.score.record_charged(side);
         }
@@ -451,8 +571,13 @@ impl TennisWorld {
     fn setup_serve(&mut self) {
         let server = self.score.server();
         let ad = self.score.ad_court();
+        // Serve setup forces the SERVER to its stance. The receiver is
+        // deliberately untouched: game truth (titanium54 native timeplots
+        // 2026-09-11) shows the receiver free-walking the whole setup —
+        // holding (8.15, 2.52), then wandering out to (10.48, 10.92),
+        // mid-court (2.7, -0.5), wherever its brain (or a human hand)
+        // takes it. Never place it at receive_stance here.
         self.players[Self::idx(server)].pos = court::serve_stance(server, ad);
-        self.players[Self::idx(server.other())].pos = court::receive_stance(server, ad);
         self.random_aim = self.reroll_random_aim();
         self.ball_held = true;
         self.serve_in_flight = false;
@@ -460,10 +585,17 @@ impl TennisWorld {
         self.serve_bounced = false;
         self.last_was_ace = false;
         self.rally_hits = 0;
-        // The strike aim is latched fresh each ServeSetup phase (see
-        // step_serve_setup) — clear any previous point's latch here.
+        // The strike aim is latched fresh each point on Toss entry (see
+        // step_toss) — clear any previous point's latch here.
         self.serve_aim_latch = None;
         self.strike_lock = None;
+        self.hit_by = None;
+        // Holds never carry across points (game charge reads 0 at point
+        // starts; point-boundary holds always release first).
+        for p in self.players.iter_mut() {
+            p.holding = false;
+            p.charge = 0.0;
+        }
         self.ball = BallState::new(
             Vec3::new(
                 self.players[Self::idx(server)].pos.x,
@@ -479,25 +611,18 @@ impl TennisWorld {
     }
 
     fn step_serve_setup(&mut self, cmds: &[TennisCommand; 2]) {
-        // Latch the serve aim at ServeSetup entry (v0.14 ServeAimHint
-        // lifecycle): a candidate inside the legal diagonal box is honored;
-        // anything else (stance targets, movement output) falls back to the
-        // box center so the strike always aims at a legal serve.
-        let server = self.score.server();
-        if self.serve_aim_latch.is_none() {
-            let receiver = self.score.receiver();
-            let ad = self.score.ad_court();
-            let candidate = cmds[Self::idx(server)].move_or_aim;
-            let latched = if candidate != Vec2::ZERO
-                && court::is_serve_in(receiver, ad, candidate.x, candidate.y)
-            {
-                candidate
-            } else {
-                court::legal_serve_target(receiver, ad)
-            };
-            self.serve_aim_latch = Some(latched);
-        }
-        // Receiver must be settled (receiver_delay 0.6) before the toss.
+        // The strike aim is NOT latched here: at setup entry the server
+        // brain has not seen Toss yet (`Is Self Actively Serving` is false),
+        // so its aim wire still carries the rally default / stance output.
+        // Game truth (titanium54 native timeplots 2026-09-11): final_aim
+        // reads best-point junk at setup entry, switches to the serve branch
+        // (7.0, 0.0) once serving goes live mid-setup, and all 8 serves land
+        // (7.0077, 0.0000) — the latch window is the first Toss tick, see
+        // step().
+        let _ = cmds;
+        // Setup settle timer before the toss (server walk stand-in; the
+        // sim teleports the server, the game walks it ~1.2 s). This gates
+        // nothing about the receiver — it walks free the whole time.
         if self.phase_t >= 0.6 {
             self.toss();
         }
@@ -523,6 +648,10 @@ impl TennisWorld {
     fn step_toss(&mut self, cmds: &[TennisCommand; 2]) {
         let _ = self.flight.step(&mut self.ball, FIXED_DT, false);
         let server = self.score.server();
+        // NOTE: the serve aim is latched in step(), before step_players —
+        // on the first Toss tick the release-strike there flips phase to
+        // Rally before this dispatch runs, so a latch here would never fire.
+        // This step only handles a hanging toss (recatch / serve clock).
         // Auto-strike the serve (game `TennisAutoSwing`): as the tossed ball
         // descends into the racket zone the serve fires with the latched
         // ServeAimHint, whatever the server brain's swing output — bots that
@@ -621,6 +750,11 @@ impl TennisWorld {
     }
 
     fn last_striker(&self) -> Option<Side> {
+        // Exact track first; the position heuristic is fallback only (it
+        // misattributes wrong-way duds hit from the striker's own half).
+        if let Some(s) = self.hit_by {
+            return Some(s);
+        }
         // The side whose shot is currently in flight.
         if self.ball.pos.x < 0.0 {
             // Ball over/bouncing on the home half: away struck last.
@@ -753,9 +887,35 @@ enum PointReason {
     Ace,
 }
 
+/// Rally fallback aim when no opponent-court output was ever latched.
+/// Env-gated sweep (default "middle"); see do_strike call site.
+fn rally_fallback_target(world: &TennisWorld, side: Side) -> Vec2 {
+    let mode = std::env::var("AIA_RALLY_DEFAULT").unwrap_or_default();
+    let opp = world.player(side.other()).pos;
+    match mode.as_str() {
+        "corner" => {
+            let z = if world.score.ad_court() { -4.5 } else { 4.5 };
+            Vec2::new(side.other().sign() * 13.75, z)
+        }
+        "back" => court::center_of_back(side.other()),
+        "opp" => opp,
+        "open" => Vec2::new(opp.x, -opp.y),
+        _ => court::default_aim_target(side),
+    }
+}
+
+/// Min-charge floor for auto-contact strikes (env AIA_MIN_CHARGE, default 0).
+/// Never-holding bots strike at q=0 → 85% speed; the game's truth is unknown.
+fn charge_floor() -> f32 {
+    std::env::var("AIA_MIN_CHARGE")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(0.0)
+}
+
 /// Resolve the controller's `Float1` shot dropdown value (data.py order:
 /// 0 Topspin, 1 Slice, 2 Flat, 3 Drop, 4 Lob, 5 Curve Left, 6 Curve Right,
-/// 7/other = Random via the VM stream â€” `rng.next() % 7`).
+/// 7/other = Random via the VM stream — `rng.next() % 7`).
 fn resolve_shot_type(value: f32, rng: &mut SplitMix64) -> ShotType {
     match value.round() as i32 {
         0 => ShotType::Topspin,

@@ -65,12 +65,21 @@ pub struct BrainOutput {
 /// `Bool1` = swing hold (charge while held, release swings),
 /// `Float1` = shot type dropdown index (0 Topspin .. 7 Curve Right),
 /// `Bool2` = sprint.
+///
+/// `aim` is the pre-gate aim request resolved through the
+/// `TennisController <- TennisAutoMove(Vector32) <- TennisAutoAim` chain
+/// (`None` when the graph has no AutoAim path — e.g. direct-wired
+/// controllers or unwired `Vector32`). The game merges move/aim in
+/// `TennisAutoMove` and aims strikes through the aim path (verified:
+/// game rally landings equal the aim request within centimetres); the sim
+/// world latches strikes from `aim` and moves from `move_or_aim`.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct TennisCommand {
     pub move_or_aim: Vec2,
     pub swing: bool,
     pub shot_type: f32,
     pub sprint: bool,
+    pub aim: Option<Vec2>,
 }
 
 impl Default for TennisCommand {
@@ -80,6 +89,7 @@ impl Default for TennisCommand {
             swing: false,
             shot_type: 2.0, // Flat
             sprint: false,
+            aim: None,
         }
     }
 }

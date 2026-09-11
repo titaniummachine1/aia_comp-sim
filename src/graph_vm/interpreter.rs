@@ -351,17 +351,26 @@ fn exec_inst(inst: &Instruction, ctx: &mut ExecutionContext, names: &[String]) {
             }
         }
         OpCode::EmitTennisController => {
-            // ops: [move_or_aim, swing, shot_type, sprint, slot]
+            // ops = args ++ immediates: [move_or_aim, swing, shot_type,
+            // sprint, (aim, has_aim)?, slot]. Programs lowered before the
+            // aim pair carry only [.., slot] and yield aim=None (world
+            // falls back to move_or_aim).
             if ops.len() >= 5 {
                 let move_or_aim = pitch_plane(reg_v(ctx, ops[0] as usize));
                 let swing = reg_b(ctx, ops[1] as usize);
                 let shot_type = reg_f(ctx, ops[2] as usize);
                 let sprint = reg_b(ctx, ops[3] as usize);
+                let aim = if ops.len() >= 7 && reg_b(ctx, ops[5] as usize) {
+                    Some(pitch_plane(reg_v(ctx, ops[4] as usize)))
+                } else {
+                    None
+                };
                 ctx.output.tennis_command = Some(crate::brain::TennisCommand {
                     move_or_aim,
                     swing,
                     shot_type,
                     sprint,
+                    aim,
                 });
             }
         }

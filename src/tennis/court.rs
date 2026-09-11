@@ -107,19 +107,36 @@ pub fn default_aim_target(attacker: Side) -> Vec2 {
     Vec2::new(attacker.other().sign() * COURT_LENGTH * 0.48, 0.0)
 }
 
+/// Serve-area depth behind the baseline (game-measured 2026-09-11 with
+/// in-editor debug lines): home server X in [-16.25, -14.0], away mirrored.
+/// The server stays outside the playable area; the boundary is inclusive
+/// (standing exactly on the line is legal).
+pub const SERVE_AREA_BACK: f32 = 2.25;
+
 /// Movement clamp for a player (v0.14 recovered_move_geometry, non-serving
-/// case: court bounds grown by `strike_radius`; serving player pinned near
-/// their baseline: `[baselineâ’2.25, baseline+0.12]`).
+/// case: court bounds grown by `strike_radius`; serving player confined to
+/// the measured serve-area box: X = baseline band behind the baseline,
+/// Z = full half-width from center to the deuce/ad sideline
+/// (deuce: [0, +6], ad: [-6, 0]). The game forces the server's mover
+/// destination into this box even with no walk input.
 pub fn clamp_player_position(side: Side, pos: Vec2, serving: bool, ad_court: bool) -> Vec2 {
     if serving {
         let baseline = side.sign() * COURT_LENGTH * 0.5;
         let (lo, hi) = if side.sign() > 0.0 {
-            (baseline - 2.25, baseline + 0.12)
+            (baseline, baseline + SERVE_AREA_BACK)
         } else {
-            (baseline - 0.12, baseline + 2.25)
+            (baseline - SERVE_AREA_BACK, baseline)
         };
-        let z = serve_stance(side, ad_court).y;
-        return Vec2::new(pos.x.clamp(lo.min(hi), lo.max(hi)), z);
+        let half_wid = COURT_SINGLES_WIDTH * 0.5;
+        let (zlo, zhi) = if ad_court {
+            (-half_wid, 0.0)
+        } else {
+            (0.0, half_wid)
+        };
+        return Vec2::new(
+            pos.x.clamp(lo.min(hi), lo.max(hi)),
+            pos.y.clamp(zlo, zhi),
+        );
     }
     let half_len = COURT_LENGTH * 0.5 + STRIKE_RADIUS;
     let half_wid = COURT_SINGLES_WIDTH * 0.5 + 0.35;
@@ -157,6 +174,33 @@ mod tests {
         assert!(is_serve_in(Side::Away, false, 6.0, 4.0));
         assert!(!is_serve_in(Side::Away, false, 6.0, -4.0));
         let _ = max;
+    }
+
+    #[test]
+    fn serve_area_is_measured_box() {
+        // Home deuce: X in [-16.25, -14.0] (bounds inclusive), Z in [0, 6].
+        let c = clamp_player_position(Side::Home, Vec2::new(-15.0, 3.0), true, false);
+        assert!((c.x + 15.0).abs() < 1e-5 && (c.y - 3.0).abs() < 1e-5);
+        let c = clamp_player_position(Side::Home, Vec2::new(-13.0, 3.0), true, false);
+        assert!((c.x + 14.0).abs() < 1e-5, "{}", c.x);
+        let c = clamp_player_position(Side::Home, Vec2::new(-17.0, 3.0), true, false);
+        assert!((c.x + 16.25).abs() < 1e-5, "{}", c.x);
+        let c = clamp_player_position(Side::Home, Vec2::new(-15.0, -2.0), true, false);
+        assert!(c.y.abs() < 1e-5, "{}", c.y);
+        let c = clamp_player_position(Side::Home, Vec2::new(-14.0, 6.0), true, false);
+        assert!((c.x + 14.0).abs() < 1e-5 && (c.y - 6.0).abs() < 1e-5);
+        // Ad court: Z in [-6, 0].
+        let c = clamp_player_position(Side::Home, Vec2::new(-15.0, -3.0), true, true);
+        assert!((c.y + 3.0).abs() < 1e-5, "{}", c.y);
+        let c = clamp_player_position(Side::Home, Vec2::new(-15.0, 2.0), true, true);
+        assert!(c.y.abs() < 1e-5, "{}", c.y);
+        // Away mirrors X: [14.0, 16.25].
+        let c = clamp_player_position(Side::Away, Vec2::new(15.0, 3.0), true, false);
+        assert!((c.x - 15.0).abs() < 1e-5, "{}", c.x);
+        let c = clamp_player_position(Side::Away, Vec2::new(13.0, 3.0), true, false);
+        assert!((c.x - 14.0).abs() < 1e-5, "{}", c.x);
+        let c = clamp_player_position(Side::Away, Vec2::new(17.0, 3.0), true, false);
+        assert!((c.x - 16.25).abs() < 1e-5, "{}", c.x);
     }
 
     #[test]

@@ -27,7 +27,7 @@ fn load_bot(
     name: &str,
     team: aia_comp_sim::brain::TeamId,
 ) -> Option<(BrainSide, Vec<String>, Vec<String>)> {
-    if name.is_empty() {
+    if name.is_empty() || name == "stock" || name == "none" {
         return None;
     }
     let path = saves_dir().join(format!("{name}.txt"));
@@ -91,6 +91,28 @@ fn main() {
 
     let mut completed_points = 0usize;
     let mut in_pause = false;
+    // Optional per-tick graph-channel capture (TimePlot sinks): set
+    // AIA_TRACE_CHANNELS=1 to append "hch"/"ach" {name:value} maps per tick.
+    // Lets sim traces speak the same channel language as the game's native
+    // timeplot exports (channel-diff without same-seed replay).
+    let trace_channels: bool = std::env::var("AIA_TRACE_CHANNELS").as_deref() == Ok("1");
+    fn side_channels() -> String {
+        let snap = aia_comp_sim::debug_draw::snapshot();
+        let mut out = String::from("{");
+        let mut first = true;
+        for (k, v) in &snap.plots {
+            if !first {
+                out.push(',');
+            }
+            first = false;
+            out.push('"');
+            out.push_str(&k.replace('"', "'"));
+            out.push_str("\":");
+            out.push_str(&format!("{v:.4}"));
+        }
+        out.push('}');
+        out
+    }
     // Per-point winner log for exact outcome-parity comparison with the
     // game's point_winners[] (0=home, 1=away). award_point resets points on
     // a game win, so winners are detected from per-step deltas: a games
@@ -99,8 +121,21 @@ fn main() {
     while world.end.is_none() && world.tick < max_ticks && completed_points < points {
         let prev_points = world.score.points;
         let prev_games = world.score.games;
-        let home_cmd = home.as_mut().and_then(|b| b.command_for(&world));
-        let away_cmd = away.as_mut().and_then(|b| b.command_for(&world));
+        let (home_cmd, home_ch, away_cmd, away_ch) = if trace_channels {
+            aia_comp_sim::debug_draw::begin_frame();
+            let hc = home.as_mut().and_then(|b| b.command_for(&world));
+            let hch = side_channels();
+            aia_comp_sim::debug_draw::begin_frame();
+            let ac = away.as_mut().and_then(|b| b.command_for(&world));
+            let ach = side_channels();
+            (hc, hch, ac, ach)
+        } else {
+            let hc = home.as_mut().and_then(|b| b.command_for(&world));
+            let ac = away.as_mut().and_then(|b| b.command_for(&world));
+            (hc, String::from("{}"), ac, String::from("{}"))
+        };
+        let home_cmd = home_cmd;
+        let away_cmd = away_cmd;
         world.step([home_cmd, away_cmd]);
 
         if world.score.games[0] > prev_games[0] {
@@ -115,24 +150,46 @@ fn main() {
 
         if let Some(w) = trace_out.as_mut() {
             use std::io::Write;
-            let _ = writeln!(
-                w,
-                "{{\"tick\":{},\"phase\":\"{:?}\",\"ball\":[{:.4},{:.4},{:.4}],\"vel\":[{:.4},{:.4},{:.4}],\"bounces\":{},\"points\":[{},{}],\"games\":[{},{}],\"serve\":\"{:?}\",\"home\":[{:.3},{:.3}],\"away\":[{:.3},{:.3}],\"hs\":{},\"as\":{},\"hc\":{:.2},\"ac\":{:.2},\"haim\":[{:.2},{:.2}],\"aaim\":[{:.2},{:.2}]}}",
-                world.tick,
-                world.phase,
-                world.ball.pos.x, world.ball.pos.y, world.ball.pos.z,
-                world.ball.vel.x, world.ball.vel.y, world.ball.vel.z,
-                world.ball.bounces,
-                world.score.points[0], world.score.points[1],
-                world.score.games[0], world.score.games[1],
-                world.score.server(),
-                world.player(Side::Home).pos.x, world.player(Side::Home).pos.y,
-                world.player(Side::Away).pos.x, world.player(Side::Away).pos.y,
-                world.player(Side::Home).holding as u8, world.player(Side::Away).holding as u8,
-                world.player(Side::Home).charge, world.player(Side::Away).charge,
-                world.last_cmd_aim[0].x, world.last_cmd_aim[0].y,
-                world.last_cmd_aim[1].x, world.last_cmd_aim[1].y,
-            );
+            if trace_channels {
+                let _ = writeln!(
+                    w,
+                    "{{\"tick\":{},\"phase\":\"{:?}\",\"ball\":[{:.4},{:.4},{:.4}],\"vel\":[{:.4},{:.4},{:.4}],\"bounces\":{},\"points\":[{},{}],\"games\":[{},{}],\"serve\":\"{:?}\",\"home\":[{:.3},{:.3}],\"away\":[{:.3},{:.3}],\"hs\":{},\"as\":{},\"hc\":{:.2},\"ac\":{:.2},\"haim\":[{:.2},{:.2}],\"aaim\":[{:.2},{:.2}],\"hch\":{},\"ach\":{}}}",
+                    world.tick,
+                    world.phase,
+                    world.ball.pos.x, world.ball.pos.y, world.ball.pos.z,
+                    world.ball.vel.x, world.ball.vel.y, world.ball.vel.z,
+                    world.ball.bounces,
+                    world.score.points[0], world.score.points[1],
+                    world.score.games[0], world.score.games[1],
+                    world.score.server(),
+                    world.player(Side::Home).pos.x, world.player(Side::Home).pos.y,
+                    world.player(Side::Away).pos.x, world.player(Side::Away).pos.y,
+                    world.player(Side::Home).holding as u8, world.player(Side::Away).holding as u8,
+                    world.player(Side::Home).charge, world.player(Side::Away).charge,
+                    world.last_cmd_aim[0].x, world.last_cmd_aim[0].y,
+                    world.last_cmd_aim[1].x, world.last_cmd_aim[1].y,
+                    home_ch, away_ch,
+                );
+            } else {
+                let _ = writeln!(
+                    w,
+                    "{{\"tick\":{},\"phase\":\"{:?}\",\"ball\":[{:.4},{:.4},{:.4}],\"vel\":[{:.4},{:.4},{:.4}],\"bounces\":{},\"points\":[{},{}],\"games\":[{},{}],\"serve\":\"{:?}\",\"home\":[{:.3},{:.3}],\"away\":[{:.3},{:.3}],\"hs\":{},\"as\":{},\"hc\":{:.2},\"ac\":{:.2},\"haim\":[{:.2},{:.2}],\"aaim\":[{:.2},{:.2}]}}",
+                    world.tick,
+                    world.phase,
+                    world.ball.pos.x, world.ball.pos.y, world.ball.pos.z,
+                    world.ball.vel.x, world.ball.vel.y, world.ball.vel.z,
+                    world.ball.bounces,
+                    world.score.points[0], world.score.points[1],
+                    world.score.games[0], world.score.games[1],
+                    world.score.server(),
+                    world.player(Side::Home).pos.x, world.player(Side::Home).pos.y,
+                    world.player(Side::Away).pos.x, world.player(Side::Away).pos.y,
+                    world.player(Side::Home).holding as u8, world.player(Side::Away).holding as u8,
+                    world.player(Side::Home).charge, world.player(Side::Away).charge,
+                    world.last_cmd_aim[0].x, world.last_cmd_aim[0].y,
+                    world.last_cmd_aim[1].x, world.last_cmd_aim[1].y,
+                );
+            }
         }
 
         let pause = world.phase == Phase::PointPause;

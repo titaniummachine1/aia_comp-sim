@@ -158,7 +158,16 @@ struct CallFrame {
 /// This cap remains only for pathological non-progress cases that somehow
 /// avoid the in-stack check. 1500 is MEASURED — see historical notes in git;
 /// on a 2 MB stack a naive recurse-without-break overflows near 3000.
+/// graphc guards its own desc demand-chains at 800 (Windows 1 MB main thread
+/// dies near 1540), so compiler-produced graphs never approach this cap —
+/// the 800→1500 margin is headroom for hand-built Unity saves only.
+/// Lowering itself always runs on a dedicated 8 MB stack (see
+/// [`Lowerer::compile`]) so a pathological chain hits this loud guard
+/// instead of killing the process with STATUS_STACK_OVERFLOW.
 const MAX_LOWER_DEPTH: u32 = 1_500;
+
+/// Stack reserved for the recursive lowering worker (see [`Lowerer::compile`]).
+const LOWER_STACK_SIZE: usize = 8 << 20;
 
 /// Set when a lowering hit [`MAX_LOWER_DEPTH`] without being broken as a latch.
 ///
@@ -212,6 +221,33 @@ impl Lowerer {
     }
 
     pub fn compile(graph: TeamGraph, spec: Option<crate::mode::GameSpec>) -> CompileResult {
+        // The demand lowerer recurses on the call stack (`lower_port` →
+        // `lower_node_output` → `lower_input` → `lower_port`). Run it on a
+        // dedicated 8 MB stack so a pathological demand chain hits the loud
+        // MAX_LOWER_DEPTH guard instead of overflowing a 1 MB viewer/headless
+        // main thread or a 2 MB test thread (STATUS_STACK_OVERFLOW is
+        // uncatchable — the process dies). Compile happens once per brain
+        // load, never per tick, so one thread spawn per compile is noise.
+        // Panics (e.g. spec-validation asserts) keep their loud semantics
+        // via resume_unwind.
+        let worker = std::thread::Builder::new()
+            .name("graph-lower".into())
+            .stack_size(LOWER_STACK_SIZE)
+            .spawn(move || Self::compile_inner(graph, spec));
+        match worker {
+            Ok(handle) => match handle.join() {
+                Ok(result) => result,
+                Err(payload) => std::panic::resume_unwind(payload),
+            },
+            // Thread spawn failed (resource exhaustion) — fail loudly instead
+            // of silently returning a wrong program.
+            Err(_) => {
+                panic!("graph lowerer: could not spawn 8 MB worker thread");
+            }
+        }
+    }
+
+    fn compile_inner(graph: TeamGraph, spec: Option<crate::mode::GameSpec>) -> CompileResult {
         if let Some(spec) = spec {
             let violations = crate::mode::validate_graph(spec, &graph);
             assert!(
@@ -404,10 +440,24 @@ impl Lowerer {
     /// `TennisController` ports: `Vector31` = move/aim target, `Bool1` =
     /// swing hold, `Float1` = shot type dropdown, `Bool2` = sprint
     /// (AIGamePyLibrary data.py port schema).
+    ///
+    /// The aim request is resolved separately through the
+    /// `Controller <- TennisAutoMove(Vector32) <- TennisAutoAim` chain so
+    /// the world can latch strikes from the aim path while moving from the
+    /// movement path. Graphs without that chain (direct-wired controllers,
+    /// unwired `Vector32`) yield no aim and the world falls back to the
+    /// legacy move_or_aim behavior.
     fn lower_tennis_controller(&mut self, slot: usize, node_sid: &str) {
         let move_or_aim = self
             .lower_input(node_sid, "Vector31")
             .unwrap_or_else(|| self.emit_const_vec2(node_sid, "Vector31", Vec2::ZERO));
+        let (aim, has_aim) = match self.aim_request_reg(node_sid) {
+            Some(r) => (r, self.emit_const_bool(node_sid, "aim_present", true)),
+            None => (
+                move_or_aim,
+                self.emit_const_bool(node_sid, "aim_present", false),
+            ),
+        };
         let swing = self
             .lower_input(node_sid, "Bool1")
             .unwrap_or_else(|| self.emit_const_bool(node_sid, "Bool1", false));
@@ -421,11 +471,39 @@ impl Lowerer {
             dest: None,
             kind: RegisterKind::Null,
             op: OpCode::EmitTennisController,
-            args: vec![move_or_aim, swing, shot_type, sprint],
+            args: vec![move_or_aim, swing, shot_type, sprint, aim, has_aim],
             immediates: vec![slot as u32],
             source_sid: node_sid.to_string(),
             source_port: "controller".to_string(),
         });
+    }
+
+    /// Demand-lower the aim request feeding a `TennisController`: walk
+    /// `Controller(Vector31) <- TennisAutoMove(Vector32) <-
+    /// TennisAutoAim(Vector31) <- request` and lower the request source.
+    /// Returns `None` when the chain is absent (direct-wired controller or
+    /// unwired `Vector32`) — the world then uses legacy move_or_aim aiming.
+    fn aim_request_reg(&mut self, controller_sid: &str) -> Option<Reg> {
+        let mut cur_sid = controller_sid.to_string();
+        let mut cur_port = "Vector31";
+        for _ in 0..8 {
+            let in_sid = self.graph.input_port_sid(&cur_sid, cur_port)?;
+            let src_out = self.graph.input_source.get(&in_sid)?.clone();
+            let pref = self.graph.ports.get(&src_out)?.clone();
+            let src_node = self.graph.nodes.get(&pref.node_sid)?.clone();
+            match src_node.id.as_str() {
+                "TennisAutoMove" => {
+                    cur_sid = src_node.sid.clone();
+                    cur_port = "Vector32";
+                }
+                "TennisAutoAim" => {
+                    cur_sid = src_node.sid.clone();
+                    cur_port = "Vector31";
+                }
+                _ => return Some(self.lower_port(&src_out)),
+            }
+        }
+        None
     }
 
     fn properties_node_sid(&self) -> Option<String> {
@@ -1993,5 +2071,149 @@ mod tests {
             })
             .expect("spawn");
         assert!(handle.join().is_ok(), "lowering a cycle overflowed the stack");
+    }
+
+    /// Deep demand chains lower on the dedicated 8 MB worker stack instead of
+    /// the caller's (possibly 1 MB) stack. A 1000-deep linear chain must
+    /// compile AND run correctly; a 2000-deep chain must trip the loud
+    /// MAX_LOWER_DEPTH guard (ConstNull + flag) rather than killing the
+    /// process with STATUS_STACK_OVERFLOW. graphc caps its own desc chains
+    /// at 800, so neither shape arises from the compiler — this pins the
+    /// sim-side safety net for hand-built saves.
+    #[test]
+    fn deep_linear_chain_lowers_loudly_instead_of_crashing() {
+        fn chain_raw(depth: usize) -> RawGraph {
+            let mut nodes = vec![
+                node("Float", "one", "1", vec![port("Float1", "oneo", 1, "one")]),
+                node("Float", "z", "0", vec![port("Float1", "zo", 1, "z")]),
+                node(
+                    "ConstructVector3",
+                    "cv",
+                    "",
+                    vec![
+                        port("Vector31", "cvo", 1, "cv"),
+                        port("Float1", "cvx", 0, "cv"),
+                        port("Float2", "cvy", 0, "cv"),
+                        port("Float3", "cvz", 0, "cv"),
+                    ],
+                ),
+                node("Bool", "bf", "1", vec![port("Bool1", "bfo", 1, "bf")]),
+                node(
+                    "SoccerController1",
+                    "c1",
+                    "",
+                    vec![
+                        port("Vector31", "c1m", 0, "c1"),
+                        port("Bool1", "c1s", 0, "c1"),
+                        port("Bool2", "c1i", 0, "c1"),
+                    ],
+                ),
+            ];
+            let mut connections = vec![
+                RawConnection {
+                    port0: "cvo".into(),
+                    port1: "c1m".into(),
+                },
+                RawConnection {
+                    port0: "bfo".into(),
+                    port1: "c1s".into(),
+                },
+                RawConnection {
+                    port0: "bfo".into(),
+                    port1: "c1i".into(),
+                },
+                RawConnection {
+                    port0: "zo".into(),
+                    port1: "cvy".into(),
+                },
+                RawConnection {
+                    port0: "zo".into(),
+                    port1: "cvz".into(),
+                },
+            ];
+            for i in 0..depth {
+                let sid = format!("a{i}");
+                nodes.push(RawNode {
+                    id: "AddFloats".into(),
+                    sid: sid.clone(),
+                    modifier: serde_json::json!(""),
+                    owner_function_sid: String::new(),
+                    ports: vec![
+                        RawPort {
+                            id: "Float1".into(),
+                            sid: format!("a{i}_in1"),
+                            polarity: 0,
+                            node_sid: sid.clone(),
+                        },
+                        RawPort {
+                            id: "Float2".into(),
+                            sid: format!("a{i}_in2"),
+                            polarity: 0,
+                            node_sid: sid.clone(),
+                        },
+                        RawPort {
+                            id: "Float1".into(),
+                            sid: format!("a{i}_out"),
+                            polarity: 1,
+                            node_sid: sid.clone(),
+                        },
+                    ],
+                });
+                // Float2 always reads the shared const 1: a_i = prev + 1.
+                connections.push(RawConnection {
+                    port0: "oneo".into(),
+                    port1: format!("a{i}_in2"),
+                });
+                if i == 0 {
+                    connections.push(RawConnection {
+                        port0: "oneo".into(),
+                        port1: "a0_in1".into(),
+                    });
+                } else {
+                    connections.push(RawConnection {
+                        port0: format!("a{}_out", i - 1),
+                        port1: format!("a{i}_in1"),
+                    });
+                }
+            }
+            connections.push(RawConnection {
+                port0: format!("a{}_out", depth - 1),
+                port1: "cvx".into(),
+            });
+            RawGraph { nodes, connections }
+        }
+
+        // 1000 < 1500 cap: compiles clean and runs the full chain.
+        // a_0 = 2, a_i = a_{i-1} + 1 → a_999 = 1001.
+        let _ = take_recursion_limit_hit();
+        let graph = crate::graph::load::index_graph(chain_raw(1000), "deep1000".into());
+        let compiled = Lowerer::compile_for(graph, crate::mode::GameSpec::soccer());
+        assert!(
+            !take_recursion_limit_hit(),
+            "1000-deep chain must stay under the depth cap"
+        );
+        let program = ProgramBuilder.pack(&compiled);
+        let mut ctx = ExecutionContext::new(
+            crate::api::TeamApi::empty(crate::brain::TeamId::Home),
+            compiled.vars.len(),
+            program.register_count as usize,
+        );
+        ctx.init_api_slots(&compiled.apis);
+        let mut interp = Interpreter::default();
+        interp.execute_controllers(&program, &mut ctx);
+        assert!(
+            (ctx.output.commands[0].move_to.x - 1001.0).abs() < 1e-2,
+            "deep chain ran wrong: {:?}",
+            ctx.output.commands[0].move_to
+        );
+
+        // 2000 > 1500 cap: loud guard (flag + Null at the cutoff), no crash.
+        let _ = take_recursion_limit_hit();
+        let graph = crate::graph::load::index_graph(chain_raw(2000), "deep2000".into());
+        let _ = Lowerer::compile_for(graph, crate::mode::GameSpec::soccer());
+        assert!(
+            take_recursion_limit_hit(),
+            "2000-deep chain must trip the depth guard loudly"
+        );
     }
 }
