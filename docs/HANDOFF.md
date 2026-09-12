@@ -1039,3 +1039,38 @@ minimum-deviation point?" question; the sim currently has **no timing-deviation
 term** (only zero-mean uniform fatigue scatter), so this fixture is what pins it.
 
 
+### 25b. Aggregate over the matched sweep (15 seeds)
+
+`scripts/tick_diff_sweep.py` runs the fair diff for every seed the restart sweep
+left a named timeplot for (auto-detecting the first server from the file name):
+
+```
+aggregate over 15 matched seeds: mean 2.578  median 2.558  min 2.263  max 2.968
+serve setup: game 64-67 vs sim 69 (every seed)
+onset:       game 86/89 vs sim 69   (seed 15 sim 164 - a sim re-toss, see below)
+```
+
+Per-channel mean|diff| across the 15 seeds (worst first):
+
+| channel | mean | comment |
+|---|---|---|
+| `v44_OppMeetX` | 14.84 | opponent meet/intercept X - WORST |
+| `v44_BallX` | 11.08 | ball trajectory divergence |
+| `v44_RacketDist` / `v44_DNow` | 8.92 | racket-to-ball distance |
+| `v44_AimReq` | 7.87 | requested aim |
+| `v49_AimZAdj` / `v44_AimZ` | 5.18 | aim Z (adjustment) |
+| `v44_SelfX` / `v44_RacketX` | 5.05 | server/racket X |
+| `v44_AimX` | 4.38 | aim X |
+
+So the opponent's planned meet point diverges more than the ball itself - the
+intercept / world-model path is the weakest subsystem, ahead of ball trajectory.
+That is the next thing to attack for rally fidelity.
+
+`--json` was added to `tick_diff.py` to feed this aggregation.
+
+Seed 15 sim onset 164 (vs 69 for every other seed): the sim's first serve took an
+extra ~95 ticks, i.e. a re-toss / recatch on the first serve (`step_toss`
+recatches when the toss is not struck). The input seed only changes RNG, not the
+toss gate, so a first serve that fails to auto-strike is a real (if rare) sim
+behaviour gap worth a look.
+

@@ -108,6 +108,8 @@ def main() -> int:
                     help="fairness anchor: 'strike' (ball release = same serve "
                          "stance, default), 'ball' (ball placed at server), "
                          "'none' (raw tick 0), 'auto', or a channel name")
+    ap.add_argument("--json", action="store_true",
+                    help="also emit a JSON map of per-channel mean|diff|")
     a = ap.parse_args()
 
     if a.game_timeplot:
@@ -244,6 +246,12 @@ def main() -> int:
         print(f"serve phase ({bc}): game placed@{gp} released@{gr} "
               f"setup={setup(gp, gr)} | sim placed@{sp} released@{sr} "
               f"setup={setup(sp, sr)}")
+
+    if a.json:
+        blob = {k: round(mad, 4) for mad, _, k in rows}
+        blob["__aligned__"] = n
+        blob["__onset__"] = [ga, sa]
+        print("JSON " + json.dumps(blob))
     return 0
 
 
