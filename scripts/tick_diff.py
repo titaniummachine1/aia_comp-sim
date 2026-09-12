@@ -112,10 +112,31 @@ def main() -> int:
                     help="also emit a JSON map of per-channel mean|diff|")
     a = ap.parse_args()
 
+    def _release_after_place(v):
+        p = next((i for i in range(len(v)) if abs(v[i]) > EPS), None)
+        if p is None:
+            return None
+        return next((i for i in range(p + 1, len(v))
+                     if abs(v[i] - v[i - 1]) > REL_EPS), None)
+
     if a.game_timeplot:
         gf = a.game_timeplot
         data = parse_timeplot_json(io.open(gf, encoding="utf-8").read())
         g = {s.get("name"): s.get("y", []) for s in data.get("series", [])}
+        # AUTO-DETECT the game's first-serve side from the data itself: at the
+        # strike the ball sits at the SERVER's stance, so sign(BallX at the
+        # release) says which side served. Never trust the file label -- a
+        # mismatched first server silently compares MIRRORED matches (the
+        # game's serve from -X vs the sim's from +X), which explodes the diff.
+        if "v44_BallX" in g:
+            rel = _release_after_place(g["v44_BallX"])
+            at = (rel if rel is not None else 0)
+            vals = [x for x in g["v44_BallX"][max(0, at - 2):at + 3] if x]
+            if vals:
+                a.srv = 0 if (sum(vals) / len(vals)) < 0 else 1
+                print(f"serve side auto-detected from the game export: "
+                      f"BallX@strike {sum(vals)/len(vals):+.2f} -> "
+                      f"{'home' if a.srv == 0 else 'away'} serves")
     else:
         gf, g = game_series(a.seed, a.srv)
     s = sim_series(a.seed, a.srv, a.home, a.away, a.points)
@@ -146,13 +167,6 @@ def main() -> int:
                 return i
         return 0
 
-    def release_after_place(v):
-        p = next((i for i in range(len(v)) if abs(v[i]) > EPS), None)
-        if p is None:
-            return None
-        return next((i for i in range(p + 1, len(v))
-                     if abs(v[i] - v[i - 1]) > REL_EPS), None)
-
     anchor = a.anchor
     if anchor == "auto":
         anchor = next((c for c in ("v44_BallX", "v44_SelfX") if c in common),
@@ -166,8 +180,8 @@ def main() -> int:
         if anchor in ("ball",):
             ga, sa = first_nonzero(g[anchor]), first_nonzero(s[anchor])
         else:
-            ga = release_after_place(g[anchor]) or first_nonzero(g[anchor])
-            sa = release_after_place(s[anchor]) or first_nonzero(s[anchor])
+            ga = _release_after_place(g[anchor]) or first_nonzero(g[anchor])
+            sa = _release_after_place(s[anchor]) or first_nonzero(s[anchor])
     else:
         ga, sa = first_change(g[anchor]), first_change(s[anchor])
 

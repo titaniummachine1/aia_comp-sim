@@ -71,9 +71,19 @@ pub const STAMINA_REGEN: f32 = 0.001;
 
 /// Player root ground Y (pinned word 1034595072 = 0.08333397).
 pub const PLAYER_GROUND_Y: f32 = 0.083_333_97;
-/// Serve toss release height above the player (config toss_height 2.55).
-pub const TOSS_HEIGHT: f32 = 2.55;
-/// Minimum toss launch speed (`sqrt(distance*(g+g))`, floored at 11.5).
+/// Serve toss release height above `PLAYER_GROUND_Y` (game-measured: the held
+/// ball bobs 1.02-1.44 m absolute and the toss launches at the bob top,
+/// settled v0.14 timeplot 2026-09-12).
+pub const TOSS_RELEASE_HEIGHT: f32 = 1.36;
+/// Absolute height the tossed ball reaches (game-measured flight/toss apex
+/// 3.72 m; the launch speed is solved to reach it).
+pub const TOSS_APEX_Y: f32 = 3.72;
+/// The game strikes the RISING toss at ~3.5 m (not on descent): tick ~86,
+/// ball 3.5-3.6 m, serve flight then peaks 3.72 into the box.
+pub const TOSS_STRIKE_Y: f32 = 3.45;
+/// Toss launch speed floor (game rise 1.44 -> 3.5 m in ~26 ticks => ~11.2;
+/// the ballistic solve for the measured apex gives ~11.8, so this floor is
+/// not binding any more).
 pub const TOSS_MIN_SPEED: f32 = 11.5;
 /// Serve contact height above the player root.
 pub const SERVE_CONTACT_Y: f32 = 3.2;
@@ -157,6 +167,9 @@ pub fn fatigued_charge(q: f32, active: i32) -> f32 {
 // --- Clocks ---
 /// Between-point hold before the next serve setup (v0.12 point_pause).
 pub const POINT_PAUSE: f32 = 1.15;
+/// Serve-setup settle before the toss launches (game-measured: ball placed at
+/// the server -> strike = 64 ticks; settle 51 + ~13 rise ticks = 64).
+pub const SETUP_SETTLE: f32 = 1.02;
 /// Serve clock: the server must get the serve under way within this window.
 /// On expiry the game **awards the serve to the opponent** (a refusal /
 /// delay-of-game forfeit of the serve for the rest of the game) — simulated by

@@ -4,8 +4,9 @@
 //! PointPause â†’ â€¦`, v0.12 `core.hpp` Match::step order):
 //!
 //! 1. **ServeSetup** â€” server/receiver walk to their stances; settle timer.
-//! 2. **Toss** â€” the tossed ball rises to `TOSS_HEIGHT`; the server charges
-//!    (swing hold) and strikes near the top of the toss.
+//! 2. **Toss** — the tossed ball rises from the hand (~1.44 m) toward the
+//!    measured apex (3.72 m); the server charges (swing hold) and the strike
+//!    fires while the toss is still RISING at ~3.45 m (game tick ~86).
 //! 3. **Rally** â€” ballistic flight with the net collider; per-shot floor
 //!    bounce; faults/out/second-bounce resolve the point.
 //! 4. **PointPause** â€” `POINT_PAUSE` hold, then the next serve.
@@ -496,7 +497,12 @@ impl TennisWorld {
                 let foul_risk = self.serve_in_flight
                     && !self.serve_bounced
                     && self.score.receiver() == side;
-                let in_toss_window = !tossing || self.ball.vel.y < 0.0;
+                let in_toss_window = !tossing
+                    // Game: the strike fires while the toss is RISING at ~3.5 m
+                    // (measured tick ~86, ball 3.5-3.6); the descent arm is a
+                    // safety net that a correct toss never reaches.
+                    || (self.ball.vel.y > 0.0 && self.ball.pos.y >= TOSS_STRIKE_Y)
+                    || self.ball.vel.y < 0.0;
                 let striking_phase = self.phase == Phase::Rally || tossing;
                 if striking_phase
                     && !foul_risk
@@ -698,23 +704,24 @@ impl TennisWorld {
         // step().
         let _ = cmds;
         // Setup settle timer before the toss (server walk stand-in; the
-        // sim teleports the server, the game walks it ~1.2 s). This gates
-        // nothing about the receiver — it walks free the whole time.
-        if self.phase_t >= 0.6 {
+        // sim teleports the server, the game walks it). Tuned so the total
+        // placement -> strike matches the game's measured 64 ticks:
+        // settle 51 + ~13 rise ticks. Gates nothing about the receiver.
+        if self.phase_t >= SETUP_SETTLE {
             self.toss();
         }
     }
 
-    /// Launch the toss (v0.14 `RequestServeToss`): straight up from the hand,
-    /// `speed = max(sqrt(d * (g+g)), 11.5)` with the release at toss height.
+    /// Launch the toss (v0.14 `RequestServeToss`): straight up from the hand
+    /// (game release ~1.44 m absolute), solved to reach the measured apex.
     fn toss(&mut self) {
         let server = self.score.server();
         let hand = Vec3::new(
             self.players[Self::idx(server)].pos.x,
-            PLAYER_GROUND_Y + TOSS_HEIGHT,
+            PLAYER_GROUND_Y + TOSS_RELEASE_HEIGHT,
             self.players[Self::idx(server)].pos.y,
         );
-        let d = (COURT_Y + TOSS_HEIGHT + 1.0) - hand.y;
+        let d = (TOSS_APEX_Y - hand.y).max(0.5);
         let speed = ((d * (GRAVITY + GRAVITY)).sqrt()).max(TOSS_MIN_SPEED);
         self.ball = BallState::new(hand, Vec3::new(0.0, speed, 0.0), ShotType::Flat.game_arg(), 0.0);
         self.ball_held = false;
@@ -729,10 +736,13 @@ impl TennisWorld {
         // on the first Toss tick the release-strike there flips phase to
         // Rally before this dispatch runs, so a latch here would never fire.
         // This step only handles a hanging toss (recatch / serve clock).
-        // Auto-strike the serve (game `TennisAutoSwing`): as the tossed ball
-        // descends into the racket zone the serve fires with the latched
-        // ServeAimHint, whatever the server brain's swing output — bots that
-        // hold (or never press) swing still serve, like in the game.
+        // Auto-strike the serve (game `TennisAutoSwing`): the primary strike
+        // fires in step_players while the toss RISES through ~3.45 m (game
+        // tick ~86); this descent branch is the safety net for a toss that
+        // got past the window (e.g. brain swing state edge cases). Either
+        // way the serve fires with the latched ServeAimHint, whatever the
+        // server brain's swing output — bots that hold (or never press)
+        // swing still serve, like in the game.
         if self.ball.vel.y < 0.0 {
             let i = Self::idx(server);
             let racket = self.players[i].racket_center();
