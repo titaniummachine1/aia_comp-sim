@@ -51,12 +51,14 @@ parity — the four steps below.
    and, when present, `tennis-v015`; a missing/empty per-version `shot_solver.jsonl`
    makes that version skip cleanly).
 
-**v0.15f status (2026-09-12, HANDOFF §21):** the event-fixture snapshot now
-tolerates version-removed fields (`metadata_trace_field_optional` applied to the
-event snapshot/restore/match groups too), so the capture runs end-to-end on
-v0.15f: `curve` 29/29 complete, `serve_direct` 26, `simulate` 13, `nth_landing`
-10. The **shot** fixture still yields 0 rows, so the v0.15 solver gate is not yet
-meaningful. Build the v0.15 event probe with `build_paritymod_event_v015.ps1`.
+**v0.15f status (2026-09-12, HANDOFF §21):** the event fixture now runs
+end-to-end on v0.15f (two fixes: the event snapshot/restore/match groups tolerate
+version-removed fields, and the shot fixture's `v014_shot_ball_fields` marks the
+three removed ball cache fields optional). Captured: **shot 210/210**, curve
+29/29, serve_direct 26, simulate 13, nth_landing 10. **The v0.15 shot solver is
+identical to v0.14** — `tennis_v014_solver_parity` reports 200/210 (max_err
+23.6888) for BOTH, so the solver fixtures need no v0.15 re-pin. Build the v0.15
+event probe with `build_paritymod_event_v015.ps1`.
 
 Start the mod host for a new version the same way v0.14/v0.15f were done:
 copy the pristine install to `modhost/v<ver>/`, keep the untouched launcher as

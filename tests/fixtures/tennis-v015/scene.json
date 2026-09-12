@@ -1,8 +1,8 @@
 {
  "kind": "shot_fixture_context",
  "schema": "v014-shot-v1",
- "manager_object": "0x000001c12e35fa80",
- "ball_object": "0x000001c130adde00",
+ "manager_object": "0x000001442f360a80",
+ "ball_object": "0x0000014431abde00",
  "manager_fields": {
   "court_length": {
    "managed_name": "courtLength",
@@ -210,7 +210,7 @@
    "encoding": 4,
    "required": true,
    "read_ok": true,
-   "value": "0x000001c12e35fa80"
+   "value": "0x000001442f360a80"
   },
   "arcade_gravity": {
    "managed_name": "arcadeGravity",
@@ -368,7 +368,7 @@
    "managed_name": "cachedPredictedBounceTime",
    "word_count": 1,
    "encoding": 3,
-   "required": true,
+   "required": false,
    "read_ok": false,
    "value": null
   },
@@ -376,7 +376,7 @@
    "managed_name": "cachedPredictedSecondBounceTime",
    "word_count": 1,
    "encoding": 3,
-   "required": true,
+   "required": false,
    "read_ok": false,
    "value": null
   },
@@ -404,7 +404,7 @@
    "managed_name": "predictedBounceAge",
    "word_count": 1,
    "encoding": 3,
-   "required": true,
+   "required": false,
    "read_ok": false,
    "value": null
   },

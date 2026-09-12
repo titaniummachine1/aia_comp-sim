@@ -817,25 +817,42 @@ They now tolerate the version-optional fields (and `required==0` serve fields),
 so a build that removed a field no longer aborts the capture. No-op for v0.14
 (all fields present).
 
-**After the fix** (v0.15f, titanium54 vs aia3 seed 20260907):
+**Second blocker found and fixed.** The shot fixture's **own** snapshot
+(`metadata_event_shot_capture_snapshot`) still failed
+(`event_fixture_failure component=shot`). Cause: `v014_shot_ball_fields` marked
+the three v0.15-removed ball cache fields (`cachedPredictedBounceTime`,
+`cachedPredictedSecondBounceTime`, `predictedBounceAge`) `required:1`. Flipped to
+`0` (the shot restore/match helpers were already `required`-aware).
+
+**After both fixes** (v0.15f, titanium54 vs aia3 seed 20260907):
 
 | fixture | v0.15f |
 |---|---|
+| `shot_fixture` | **complete 210/210 cases, 840/840 calls** |
 | `curve_fixture` | **complete 29/29** |
 | `serve_direct` | 26 rows |
 | `simulate` | 13 rows |
 | `nth_landing` | 10 rows |
-| `shot_fixture` | **0 rows (still fails)** |
-| `getter_items` | waiting (`graph_not_ready` at the startup fixture) |
+| `getter_items` | pending (`graph_not_ready` at the startup fixture) |
 
-Partial corpus emitted to `tests/fixtures/tennis-v015/` (curve / nth_landing /
-scene / simulate). `tests/tennis_v014_solver_parity.rs` is now version-
-parameterised: it reads `tennis-v014` for the gate (unchanged, 200/210) and
-**skips cleanly** for `tennis-v015` while the shot corpus is absent. Verified:
-both tests pass.
+Full corpus emitted to `tests/fixtures/tennis-v015/`.
 
-**Next for F4:** mine the v0.15 **shot** fixture (the one the solver gate needs).
-`shot_fixture_success:false / shot_case_rows:0` means a `v014_shot_manager_fields`
-input or the `ComputeShotVelocity` signature/field layout moved in v0.15; add it
-to the optional allowlist or re-map it, then re-run the same recipe.
+**Result: the v0.15 shot solver is IDENTICAL to v0.14.**
+`cargo test --test tennis_v014_solver_parity`:
+
+```
+v0.14 shot solver parity: 200/210 within 0.25 m/s, max_err=23.6888 m/s
+v0.15 shot solver parity: 200/210 within 0.25 m/s, max_err=23.6888 m/s
+```
+
+Same ratio, same max error, same worst row (the documented `fallback`
+world-state case) → v0.15's solver-adjacent changes did **not** move
+`ComputeShotVelocity`. So the sim's solver fixtures need **no** v0.15 re-pin;
+v0.15's real behaviour changes are confined to ball-position interpolation +
+the time-to-ground cache (§18/§20 triage map).
+
+**Remaining F4:** `getter_items` (the capture must run after the graph loads),
+and the non-solver v0.15 behaviours (frame interpolation, time-to-ground cache)
+— world-model work, not fixture work.
+
 
