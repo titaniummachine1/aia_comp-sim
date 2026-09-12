@@ -956,3 +956,31 @@ curve (then replace/augment the fatigue-only scatter with it).
 state so ticks align from the first meaningful sample; (2) shorten/µ-match the
 serve setup; (3) build the contact-grading fixture.
 
+## 24. The cold-launch boot match is not a fair state (fixed in the mod driver)
+
+On a **cold launch** the game spawns the ball at court centre and awards a
+spurious point to the right side before the serve setup — so the *boot match* is
+not a fair/correct state. This is exactly what the §23 tick diff saw (`v44_BallX`
+`0.00` for the first ~23 samples) and why `restart_sweep.py` restarts before each
+seed (its `restart_epoch` guard exists for the same reason).
+
+The other drivers did **not** restart, so they recorded the boot dud:
+`game_tournament.py` (the 78-match set) called `modctl launch` then waited for
+`done` — capturing the ball-at-centre match. That is a real contributor to the
+low exact parity on that set.
+
+Fixed (`AIA_tennis`):
+
+- `modctl.py` gains a **`settle`** subcommand: after a cold launch it waits for
+  the mod to come up, writes `{"cmd":"restart_match",…}`, and waits for a fresh
+  `restart_epoch`. Docstring records *why*.
+- `game_tournament.py::play_match` now calls `modctl.settle` right after launch,
+  so the match it records is the clean one.
+- `restart_sweep.py` already did this; `capture_fixtures.py` is unaffected (the
+  event fixture runs at startup, not through a match).
+
+**Sim side:** no change needed — the sim starts with the ball at the server's
+hand (a clean state), so it was already "correct" here; the comparison tooling
+(`scripts/tick_diff.py`) should simply use a **restarted** match's timeplot, not
+the boot export.
+
