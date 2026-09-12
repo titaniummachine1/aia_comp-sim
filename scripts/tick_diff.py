@@ -31,6 +31,30 @@ SAVES = os.path.join(os.path.expanduser("~"), "AppData", "LocalLow",
 TP = os.path.join(SAVES, "Timeplots")
 BIN = ["cargo", "run", "-q", "--bin", "tennis_tournament", "--"]
 EPS = 1e-3
+# Ball RELEASE ("serve strike") threshold: a per-tick positional step big enough
+# to be a launched ball (>0.3 m/tick = 15 m/s), well above the placement settle
+# and the in-hand hover drift (<0.15). Without this, the ball's teleport onto the
+# server's hand false-fires as a "release" one tick later.
+REL_EPS = 0.3
+# The game emits 999.0 for "time to intercept = unreachable". Treat that as a
+# categorical sentinel: equal sentinels match; a sentinel vs a real value is one
+# unit of "wrong state" (not a 999-wide numeric gap, which would swamp the mean).
+SENTINEL = 900.0
+
+
+def _absdiff(a: float, b: float) -> float:
+    if a >= SENTINEL and b >= SENTINEL:
+        return 0.0
+    if a >= SENTINEL or b >= SENTINEL:
+        return 1.0
+    return abs(a - b)
+
+
+def _diverge(a: float, b: float) -> bool:
+    if a >= SENTINEL or b >= SENTINEL:
+        return (a >= SENTINEL) != (b >= SENTINEL)
+    return abs(a - b) > EPS
+
 
 
 def game_series(seed: int, srv: int):
@@ -77,12 +101,21 @@ def main() -> int:
     ap.add_argument("--away", default="aia3")
     ap.add_argument("--points", type=int, default=8)
     ap.add_argument("--top", type=int, default=14)
-    ap.add_argument("--anchor", default="none",
-                    help="channel aligned on its first value change ('none' = "
-                         "raw tick 0; 'auto'; or e.g. v44_BallX)")
+    ap.add_argument("--game-timeplot", default=None,
+                    help="explicit game TimePlot export path (an un-renamed "
+                         "quit export); default = the sweep-named file")
+    ap.add_argument("--anchor", default="strike",
+                    help="fairness anchor: 'strike' (ball release = same serve "
+                         "stance, default), 'ball' (ball placed at server), "
+                         "'none' (raw tick 0), 'auto', or a channel name")
     a = ap.parse_args()
 
-    gf, g = game_series(a.seed, a.srv)
+    if a.game_timeplot:
+        gf = a.game_timeplot
+        data = parse_timeplot_json(io.open(gf, encoding="utf-8").read())
+        g = {s.get("name"): s.get("y", []) for s in data.get("series", [])}
+    else:
+        gf, g = game_series(a.seed, a.srv)
     s = sim_series(a.seed, a.srv, a.home, a.away, a.points)
     common = [k for k in g if k in s and g[k] and s[k]]
     if not common:
@@ -99,6 +132,25 @@ def main() -> int:
                 return i
         return 0
 
+    # Serve-stance anchor. The game holds the ball at the ORIGIN (0,0,0)
+    # during the pre-serve setup, then *teleports* it to the server's hand and
+    # serves almost immediately (placed@t, released@t+1). The sim holds it at
+    # the hand from tick 0 and spends a walk-in/toass window before releasing.
+    # The fair "same serve stance" instant is therefore the ball RELEASE (the
+    # serve strike), where both sides are about to launch the same point.
+    def first_nonzero(v):
+        for i in range(len(v)):
+            if abs(v[i]) > EPS:
+                return i
+        return 0
+
+    def release_after_place(v):
+        p = next((i for i in range(len(v)) if abs(v[i]) > EPS), None)
+        if p is None:
+            return None
+        return next((i for i in range(p + 1, len(v))
+                     if abs(v[i] - v[i - 1]) > REL_EPS), None)
+
     anchor = a.anchor
     if anchor == "auto":
         anchor = next((c for c in ("v44_BallX", "v44_SelfX") if c in common),
@@ -106,36 +158,43 @@ def main() -> int:
     if anchor in ("none", ""):
         ga = sa = 0
         anchor = None
+    elif anchor in ("ball", "strike", "release"):
+        anchor = next((c for c in ("v44_BallX", "v44_BallY", "v44_BallZ")
+                       if c in common), common[0])
+        if anchor in ("ball",):
+            ga, sa = first_nonzero(g[anchor]), first_nonzero(s[anchor])
+        else:
+            ga = release_after_place(g[anchor]) or first_nonzero(g[anchor])
+            sa = release_after_place(s[anchor]) or first_nonzero(s[anchor])
     else:
         ga, sa = first_change(g[anchor]), first_change(s[anchor])
 
     def mad_at() -> tuple[float, list[tuple[float, int, str]], int, int]:
-        # shift = ga - sa: skip that many leading samples from the longer side.
-        shift = ga - sa
+        # Slice BOTH sides at their own serve onset (ga / sa) so tick i compares
+        # the same rally instant -- the game's pre-serve lead-in (ball at origin)
+        # and the sim's walk-in/toass window are both discarded.
         rows = []
+        n = 0
         for k in common:
-            if shift >= 0:
-                gv, sv = g[k][shift:], s[k]
-            else:
-                gv, sv = g[k], s[k][-shift:]
+            gv, sv = g[k][ga:], s[k][sa:]
             n = min(len(gv), len(sv))
             if n <= 0:
                 continue
             first = -1
             for i in range(n):
-                if abs(gv[i] - sv[i]) > EPS:
+                if _diverge(gv[i], sv[i]):
                     first = i
                     break
-            mad = sum(abs(gv[i] - sv[i]) for i in range(n)) / n
+            mad = sum(_absdiff(gv[i], sv[i]) for i in range(n)) / n
             rows.append((mad, first, k))
         total = sum(r[0] for r in rows) / max(1, len(rows))
-        return total, rows, shift, n
+        return total, rows, n
 
-    total, rows, shift, n = mad_at()
+    total, rows, n = mad_at()
     print(f"game {os.path.basename(gf)}  "
           f"game_n={len(g[common[0]])} sim_n={len(s[common[0]])} | "
           f"{len(common)} shared channels | anchor {anchor or 'none'} "
-          f"(game first-change {ga}, sim {sa}) | shift {shift} | "
+          f"(game onset {ga}, sim onset {sa}) | "
           f"aligned {n} | mean|diff| {total:.4f}\n")
 
     rows.sort(reverse=True)
@@ -149,12 +208,13 @@ def main() -> int:
     # drift, and shows whether they ever converge.
     probe = [k for _, _, k in rows[:4]]
     ticks = [0, 1, 2, 10, 25, 50, 100, 200, 400]
-    print(f"\nsamples (game vs sim) at aligned ticks {ticks} (shift {shift}):")
+    print(f"\nsamples (game vs sim) at aligned ticks {ticks} "
+          f"(game onset {ga}, sim onset {sa}):")
     for k in probe:
         gv, sv = g[k], s[k]
         cells = []
         for t in ticks:
-            gi, si = t + shift, t
+            gi, si = ga + t, sa + t
             cells.append(
                 f"{t}: {gv[gi]:.2f}/{sv[si]:.2f}"
                 if 0 <= gi < len(gv) and si < len(sv) else f"{t}: -/-")
@@ -163,6 +223,27 @@ def main() -> int:
     print(f"\nearliest divergence over {len(common)} channels: "
           f"tick {min(onset) if onset else 'none'} "
           f"(median {sorted(onset)[len(onset)//2] if onset else '-'})")
+
+    # Serve-phase timing: when is the ball PLACED at the server (first non-zero)
+    # and when is it RELEASED (first positional move after placement)? This is
+    # the fair "same serve stance" clock; a gap here is a serve-setup timing
+    # difference, not a rally difference.
+    bc = next((c for c in ("v44_BallX", "v44_BallY", "v44_BallZ")
+               if c in common), None)
+    if bc:
+        def place_release(v):
+            p = next((i for i in range(len(v)) if abs(v[i]) > EPS), None)
+            if p is None:
+                return None, None
+            r = next((i for i in range(p + 1, len(v))
+                      if abs(v[i] - v[i - 1]) > REL_EPS), None)
+            return p, r
+        gp, gr = place_release(g[bc])
+        sp, sr = place_release(s[bc])
+        setup = lambda a, b: (b - a) if (a is not None and b is not None) else None
+        print(f"serve phase ({bc}): game placed@{gp} released@{gr} "
+              f"setup={setup(gp, gr)} | sim placed@{sp} released@{sr} "
+              f"setup={setup(sp, sr)}")
     return 0
 
 

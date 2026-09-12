@@ -984,3 +984,58 @@ hand (a clean state), so it was already "correct" here; the comparison tooling
 (`scripts/tick_diff.py`) should simply use a **restarted** match's timeplot, not
 the boot export.
 
+## 25. Fair tick-by-tick alignment: sim DOES replicate the serve stance
+
+Question asked: after settling, can the sim replicate how the game behaves? The
+`tick_diff.py` tool now answers it fairly.
+
+**Anchor (new default `--anchor strike`).** The game holds the ball at the
+**origin** while the match is *not started*, then **teleports it to the server's
+hand**, the server settles, and at the **strike** the ball launches. The sim
+holds the ball at the hand from tick 0. So the fair "same serve stance" instant
+is the ball **release/strike**, not raw tick 0:
+
+- release detector uses `REL_EPS = 0.3` (a launched ball = >0.3 m/tick = 15 m/s)
+  so the placement settle / in-hand hover (<0.15 m/tick) does **not** false-fire;
+- `mad_at` slices **both** sides at their own onset (`g[ga:]`, `s[sa:]`), rather
+  than shifting one side by `ga - sa`.
+
+**Sentinel handling.** The game emits `999.0` for "time to intercept =
+unreachable". `_absdiff`/`_diverge` treat it categorically (equal sentinels
+match; sentinel vs real = 1.0 of "wrong state"), so it no longer swamps the mean.
+
+Settled match, `titanium54 vs aia3`, seed 7, srv home (`timeplot_..12-40-45`):
+
+```
+game  game_n=191 sim_n=352 | 44 shared channels | anchor v44_BallX
+      (game onset 86, sim onset 69) | aligned 105 | mean|diff| 1.4818
+serve phase (v44_BallX): game placed@22 released@86 setup=64 | sim placed@0 released@69 setup=69
+```
+
+**Findings**
+
+1. **Serve setup matches within 5 ticks** (game 64, sim 69). The earlier "1 vs
+   69" scare was the placement-settle false-firing as a release.
+2. **Serve stance matches**: `SelfX` -14.01/-14.92, `OppMeetX` 4.01/3.31 at the
+   strike.
+3. **The first ~25-30 ticks (~0.5-0.6 s) of the rally track closely**:
+   `RacketDist`/`DNow` 1.36/0.14 -> 5.70/5.44 (t10) -> 13.12/14.27 (t25);
+   `SelfX` -12.93/-13.30 (t10).
+4. **Beyond ~t30 the rally diverges** and by t100 is fully uncorrelated. This is
+   expected: the rally is chaotic multi-agent dynamics, so *any* residual (a
+   one-tick decision difference, an RNG draw, a contact micro-timing) amplifies.
+   Tick-exact rally parity therefore requires matching every decision and random
+   draw, not just the world model.
+
+**Net answer:** the sim replicates the game's serve stance and the early rally
+(within ~0.5 s the named channels agree to a few cm / tenths); it cannot follow a
+full rally tick-for-tick, and that is a property of the system, not a bug.
+
+**Next (still to do):** (a) re-mine the 78-match tournament now that `settle`
+discards the boot dud; (b) build the **contact-grading fixture**
+(`GradeRallyContact` / `EvaluateHitAccuracy`, still uncaptured) to measure the
+early/late hit-deviation distribution - the "is the bell-curve centre at the
+minimum-deviation point?" question; the sim currently has **no timing-deviation
+term** (only zero-mean uniform fatigue scatter), so this fixture is what pins it.
+
+
