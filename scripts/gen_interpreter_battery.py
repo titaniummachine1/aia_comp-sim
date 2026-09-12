@@ -70,10 +70,14 @@ POLICY = {
     "B.hold_v_1": "ConditionalSetVector3 unwired-false hold rule",
     "B.hold_v_2": "ConditionalSetVector3 unwired-false hold rule",
     "B.hold_v_3": "ConditionalSetVector3 unwired-false hold rule",
+    "B.holdv_mag": "ConditionalSetVector3 unwired-false (Magnitude port, no split)",
+    "B.holdv_ctrl_mag": "ConditionalSetVector3 both-arms-wired control",
     "B.null_add": "unwired arithmetic input policy",
     "B.latch_a": "variable read/write order",
     "B.latch_b": "variable initial value",
     "B.coerce_b2f": "bool->float coercion",
+    "B.coerce_b2f_add": "Bool->Float coercion into arithmetic (AddFloats(bool,0))",
+    "B.coerce_b2f_mul": "Bool->Float coercion into arithmetic (MultiplyFloats(bool,1))",
     "B.coerce_f2b": "float->bool condition coercion",
 }
 
@@ -147,6 +151,13 @@ def clamped(g, node_sid, port="Float1"):
 def plot_f(g, ch, node_sid, port="Float1"):
     CHANNELS.append(ch)
     g.timeplot(ch, clamped(g, node_sid, port))
+
+
+def mag(g, vec_sid, port="Vector31"):
+    """Magnitude of a vector output as a plain Float port (no Vector3Split)."""
+    n = g.node("Magnitude", ports=[(port, 0), ("Float1", 1)])
+    g.link(g.port(vec_sid, port, 1), g.port(n, port, 0))
+    return n
 
 
 def split3(g, vec_sid, ch):
@@ -241,6 +252,21 @@ def main() -> None:
     g.link(g.port(make_vec(g, 1.0, 2.0, 3.0), "Vector31", 1), g.port(hv, "Vector31", 0))
     split3(g, hv, "B.hold_v")                       # Vector32 UNWIRED
 
+    # ---- Phase-B disambiguation (settle the two game-sourced divergences) ----
+    # The vector hold above is read through `Vector3Split`; `Magnitude` reads the
+    # SAME node through an ordinary Float port, ruling out a split-path artifact.
+    plot_f(g, "B.holdv_mag", mag(g, hv))
+    # Control: the very same node type with BOTH arms wired — proves the
+    # conditional + Magnitude path is sound (|(1,2,3)| == |(-1,-2,-3)|).
+    hv_ctl = g.node("ConditionalSetVector3", ports=[
+        ("Bool1", 0), ("Vector31", 0), ("Vector32", 0), ("Vector31", 1)])
+    g.link(g.port(parity, "Bool1", 1), g.port(hv_ctl, "Bool1", 0))
+    g.link(g.port(make_vec(g, 1.0, 2.0, 3.0), "Vector31", 1),
+           g.port(hv_ctl, "Vector31", 0))
+    g.link(g.port(make_vec(g, 4.0, 5.0, 6.0), "Vector31", 1),
+           g.port(hv_ctl, "Vector32", 0))
+    plot_f(g, "B.holdv_ctrl_mag", mag(g, hv_ctl))
+
     # Coercions: bool -> Float slot, and a float used as a condition.
     plot_f(g, "B.coerce_b2f", parity, "Bool1")
     cb = g.node("ConditionalSetBool", ports=[
@@ -249,6 +275,15 @@ def main() -> None:
     g.link(g.port(g.const_bool(True), "Bool1", 1), g.port(cb, "Bool2", 0))
     g.link(g.port(g.const_bool(False), "Bool1", 1), g.port(cb, "Bool3", 0))
     plot_f(g, "B.coerce_f2b", cb, "Bool1")
+
+    # Bool -> Float coercion, isolated from the TimePlot: feed the Bool into an
+    # arithmetic node first. If the game coerces, Add(bool,0) == 1; if not, 0.
+    ba = g.node("AddFloats", ports=[("Float1", 0), ("Float2", 0), ("Float1", 1)])
+    g.link(g.port(parity, "Bool1", 1), g.port(ba, "Float1", 0))
+    g.link(g.port(g.const_float(0.0), "Float1", 1), g.port(ba, "Float2", 0))
+    plot_f(g, "B.coerce_b2f_add", ba)
+    plot_f(g, "B.coerce_b2f_mul",
+           node2(g, "MultiplyFloats", parity, "Bool1", g.const_float(1.0), "Float1"))
 
     # Division edge cases (clamped so they stay observable).
     for ch, a in (("B.div_p0", 1.0), ("B.div_n0", -1.0), ("B.div_00", 0.0)):

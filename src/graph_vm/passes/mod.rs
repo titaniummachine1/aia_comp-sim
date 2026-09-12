@@ -33,15 +33,35 @@ impl PassManager {
 
     /// O1 pipeline: ConstFold → RelayRemoval → CSE → Fusion → RegAlloc.
     pub fn o1() -> Self {
-        Self {
-            passes: vec![
-                Box::new(ConstFold),
-                Box::new(RelayRemoval),
-                Box::new(Cse),
-                Box::new(Fusion),
-                Box::new(RegAlloc),
-            ],
+        Self::o1_prefix(5)
+    }
+
+    /// The O1 pipeline truncated to its first `k` passes. Diagnostics only:
+    /// running a save through each prefix pinpoints *which* pass changes
+    /// behaviour (`k >= 5` == [`Self::o1`]).
+    pub fn o1_prefix(k: usize) -> Self {
+        let mut passes: Vec<Box<dyn Pass>> = Vec::new();
+        if k > 0 {
+            passes.push(Box::new(ConstFold));
         }
+        if k > 1 {
+            passes.push(Box::new(RelayRemoval));
+        }
+        if k > 2 {
+            passes.push(Box::new(Cse));
+        }
+        if k > 3 {
+            passes.push(Box::new(Fusion));
+        }
+        if k > 4 {
+            passes.push(Box::new(RegAlloc));
+        }
+        Self { passes }
+    }
+
+    /// Names of the passes in execution order (for reports).
+    pub fn names(&self) -> Vec<&'static str> {
+        self.passes.iter().map(|p| p.name()).collect()
     }
 
     /// Compatibility alias for the renamed O1 pipeline.

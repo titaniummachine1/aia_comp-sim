@@ -49,6 +49,16 @@
   "policy": true,
   "question": "bool->float coercion"
  },
+ "B.coerce_b2f_add": {
+  "kind": "float",
+  "policy": true,
+  "question": "Bool->Float coercion into arithmetic (AddFloats(bool,0))"
+ },
+ "B.coerce_b2f_mul": {
+  "kind": "float",
+  "policy": true,
+  "question": "Bool->Float coercion into arithmetic (MultiplyFloats(bool,1))"
+ },
  "B.coerce_f2b": {
   "kind": "bool",
   "policy": true,
@@ -93,6 +103,16 @@
   "kind": "float",
   "policy": true,
   "question": "ConditionalSetVector3 unwired-false hold rule"
+ },
+ "B.holdv_ctrl_mag": {
+  "kind": "float",
+  "policy": true,
+  "question": "ConditionalSetVector3 both-arms-wired control"
+ },
+ "B.holdv_mag": {
+  "kind": "float",
+  "policy": true,
+  "question": "ConditionalSetVector3 unwired-false (Magnitude port, no split)"
  },
  "B.latch_a": {
   "kind": "float",

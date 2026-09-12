@@ -4983,373 +4983,373 @@
    ]
   },
   {
-   "id": "ClampFloat",
-   "sID": "ClampFloat_02ed",
+   "id": "Magnitude",
+   "sID": "Magnitude_02ed",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
+     "id": "Vector31",
+     "sID": "Magnitude_Vector31_02ee",
+     "nodeSID": "Magnitude_02ed",
+     "polarity": 0
+    },
+    {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_02ee",
-     "nodeSID": "ClampFloat_02ed",
-     "polarity": 0
-    },
-    {
-     "id": "Float2",
-     "sID": "ClampFloat_Float2_02ef",
-     "nodeSID": "ClampFloat_02ed",
-     "polarity": 0
-    },
-    {
-     "id": "Float3",
-     "sID": "ClampFloat_Float3_02f0",
-     "nodeSID": "ClampFloat_02ed",
-     "polarity": 0
-    },
+     "sID": "Magnitude_Float1_02ef",
+     "nodeSID": "Magnitude_02ed",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "ClampFloat",
+   "sID": "ClampFloat_02f0",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
     {
      "id": "Float1",
      "sID": "ClampFloat_Float1_02f1",
-     "nodeSID": "ClampFloat_02ed",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_02f2",
-   "modifier": "-1e+30",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_02f3",
-     "nodeSID": "Float_02f2",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_02f4",
-   "modifier": "1e+30",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_02f5",
-     "nodeSID": "Float_02f4",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "TimePlot",
-   "sID": "TimePlot_02f6",
-   "modifier": "",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "String1",
-     "sID": "TimePlot_String1_02f7",
-     "nodeSID": "TimePlot_02f6",
-     "polarity": 0
-    },
-    {
-     "id": "Color1",
-     "sID": "TimePlot_Color1_02f8",
-     "nodeSID": "TimePlot_02f6",
-     "polarity": 0
-    },
-    {
-     "id": "String2",
-     "sID": "TimePlot_String2_02f9",
-     "nodeSID": "TimePlot_02f6",
-     "polarity": 0
-    },
-    {
-     "id": "Float1",
-     "sID": "TimePlot_Float1_02fa",
-     "nodeSID": "TimePlot_02f6",
-     "polarity": 0
-    }
-   ]
-  },
-  {
-   "id": "String",
-   "sID": "String_02fb",
-   "modifier": "B.coerce_b2f",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "String1",
-     "sID": "String_String1_02fc",
-     "nodeSID": "String_02fb",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "ConditionalSetBool",
-   "sID": "ConditionalSetBool_02fd",
-   "modifier": "",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Bool1",
-     "sID": "ConditionalSetBool_Bool1_02fe",
-     "nodeSID": "ConditionalSetBool_02fd",
-     "polarity": 0
-    },
-    {
-     "id": "Bool2",
-     "sID": "ConditionalSetBool_Bool2_02ff",
-     "nodeSID": "ConditionalSetBool_02fd",
-     "polarity": 0
-    },
-    {
-     "id": "Bool3",
-     "sID": "ConditionalSetBool_Bool3_0300",
-     "nodeSID": "ConditionalSetBool_02fd",
-     "polarity": 0
-    },
-    {
-     "id": "Bool1",
-     "sID": "ConditionalSetBool_Bool1_0301",
-     "nodeSID": "ConditionalSetBool_02fd",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_0302",
-   "modifier": "0.5",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_0303",
-     "nodeSID": "Float_0302",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Bool",
-   "sID": "Bool_0304",
-   "modifier": "0",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Bool1",
-     "sID": "Bool_Bool1_0305",
-     "nodeSID": "Bool_0304",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Bool",
-   "sID": "Bool_0306",
-   "modifier": "1",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Bool1",
-     "sID": "Bool_Bool1_0307",
-     "nodeSID": "Bool_0306",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "ClampFloat",
-   "sID": "ClampFloat_0308",
-   "modifier": "",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "ClampFloat_Float1_0309",
-     "nodeSID": "ClampFloat_0308",
+     "nodeSID": "ClampFloat_02f0",
      "polarity": 0
     },
     {
      "id": "Float2",
-     "sID": "ClampFloat_Float2_030a",
-     "nodeSID": "ClampFloat_0308",
+     "sID": "ClampFloat_Float2_02f2",
+     "nodeSID": "ClampFloat_02f0",
      "polarity": 0
     },
     {
      "id": "Float3",
-     "sID": "ClampFloat_Float3_030b",
-     "nodeSID": "ClampFloat_0308",
+     "sID": "ClampFloat_Float3_02f3",
+     "nodeSID": "ClampFloat_02f0",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_030c",
-     "nodeSID": "ClampFloat_0308",
+     "sID": "ClampFloat_Float1_02f4",
+     "nodeSID": "ClampFloat_02f0",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_030d",
+   "sID": "Float_02f5",
    "modifier": "-1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_030e",
-     "nodeSID": "Float_030d",
+     "sID": "Float_Float1_02f6",
+     "nodeSID": "Float_02f5",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_030f",
+   "sID": "Float_02f7",
    "modifier": "1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_0310",
-     "nodeSID": "Float_030f",
+     "sID": "Float_Float1_02f8",
+     "nodeSID": "Float_02f7",
      "polarity": 1
     }
    ]
   },
   {
    "id": "TimePlot",
-   "sID": "TimePlot_0311",
+   "sID": "TimePlot_02f9",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "TimePlot_String1_0312",
-     "nodeSID": "TimePlot_0311",
+     "sID": "TimePlot_String1_02fa",
+     "nodeSID": "TimePlot_02f9",
      "polarity": 0
     },
     {
      "id": "Color1",
-     "sID": "TimePlot_Color1_0313",
-     "nodeSID": "TimePlot_0311",
+     "sID": "TimePlot_Color1_02fb",
+     "nodeSID": "TimePlot_02f9",
      "polarity": 0
     },
     {
      "id": "String2",
-     "sID": "TimePlot_String2_0314",
-     "nodeSID": "TimePlot_0311",
+     "sID": "TimePlot_String2_02fc",
+     "nodeSID": "TimePlot_02f9",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "TimePlot_Float1_0315",
-     "nodeSID": "TimePlot_0311",
+     "sID": "TimePlot_Float1_02fd",
+     "nodeSID": "TimePlot_02f9",
      "polarity": 0
     }
    ]
   },
   {
    "id": "String",
-   "sID": "String_0316",
-   "modifier": "B.coerce_f2b",
+   "sID": "String_02fe",
+   "modifier": "B.holdv_mag",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "String_String1_0317",
-     "nodeSID": "String_0316",
+     "sID": "String_String1_02ff",
+     "nodeSID": "String_02fe",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "ConditionalSetVector3",
+   "sID": "ConditionalSetVector3_0300",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Bool1",
+     "sID": "ConditionalSetVector3_Bool1_0301",
+     "nodeSID": "ConditionalSetVector3_0300",
+     "polarity": 0
+    },
+    {
+     "id": "Vector31",
+     "sID": "ConditionalSetVector3_Vector31_0302",
+     "nodeSID": "ConditionalSetVector3_0300",
+     "polarity": 0
+    },
+    {
+     "id": "Vector32",
+     "sID": "ConditionalSetVector3_Vector32_0303",
+     "nodeSID": "ConditionalSetVector3_0300",
+     "polarity": 0
+    },
+    {
+     "id": "Vector31",
+     "sID": "ConditionalSetVector3_Vector31_0304",
+     "nodeSID": "ConditionalSetVector3_0300",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "ConstructVector3",
+   "sID": "ConstructVector3_0305",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "ConstructVector3_Float1_0306",
+     "nodeSID": "ConstructVector3_0305",
+     "polarity": 0
+    },
+    {
+     "id": "Float2",
+     "sID": "ConstructVector3_Float2_0307",
+     "nodeSID": "ConstructVector3_0305",
+     "polarity": 0
+    },
+    {
+     "id": "Float3",
+     "sID": "ConstructVector3_Float3_0308",
+     "nodeSID": "ConstructVector3_0305",
+     "polarity": 0
+    },
+    {
+     "id": "Vector31",
+     "sID": "ConstructVector3_Vector31_0309",
+     "nodeSID": "ConstructVector3_0305",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_0318",
+   "sID": "Float_030a",
    "modifier": "1.0",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_0319",
-     "nodeSID": "Float_0318",
+     "sID": "Float_Float1_030b",
+     "nodeSID": "Float_030a",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_031a",
-   "modifier": "0.0",
+   "sID": "Float_030c",
+   "modifier": "2.0",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_031b",
-     "nodeSID": "Float_031a",
+     "sID": "Float_Float1_030d",
+     "nodeSID": "Float_030c",
      "polarity": 1
     }
    ]
   },
   {
-   "id": "DivideFloats",
-   "sID": "DivideFloats_031c",
+   "id": "Float",
+   "sID": "Float_030e",
+   "modifier": "3.0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_030f",
+     "nodeSID": "Float_030e",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "ConstructVector3",
+   "sID": "ConstructVector3_0310",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "DivideFloats_Float1_031d",
-     "nodeSID": "DivideFloats_031c",
+     "sID": "ConstructVector3_Float1_0311",
+     "nodeSID": "ConstructVector3_0310",
      "polarity": 0
     },
     {
      "id": "Float2",
-     "sID": "DivideFloats_Float2_031e",
-     "nodeSID": "DivideFloats_031c",
+     "sID": "ConstructVector3_Float2_0312",
+     "nodeSID": "ConstructVector3_0310",
+     "polarity": 0
+    },
+    {
+     "id": "Float3",
+     "sID": "ConstructVector3_Float3_0313",
+     "nodeSID": "ConstructVector3_0310",
+     "polarity": 0
+    },
+    {
+     "id": "Vector31",
+     "sID": "ConstructVector3_Vector31_0314",
+     "nodeSID": "ConstructVector3_0310",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_0315",
+   "modifier": "4.0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_0316",
+     "nodeSID": "Float_0315",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_0317",
+   "modifier": "5.0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_0318",
+     "nodeSID": "Float_0317",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_0319",
+   "modifier": "6.0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_031a",
+     "nodeSID": "Float_0319",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Magnitude",
+   "sID": "Magnitude_031b",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Vector31",
+     "sID": "Magnitude_Vector31_031c",
+     "nodeSID": "Magnitude_031b",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "DivideFloats_Float1_031f",
-     "nodeSID": "DivideFloats_031c",
+     "sID": "Magnitude_Float1_031d",
+     "nodeSID": "Magnitude_031b",
      "polarity": 1
     }
    ]
   },
   {
    "id": "ClampFloat",
-   "sID": "ClampFloat_0320",
+   "sID": "ClampFloat_031e",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_0321",
-     "nodeSID": "ClampFloat_0320",
+     "sID": "ClampFloat_Float1_031f",
+     "nodeSID": "ClampFloat_031e",
      "polarity": 0
     },
     {
      "id": "Float2",
-     "sID": "ClampFloat_Float2_0322",
-     "nodeSID": "ClampFloat_0320",
+     "sID": "ClampFloat_Float2_0320",
+     "nodeSID": "ClampFloat_031e",
      "polarity": 0
     },
     {
      "id": "Float3",
-     "sID": "ClampFloat_Float3_0323",
-     "nodeSID": "ClampFloat_0320",
+     "sID": "ClampFloat_Float3_0321",
+     "nodeSID": "ClampFloat_031e",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_0324",
-     "nodeSID": "ClampFloat_0320",
+     "sID": "ClampFloat_Float1_0322",
+     "nodeSID": "ClampFloat_031e",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_0323",
+   "modifier": "-1e+30",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_0324",
+     "nodeSID": "Float_0323",
      "polarity": 1
     }
    ]
@@ -5357,7 +5357,7 @@
   {
    "id": "Float",
    "sID": "Float_0325",
-   "modifier": "-1e+30",
+   "modifier": "1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
@@ -5369,407 +5369,405 @@
    ]
   },
   {
-   "id": "Float",
-   "sID": "Float_0327",
-   "modifier": "1e+30",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_0328",
-     "nodeSID": "Float_0327",
-     "polarity": 1
-    }
-   ]
-  },
-  {
    "id": "TimePlot",
-   "sID": "TimePlot_0329",
+   "sID": "TimePlot_0327",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "TimePlot_String1_032a",
-     "nodeSID": "TimePlot_0329",
+     "sID": "TimePlot_String1_0328",
+     "nodeSID": "TimePlot_0327",
      "polarity": 0
     },
     {
      "id": "Color1",
-     "sID": "TimePlot_Color1_032b",
-     "nodeSID": "TimePlot_0329",
+     "sID": "TimePlot_Color1_0329",
+     "nodeSID": "TimePlot_0327",
      "polarity": 0
     },
     {
      "id": "String2",
-     "sID": "TimePlot_String2_032c",
-     "nodeSID": "TimePlot_0329",
+     "sID": "TimePlot_String2_032a",
+     "nodeSID": "TimePlot_0327",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "TimePlot_Float1_032d",
-     "nodeSID": "TimePlot_0329",
+     "sID": "TimePlot_Float1_032b",
+     "nodeSID": "TimePlot_0327",
      "polarity": 0
     }
    ]
   },
   {
    "id": "String",
-   "sID": "String_032e",
-   "modifier": "B.div_p0",
+   "sID": "String_032c",
+   "modifier": "B.holdv_ctrl_mag",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "String_String1_032f",
-     "nodeSID": "String_032e",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_0330",
-   "modifier": "-1.0",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_0331",
-     "nodeSID": "Float_0330",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_0332",
-   "modifier": "0.0",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_0333",
-     "nodeSID": "Float_0332",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "DivideFloats",
-   "sID": "DivideFloats_0334",
-   "modifier": "",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "DivideFloats_Float1_0335",
-     "nodeSID": "DivideFloats_0334",
-     "polarity": 0
-    },
-    {
-     "id": "Float2",
-     "sID": "DivideFloats_Float2_0336",
-     "nodeSID": "DivideFloats_0334",
-     "polarity": 0
-    },
-    {
-     "id": "Float1",
-     "sID": "DivideFloats_Float1_0337",
-     "nodeSID": "DivideFloats_0334",
+     "sID": "String_String1_032d",
+     "nodeSID": "String_032c",
      "polarity": 1
     }
    ]
   },
   {
    "id": "ClampFloat",
-   "sID": "ClampFloat_0338",
+   "sID": "ClampFloat_032e",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_0339",
-     "nodeSID": "ClampFloat_0338",
+     "sID": "ClampFloat_Float1_032f",
+     "nodeSID": "ClampFloat_032e",
      "polarity": 0
     },
     {
      "id": "Float2",
-     "sID": "ClampFloat_Float2_033a",
-     "nodeSID": "ClampFloat_0338",
+     "sID": "ClampFloat_Float2_0330",
+     "nodeSID": "ClampFloat_032e",
      "polarity": 0
     },
     {
      "id": "Float3",
-     "sID": "ClampFloat_Float3_033b",
-     "nodeSID": "ClampFloat_0338",
+     "sID": "ClampFloat_Float3_0331",
+     "nodeSID": "ClampFloat_032e",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_033c",
-     "nodeSID": "ClampFloat_0338",
+     "sID": "ClampFloat_Float1_0332",
+     "nodeSID": "ClampFloat_032e",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_033d",
+   "sID": "Float_0333",
    "modifier": "-1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_033e",
-     "nodeSID": "Float_033d",
+     "sID": "Float_Float1_0334",
+     "nodeSID": "Float_0333",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_033f",
+   "sID": "Float_0335",
    "modifier": "1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_0340",
-     "nodeSID": "Float_033f",
+     "sID": "Float_Float1_0336",
+     "nodeSID": "Float_0335",
      "polarity": 1
     }
    ]
   },
   {
    "id": "TimePlot",
-   "sID": "TimePlot_0341",
+   "sID": "TimePlot_0337",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "TimePlot_String1_0342",
-     "nodeSID": "TimePlot_0341",
+     "sID": "TimePlot_String1_0338",
+     "nodeSID": "TimePlot_0337",
      "polarity": 0
     },
     {
      "id": "Color1",
-     "sID": "TimePlot_Color1_0343",
-     "nodeSID": "TimePlot_0341",
+     "sID": "TimePlot_Color1_0339",
+     "nodeSID": "TimePlot_0337",
      "polarity": 0
     },
     {
      "id": "String2",
-     "sID": "TimePlot_String2_0344",
-     "nodeSID": "TimePlot_0341",
+     "sID": "TimePlot_String2_033a",
+     "nodeSID": "TimePlot_0337",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "TimePlot_Float1_0345",
-     "nodeSID": "TimePlot_0341",
+     "sID": "TimePlot_Float1_033b",
+     "nodeSID": "TimePlot_0337",
      "polarity": 0
     }
    ]
   },
   {
    "id": "String",
-   "sID": "String_0346",
-   "modifier": "B.div_n0",
+   "sID": "String_033c",
+   "modifier": "B.coerce_b2f",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "String_String1_0347",
-     "nodeSID": "String_0346",
+     "sID": "String_String1_033d",
+     "nodeSID": "String_033c",
      "polarity": 1
     }
    ]
   },
   {
-   "id": "Float",
-   "sID": "Float_0348",
-   "modifier": "0.0",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_0349",
-     "nodeSID": "Float_0348",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_034a",
-   "modifier": "0.0",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_034b",
-     "nodeSID": "Float_034a",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "DivideFloats",
-   "sID": "DivideFloats_034c",
+   "id": "ConditionalSetBool",
+   "sID": "ConditionalSetBool_033e",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
-     "id": "Float1",
-     "sID": "DivideFloats_Float1_034d",
-     "nodeSID": "DivideFloats_034c",
+     "id": "Bool1",
+     "sID": "ConditionalSetBool_Bool1_033f",
+     "nodeSID": "ConditionalSetBool_033e",
      "polarity": 0
     },
     {
-     "id": "Float2",
-     "sID": "DivideFloats_Float2_034e",
-     "nodeSID": "DivideFloats_034c",
+     "id": "Bool2",
+     "sID": "ConditionalSetBool_Bool2_0340",
+     "nodeSID": "ConditionalSetBool_033e",
      "polarity": 0
     },
     {
+     "id": "Bool3",
+     "sID": "ConditionalSetBool_Bool3_0341",
+     "nodeSID": "ConditionalSetBool_033e",
+     "polarity": 0
+    },
+    {
+     "id": "Bool1",
+     "sID": "ConditionalSetBool_Bool1_0342",
+     "nodeSID": "ConditionalSetBool_033e",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_0343",
+   "modifier": "0.5",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
      "id": "Float1",
-     "sID": "DivideFloats_Float1_034f",
-     "nodeSID": "DivideFloats_034c",
+     "sID": "Float_Float1_0344",
+     "nodeSID": "Float_0343",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Bool",
+   "sID": "Bool_0345",
+   "modifier": "0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Bool1",
+     "sID": "Bool_Bool1_0346",
+     "nodeSID": "Bool_0345",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Bool",
+   "sID": "Bool_0347",
+   "modifier": "1",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Bool1",
+     "sID": "Bool_Bool1_0348",
+     "nodeSID": "Bool_0347",
      "polarity": 1
     }
    ]
   },
   {
    "id": "ClampFloat",
-   "sID": "ClampFloat_0350",
+   "sID": "ClampFloat_0349",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_0351",
-     "nodeSID": "ClampFloat_0350",
+     "sID": "ClampFloat_Float1_034a",
+     "nodeSID": "ClampFloat_0349",
      "polarity": 0
     },
     {
      "id": "Float2",
-     "sID": "ClampFloat_Float2_0352",
-     "nodeSID": "ClampFloat_0350",
+     "sID": "ClampFloat_Float2_034b",
+     "nodeSID": "ClampFloat_0349",
      "polarity": 0
     },
     {
      "id": "Float3",
-     "sID": "ClampFloat_Float3_0353",
-     "nodeSID": "ClampFloat_0350",
+     "sID": "ClampFloat_Float3_034c",
+     "nodeSID": "ClampFloat_0349",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_0354",
-     "nodeSID": "ClampFloat_0350",
+     "sID": "ClampFloat_Float1_034d",
+     "nodeSID": "ClampFloat_0349",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_0355",
+   "sID": "Float_034e",
    "modifier": "-1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_0356",
-     "nodeSID": "Float_0355",
+     "sID": "Float_Float1_034f",
+     "nodeSID": "Float_034e",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_0357",
+   "sID": "Float_0350",
    "modifier": "1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_0358",
-     "nodeSID": "Float_0357",
+     "sID": "Float_Float1_0351",
+     "nodeSID": "Float_0350",
      "polarity": 1
     }
    ]
   },
   {
    "id": "TimePlot",
-   "sID": "TimePlot_0359",
+   "sID": "TimePlot_0352",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "TimePlot_String1_035a",
-     "nodeSID": "TimePlot_0359",
+     "sID": "TimePlot_String1_0353",
+     "nodeSID": "TimePlot_0352",
      "polarity": 0
     },
     {
      "id": "Color1",
-     "sID": "TimePlot_Color1_035b",
-     "nodeSID": "TimePlot_0359",
+     "sID": "TimePlot_Color1_0354",
+     "nodeSID": "TimePlot_0352",
      "polarity": 0
     },
     {
      "id": "String2",
-     "sID": "TimePlot_String2_035c",
-     "nodeSID": "TimePlot_0359",
+     "sID": "TimePlot_String2_0355",
+     "nodeSID": "TimePlot_0352",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "TimePlot_Float1_035d",
-     "nodeSID": "TimePlot_0359",
+     "sID": "TimePlot_Float1_0356",
+     "nodeSID": "TimePlot_0352",
      "polarity": 0
     }
    ]
   },
   {
    "id": "String",
-   "sID": "String_035e",
-   "modifier": "B.div_00",
+   "sID": "String_0357",
+   "modifier": "B.coerce_f2b",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "String_String1_035f",
-     "nodeSID": "String_035e",
+     "sID": "String_String1_0358",
+     "nodeSID": "String_0357",
      "polarity": 1
     }
    ]
   },
   {
    "id": "AddFloats",
-   "sID": "AddFloats_0360",
+   "sID": "AddFloats_0359",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "AddFloats_Float1_0361",
-     "nodeSID": "AddFloats_0360",
+     "sID": "AddFloats_Float1_035a",
+     "nodeSID": "AddFloats_0359",
      "polarity": 0
     },
     {
      "id": "Float2",
-     "sID": "AddFloats_Float2_0362",
-     "nodeSID": "AddFloats_0360",
+     "sID": "AddFloats_Float2_035b",
+     "nodeSID": "AddFloats_0359",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "AddFloats_Float1_0363",
-     "nodeSID": "AddFloats_0360",
+     "sID": "AddFloats_Float1_035c",
+     "nodeSID": "AddFloats_0359",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_035d",
+   "modifier": "0.0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_035e",
+     "nodeSID": "Float_035d",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "ClampFloat",
+   "sID": "ClampFloat_035f",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_0360",
+     "nodeSID": "ClampFloat_035f",
+     "polarity": 0
+    },
+    {
+     "id": "Float2",
+     "sID": "ClampFloat_Float2_0361",
+     "nodeSID": "ClampFloat_035f",
+     "polarity": 0
+    },
+    {
+     "id": "Float3",
+     "sID": "ClampFloat_Float3_0362",
+     "nodeSID": "ClampFloat_035f",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_0363",
+     "nodeSID": "ClampFloat_035f",
      "polarity": 1
     }
    ]
@@ -5777,7 +5775,7 @@
   {
    "id": "Float",
    "sID": "Float_0364",
-   "modifier": "3.0",
+   "modifier": "-1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
@@ -5789,365 +5787,367 @@
    ]
   },
   {
-   "id": "ClampFloat",
-   "sID": "ClampFloat_0366",
-   "modifier": "",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "ClampFloat_Float1_0367",
-     "nodeSID": "ClampFloat_0366",
-     "polarity": 0
-    },
-    {
-     "id": "Float2",
-     "sID": "ClampFloat_Float2_0368",
-     "nodeSID": "ClampFloat_0366",
-     "polarity": 0
-    },
-    {
-     "id": "Float3",
-     "sID": "ClampFloat_Float3_0369",
-     "nodeSID": "ClampFloat_0366",
-     "polarity": 0
-    },
-    {
-     "id": "Float1",
-     "sID": "ClampFloat_Float1_036a",
-     "nodeSID": "ClampFloat_0366",
-     "polarity": 1
-    }
-   ]
-  },
-  {
    "id": "Float",
-   "sID": "Float_036b",
-   "modifier": "-1e+30",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_036c",
-     "nodeSID": "Float_036b",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_036d",
+   "sID": "Float_0366",
    "modifier": "1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_036e",
-     "nodeSID": "Float_036d",
+     "sID": "Float_Float1_0367",
+     "nodeSID": "Float_0366",
      "polarity": 1
     }
    ]
   },
   {
    "id": "TimePlot",
-   "sID": "TimePlot_036f",
+   "sID": "TimePlot_0368",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "TimePlot_String1_0370",
-     "nodeSID": "TimePlot_036f",
+     "sID": "TimePlot_String1_0369",
+     "nodeSID": "TimePlot_0368",
      "polarity": 0
     },
     {
      "id": "Color1",
-     "sID": "TimePlot_Color1_0371",
-     "nodeSID": "TimePlot_036f",
+     "sID": "TimePlot_Color1_036a",
+     "nodeSID": "TimePlot_0368",
      "polarity": 0
     },
     {
      "id": "String2",
-     "sID": "TimePlot_String2_0372",
-     "nodeSID": "TimePlot_036f",
+     "sID": "TimePlot_String2_036b",
+     "nodeSID": "TimePlot_0368",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "TimePlot_Float1_0373",
-     "nodeSID": "TimePlot_036f",
+     "sID": "TimePlot_Float1_036c",
+     "nodeSID": "TimePlot_0368",
      "polarity": 0
     }
    ]
   },
   {
    "id": "String",
-   "sID": "String_0374",
-   "modifier": "B.null_add",
+   "sID": "String_036d",
+   "modifier": "B.coerce_b2f_add",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "String_String1_0375",
-     "nodeSID": "String_0374",
+     "sID": "String_String1_036e",
+     "nodeSID": "String_036d",
      "polarity": 1
     }
    ]
   },
   {
-   "id": "ConstructVector3",
-   "sID": "ConstructVector3_0376",
+   "id": "Float",
+   "sID": "Float_036f",
+   "modifier": "1.0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_0370",
+     "nodeSID": "Float_036f",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "MultiplyFloats",
+   "sID": "MultiplyFloats_0371",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "ConstructVector3_Float1_0377",
-     "nodeSID": "ConstructVector3_0376",
+     "sID": "MultiplyFloats_Float1_0372",
+     "nodeSID": "MultiplyFloats_0371",
      "polarity": 0
     },
     {
      "id": "Float2",
-     "sID": "ConstructVector3_Float2_0378",
-     "nodeSID": "ConstructVector3_0376",
-     "polarity": 0
-    },
-    {
-     "id": "Float3",
-     "sID": "ConstructVector3_Float3_0379",
-     "nodeSID": "ConstructVector3_0376",
-     "polarity": 0
-    },
-    {
-     "id": "Vector31",
-     "sID": "ConstructVector3_Vector31_037a",
-     "nodeSID": "ConstructVector3_0376",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_037b",
-   "modifier": "1.5",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_037c",
-     "nodeSID": "Float_037b",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_037d",
-   "modifier": "2.5",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_037e",
-     "nodeSID": "Float_037d",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_037f",
-   "modifier": "3.5",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_0380",
-     "nodeSID": "Float_037f",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Vector3Split",
-   "sID": "Vector3Split_0381",
-   "modifier": "",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Vector31",
-     "sID": "Vector3Split_Vector31_0382",
-     "nodeSID": "Vector3Split_0381",
+     "sID": "MultiplyFloats_Float2_0373",
+     "nodeSID": "MultiplyFloats_0371",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "Vector3Split_Float1_0383",
-     "nodeSID": "Vector3Split_0381",
-     "polarity": 1
-    },
-    {
-     "id": "Float2",
-     "sID": "Vector3Split_Float2_0384",
-     "nodeSID": "Vector3Split_0381",
-     "polarity": 1
-    },
-    {
-     "id": "Float3",
-     "sID": "Vector3Split_Float3_0385",
-     "nodeSID": "Vector3Split_0381",
+     "sID": "MultiplyFloats_Float1_0374",
+     "nodeSID": "MultiplyFloats_0371",
      "polarity": 1
     }
    ]
   },
   {
    "id": "ClampFloat",
-   "sID": "ClampFloat_0386",
+   "sID": "ClampFloat_0375",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_0387",
-     "nodeSID": "ClampFloat_0386",
+     "sID": "ClampFloat_Float1_0376",
+     "nodeSID": "ClampFloat_0375",
      "polarity": 0
     },
     {
      "id": "Float2",
-     "sID": "ClampFloat_Float2_0388",
-     "nodeSID": "ClampFloat_0386",
+     "sID": "ClampFloat_Float2_0377",
+     "nodeSID": "ClampFloat_0375",
      "polarity": 0
     },
     {
      "id": "Float3",
-     "sID": "ClampFloat_Float3_0389",
-     "nodeSID": "ClampFloat_0386",
+     "sID": "ClampFloat_Float3_0378",
+     "nodeSID": "ClampFloat_0375",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_038a",
-     "nodeSID": "ClampFloat_0386",
+     "sID": "ClampFloat_Float1_0379",
+     "nodeSID": "ClampFloat_0375",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_038b",
+   "sID": "Float_037a",
    "modifier": "-1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_038c",
-     "nodeSID": "Float_038b",
+     "sID": "Float_Float1_037b",
+     "nodeSID": "Float_037a",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_038d",
+   "sID": "Float_037c",
    "modifier": "1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_038e",
-     "nodeSID": "Float_038d",
+     "sID": "Float_Float1_037d",
+     "nodeSID": "Float_037c",
      "polarity": 1
     }
    ]
   },
   {
    "id": "TimePlot",
-   "sID": "TimePlot_038f",
+   "sID": "TimePlot_037e",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "TimePlot_String1_0390",
-     "nodeSID": "TimePlot_038f",
+     "sID": "TimePlot_String1_037f",
+     "nodeSID": "TimePlot_037e",
      "polarity": 0
     },
     {
      "id": "Color1",
-     "sID": "TimePlot_Color1_0391",
-     "nodeSID": "TimePlot_038f",
+     "sID": "TimePlot_Color1_0380",
+     "nodeSID": "TimePlot_037e",
      "polarity": 0
     },
     {
      "id": "String2",
-     "sID": "TimePlot_String2_0392",
-     "nodeSID": "TimePlot_038f",
+     "sID": "TimePlot_String2_0381",
+     "nodeSID": "TimePlot_037e",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "TimePlot_Float1_0393",
-     "nodeSID": "TimePlot_038f",
+     "sID": "TimePlot_Float1_0382",
+     "nodeSID": "TimePlot_037e",
      "polarity": 0
     }
    ]
   },
   {
    "id": "String",
-   "sID": "String_0394",
-   "modifier": "B.vec_1",
+   "sID": "String_0383",
+   "modifier": "B.coerce_b2f_mul",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "String_String1_0395",
-     "nodeSID": "String_0394",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "ClampFloat",
-   "sID": "ClampFloat_0396",
-   "modifier": "",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "ClampFloat_Float1_0397",
-     "nodeSID": "ClampFloat_0396",
-     "polarity": 0
-    },
-    {
-     "id": "Float2",
-     "sID": "ClampFloat_Float2_0398",
-     "nodeSID": "ClampFloat_0396",
-     "polarity": 0
-    },
-    {
-     "id": "Float3",
-     "sID": "ClampFloat_Float3_0399",
-     "nodeSID": "ClampFloat_0396",
-     "polarity": 0
-    },
-    {
-     "id": "Float1",
-     "sID": "ClampFloat_Float1_039a",
-     "nodeSID": "ClampFloat_0396",
+     "sID": "String_String1_0384",
+     "nodeSID": "String_0383",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_039b",
+   "sID": "Float_0385",
+   "modifier": "1.0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_0386",
+     "nodeSID": "Float_0385",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_0387",
+   "modifier": "0.0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_0388",
+     "nodeSID": "Float_0387",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "DivideFloats",
+   "sID": "DivideFloats_0389",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "DivideFloats_Float1_038a",
+     "nodeSID": "DivideFloats_0389",
+     "polarity": 0
+    },
+    {
+     "id": "Float2",
+     "sID": "DivideFloats_Float2_038b",
+     "nodeSID": "DivideFloats_0389",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "DivideFloats_Float1_038c",
+     "nodeSID": "DivideFloats_0389",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "ClampFloat",
+   "sID": "ClampFloat_038d",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_038e",
+     "nodeSID": "ClampFloat_038d",
+     "polarity": 0
+    },
+    {
+     "id": "Float2",
+     "sID": "ClampFloat_Float2_038f",
+     "nodeSID": "ClampFloat_038d",
+     "polarity": 0
+    },
+    {
+     "id": "Float3",
+     "sID": "ClampFloat_Float3_0390",
+     "nodeSID": "ClampFloat_038d",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_0391",
+     "nodeSID": "ClampFloat_038d",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_0392",
    "modifier": "-1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_039c",
-     "nodeSID": "Float_039b",
+     "sID": "Float_Float1_0393",
+     "nodeSID": "Float_0392",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_0394",
+   "modifier": "1e+30",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_0395",
+     "nodeSID": "Float_0394",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "TimePlot",
+   "sID": "TimePlot_0396",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "String1",
+     "sID": "TimePlot_String1_0397",
+     "nodeSID": "TimePlot_0396",
+     "polarity": 0
+    },
+    {
+     "id": "Color1",
+     "sID": "TimePlot_Color1_0398",
+     "nodeSID": "TimePlot_0396",
+     "polarity": 0
+    },
+    {
+     "id": "String2",
+     "sID": "TimePlot_String2_0399",
+     "nodeSID": "TimePlot_0396",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "TimePlot_Float1_039a",
+     "nodeSID": "TimePlot_0396",
+     "polarity": 0
+    }
+   ]
+  },
+  {
+   "id": "String",
+   "sID": "String_039b",
+   "modifier": "B.div_p0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "String1",
+     "sID": "String_String1_039c",
+     "nodeSID": "String_039b",
      "polarity": 1
     }
    ]
@@ -6155,7 +6155,7 @@
   {
    "id": "Float",
    "sID": "Float_039d",
-   "modifier": "1e+30",
+   "modifier": "-1.0",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
@@ -6167,379 +6167,379 @@
    ]
   },
   {
-   "id": "TimePlot",
-   "sID": "TimePlot_039f",
-   "modifier": "",
+   "id": "Float",
+   "sID": "Float_039f",
+   "modifier": "0.0",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
-     "id": "String1",
-     "sID": "TimePlot_String1_03a0",
-     "nodeSID": "TimePlot_039f",
-     "polarity": 0
-    },
-    {
-     "id": "Color1",
-     "sID": "TimePlot_Color1_03a1",
-     "nodeSID": "TimePlot_039f",
-     "polarity": 0
-    },
-    {
-     "id": "String2",
-     "sID": "TimePlot_String2_03a2",
-     "nodeSID": "TimePlot_039f",
-     "polarity": 0
-    },
-    {
      "id": "Float1",
-     "sID": "TimePlot_Float1_03a3",
-     "nodeSID": "TimePlot_039f",
-     "polarity": 0
+     "sID": "Float_Float1_03a0",
+     "nodeSID": "Float_039f",
+     "polarity": 1
     }
    ]
   },
   {
-   "id": "String",
-   "sID": "String_03a4",
-   "modifier": "B.vec_2",
+   "id": "DivideFloats",
+   "sID": "DivideFloats_03a1",
+   "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
-     "id": "String1",
-     "sID": "String_String1_03a5",
-     "nodeSID": "String_03a4",
+     "id": "Float1",
+     "sID": "DivideFloats_Float1_03a2",
+     "nodeSID": "DivideFloats_03a1",
+     "polarity": 0
+    },
+    {
+     "id": "Float2",
+     "sID": "DivideFloats_Float2_03a3",
+     "nodeSID": "DivideFloats_03a1",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "DivideFloats_Float1_03a4",
+     "nodeSID": "DivideFloats_03a1",
      "polarity": 1
     }
    ]
   },
   {
    "id": "ClampFloat",
-   "sID": "ClampFloat_03a6",
+   "sID": "ClampFloat_03a5",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_03a7",
-     "nodeSID": "ClampFloat_03a6",
+     "sID": "ClampFloat_Float1_03a6",
+     "nodeSID": "ClampFloat_03a5",
      "polarity": 0
     },
     {
      "id": "Float2",
-     "sID": "ClampFloat_Float2_03a8",
-     "nodeSID": "ClampFloat_03a6",
+     "sID": "ClampFloat_Float2_03a7",
+     "nodeSID": "ClampFloat_03a5",
      "polarity": 0
     },
     {
      "id": "Float3",
-     "sID": "ClampFloat_Float3_03a9",
-     "nodeSID": "ClampFloat_03a6",
+     "sID": "ClampFloat_Float3_03a8",
+     "nodeSID": "ClampFloat_03a5",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_03aa",
-     "nodeSID": "ClampFloat_03a6",
+     "sID": "ClampFloat_Float1_03a9",
+     "nodeSID": "ClampFloat_03a5",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_03ab",
+   "sID": "Float_03aa",
    "modifier": "-1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_03ac",
-     "nodeSID": "Float_03ab",
+     "sID": "Float_Float1_03ab",
+     "nodeSID": "Float_03aa",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_03ad",
+   "sID": "Float_03ac",
    "modifier": "1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_03ae",
-     "nodeSID": "Float_03ad",
+     "sID": "Float_Float1_03ad",
+     "nodeSID": "Float_03ac",
      "polarity": 1
     }
    ]
   },
   {
    "id": "TimePlot",
-   "sID": "TimePlot_03af",
+   "sID": "TimePlot_03ae",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "TimePlot_String1_03b0",
-     "nodeSID": "TimePlot_03af",
+     "sID": "TimePlot_String1_03af",
+     "nodeSID": "TimePlot_03ae",
      "polarity": 0
     },
     {
      "id": "Color1",
-     "sID": "TimePlot_Color1_03b1",
-     "nodeSID": "TimePlot_03af",
+     "sID": "TimePlot_Color1_03b0",
+     "nodeSID": "TimePlot_03ae",
      "polarity": 0
     },
     {
      "id": "String2",
-     "sID": "TimePlot_String2_03b2",
-     "nodeSID": "TimePlot_03af",
+     "sID": "TimePlot_String2_03b1",
+     "nodeSID": "TimePlot_03ae",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "TimePlot_Float1_03b3",
-     "nodeSID": "TimePlot_03af",
+     "sID": "TimePlot_Float1_03b2",
+     "nodeSID": "TimePlot_03ae",
      "polarity": 0
     }
    ]
   },
   {
    "id": "String",
-   "sID": "String_03b4",
-   "modifier": "B.vec_3",
+   "sID": "String_03b3",
+   "modifier": "B.div_n0",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "String_String1_03b5",
-     "nodeSID": "String_03b4",
+     "sID": "String_String1_03b4",
+     "nodeSID": "String_03b3",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_03b5",
+   "modifier": "0.0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_03b6",
+     "nodeSID": "Float_03b5",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_03b7",
+   "modifier": "0.0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_03b8",
+     "nodeSID": "Float_03b7",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "DivideFloats",
+   "sID": "DivideFloats_03b9",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "DivideFloats_Float1_03ba",
+     "nodeSID": "DivideFloats_03b9",
+     "polarity": 0
+    },
+    {
+     "id": "Float2",
+     "sID": "DivideFloats_Float2_03bb",
+     "nodeSID": "DivideFloats_03b9",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "DivideFloats_Float1_03bc",
+     "nodeSID": "DivideFloats_03b9",
      "polarity": 1
     }
    ]
   },
   {
    "id": "ClampFloat",
-   "sID": "ClampFloat_03b6",
+   "sID": "ClampFloat_03bd",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_03b7",
-     "nodeSID": "ClampFloat_03b6",
+     "sID": "ClampFloat_Float1_03be",
+     "nodeSID": "ClampFloat_03bd",
      "polarity": 0
     },
     {
      "id": "Float2",
-     "sID": "ClampFloat_Float2_03b8",
-     "nodeSID": "ClampFloat_03b6",
+     "sID": "ClampFloat_Float2_03bf",
+     "nodeSID": "ClampFloat_03bd",
      "polarity": 0
     },
     {
      "id": "Float3",
-     "sID": "ClampFloat_Float3_03b9",
-     "nodeSID": "ClampFloat_03b6",
+     "sID": "ClampFloat_Float3_03c0",
+     "nodeSID": "ClampFloat_03bd",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_03ba",
-     "nodeSID": "ClampFloat_03b6",
+     "sID": "ClampFloat_Float1_03c1",
+     "nodeSID": "ClampFloat_03bd",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_03bb",
-   "modifier": "5.0",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_03bc",
-     "nodeSID": "Float_03bb",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_03bd",
-   "modifier": "-1.0",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_03be",
-     "nodeSID": "Float_03bd",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_03bf",
-   "modifier": "1.0",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_03c0",
-     "nodeSID": "Float_03bf",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "ClampFloat",
-   "sID": "ClampFloat_03c1",
-   "modifier": "",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "ClampFloat_Float1_03c2",
-     "nodeSID": "ClampFloat_03c1",
-     "polarity": 0
-    },
-    {
-     "id": "Float2",
-     "sID": "ClampFloat_Float2_03c3",
-     "nodeSID": "ClampFloat_03c1",
-     "polarity": 0
-    },
-    {
-     "id": "Float3",
-     "sID": "ClampFloat_Float3_03c4",
-     "nodeSID": "ClampFloat_03c1",
-     "polarity": 0
-    },
-    {
-     "id": "Float1",
-     "sID": "ClampFloat_Float1_03c5",
-     "nodeSID": "ClampFloat_03c1",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_03c6",
+   "sID": "Float_03c2",
    "modifier": "-1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_03c7",
-     "nodeSID": "Float_03c6",
+     "sID": "Float_Float1_03c3",
+     "nodeSID": "Float_03c2",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_03c8",
+   "sID": "Float_03c4",
    "modifier": "1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_03c9",
-     "nodeSID": "Float_03c8",
+     "sID": "Float_Float1_03c5",
+     "nodeSID": "Float_03c4",
      "polarity": 1
     }
    ]
   },
   {
    "id": "TimePlot",
-   "sID": "TimePlot_03ca",
+   "sID": "TimePlot_03c6",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "TimePlot_String1_03cb",
-     "nodeSID": "TimePlot_03ca",
+     "sID": "TimePlot_String1_03c7",
+     "nodeSID": "TimePlot_03c6",
      "polarity": 0
     },
     {
      "id": "Color1",
-     "sID": "TimePlot_Color1_03cc",
-     "nodeSID": "TimePlot_03ca",
+     "sID": "TimePlot_Color1_03c8",
+     "nodeSID": "TimePlot_03c6",
      "polarity": 0
     },
     {
      "id": "String2",
-     "sID": "TimePlot_String2_03cd",
-     "nodeSID": "TimePlot_03ca",
+     "sID": "TimePlot_String2_03c9",
+     "nodeSID": "TimePlot_03c6",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "TimePlot_Float1_03ce",
-     "nodeSID": "TimePlot_03ca",
+     "sID": "TimePlot_Float1_03ca",
+     "nodeSID": "TimePlot_03c6",
      "polarity": 0
     }
    ]
   },
   {
    "id": "String",
-   "sID": "String_03cf",
-   "modifier": "B.clamp_hi",
+   "sID": "String_03cb",
+   "modifier": "B.div_00",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "String_String1_03d0",
-     "nodeSID": "String_03cf",
+     "sID": "String_String1_03cc",
+     "nodeSID": "String_03cb",
      "polarity": 1
     }
    ]
   },
   {
-   "id": "ClampFloat",
-   "sID": "ClampFloat_03d1",
+   "id": "AddFloats",
+   "sID": "AddFloats_03cd",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_03d2",
-     "nodeSID": "ClampFloat_03d1",
+     "sID": "AddFloats_Float1_03ce",
+     "nodeSID": "AddFloats_03cd",
      "polarity": 0
     },
     {
      "id": "Float2",
-     "sID": "ClampFloat_Float2_03d3",
-     "nodeSID": "ClampFloat_03d1",
-     "polarity": 0
-    },
-    {
-     "id": "Float3",
-     "sID": "ClampFloat_Float3_03d4",
-     "nodeSID": "ClampFloat_03d1",
+     "sID": "AddFloats_Float2_03cf",
+     "nodeSID": "AddFloats_03cd",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_03d5",
-     "nodeSID": "ClampFloat_03d1",
+     "sID": "AddFloats_Float1_03d0",
+     "nodeSID": "AddFloats_03cd",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_03d6",
-   "modifier": "-5.0",
+   "sID": "Float_03d1",
+   "modifier": "3.0",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_03d7",
-     "nodeSID": "Float_03d6",
+     "sID": "Float_Float1_03d2",
+     "nodeSID": "Float_03d1",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "ClampFloat",
+   "sID": "ClampFloat_03d3",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_03d4",
+     "nodeSID": "ClampFloat_03d3",
+     "polarity": 0
+    },
+    {
+     "id": "Float2",
+     "sID": "ClampFloat_Float2_03d5",
+     "nodeSID": "ClampFloat_03d3",
+     "polarity": 0
+    },
+    {
+     "id": "Float3",
+     "sID": "ClampFloat_Float3_03d6",
+     "nodeSID": "ClampFloat_03d3",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_03d7",
+     "nodeSID": "ClampFloat_03d3",
      "polarity": 1
     }
    ]
@@ -6547,7 +6547,7 @@
   {
    "id": "Float",
    "sID": "Float_03d8",
-   "modifier": "-1.0",
+   "modifier": "-1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
@@ -6561,7 +6561,7 @@
   {
    "id": "Float",
    "sID": "Float_03da",
-   "modifier": "1.0",
+   "modifier": "1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
@@ -6573,533 +6573,531 @@
    ]
   },
   {
-   "id": "ClampFloat",
-   "sID": "ClampFloat_03dc",
-   "modifier": "",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "ClampFloat_Float1_03dd",
-     "nodeSID": "ClampFloat_03dc",
-     "polarity": 0
-    },
-    {
-     "id": "Float2",
-     "sID": "ClampFloat_Float2_03de",
-     "nodeSID": "ClampFloat_03dc",
-     "polarity": 0
-    },
-    {
-     "id": "Float3",
-     "sID": "ClampFloat_Float3_03df",
-     "nodeSID": "ClampFloat_03dc",
-     "polarity": 0
-    },
-    {
-     "id": "Float1",
-     "sID": "ClampFloat_Float1_03e0",
-     "nodeSID": "ClampFloat_03dc",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_03e1",
-   "modifier": "-1e+30",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_03e2",
-     "nodeSID": "Float_03e1",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_03e3",
-   "modifier": "1e+30",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_03e4",
-     "nodeSID": "Float_03e3",
-     "polarity": 1
-    }
-   ]
-  },
-  {
    "id": "TimePlot",
-   "sID": "TimePlot_03e5",
+   "sID": "TimePlot_03dc",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "TimePlot_String1_03e6",
-     "nodeSID": "TimePlot_03e5",
+     "sID": "TimePlot_String1_03dd",
+     "nodeSID": "TimePlot_03dc",
      "polarity": 0
     },
     {
      "id": "Color1",
-     "sID": "TimePlot_Color1_03e7",
-     "nodeSID": "TimePlot_03e5",
+     "sID": "TimePlot_Color1_03de",
+     "nodeSID": "TimePlot_03dc",
      "polarity": 0
     },
     {
      "id": "String2",
-     "sID": "TimePlot_String2_03e8",
-     "nodeSID": "TimePlot_03e5",
+     "sID": "TimePlot_String2_03df",
+     "nodeSID": "TimePlot_03dc",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "TimePlot_Float1_03e9",
-     "nodeSID": "TimePlot_03e5",
+     "sID": "TimePlot_Float1_03e0",
+     "nodeSID": "TimePlot_03dc",
      "polarity": 0
     }
    ]
   },
   {
    "id": "String",
-   "sID": "String_03ea",
-   "modifier": "B.clamp_lo",
+   "sID": "String_03e1",
+   "modifier": "B.null_add",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "String_String1_03eb",
-     "nodeSID": "String_03ea",
+     "sID": "String_String1_03e2",
+     "nodeSID": "String_03e1",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "ConstructVector3",
+   "sID": "ConstructVector3_03e3",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "ConstructVector3_Float1_03e4",
+     "nodeSID": "ConstructVector3_03e3",
+     "polarity": 0
+    },
+    {
+     "id": "Float2",
+     "sID": "ConstructVector3_Float2_03e5",
+     "nodeSID": "ConstructVector3_03e3",
+     "polarity": 0
+    },
+    {
+     "id": "Float3",
+     "sID": "ConstructVector3_Float3_03e6",
+     "nodeSID": "ConstructVector3_03e3",
+     "polarity": 0
+    },
+    {
+     "id": "Vector31",
+     "sID": "ConstructVector3_Vector31_03e7",
+     "nodeSID": "ConstructVector3_03e3",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_03e8",
+   "modifier": "1.5",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_03e9",
+     "nodeSID": "Float_03e8",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_03ea",
+   "modifier": "2.5",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_03eb",
+     "nodeSID": "Float_03ea",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_03ec",
+   "modifier": "3.5",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_03ed",
+     "nodeSID": "Float_03ec",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Vector3Split",
+   "sID": "Vector3Split_03ee",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Vector31",
+     "sID": "Vector3Split_Vector31_03ef",
+     "nodeSID": "Vector3Split_03ee",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "Vector3Split_Float1_03f0",
+     "nodeSID": "Vector3Split_03ee",
+     "polarity": 1
+    },
+    {
+     "id": "Float2",
+     "sID": "Vector3Split_Float2_03f1",
+     "nodeSID": "Vector3Split_03ee",
+     "polarity": 1
+    },
+    {
+     "id": "Float3",
+     "sID": "Vector3Split_Float3_03f2",
+     "nodeSID": "Vector3Split_03ee",
      "polarity": 1
     }
    ]
   },
   {
    "id": "ClampFloat",
-   "sID": "ClampFloat_03ec",
+   "sID": "ClampFloat_03f3",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_03ed",
-     "nodeSID": "ClampFloat_03ec",
+     "sID": "ClampFloat_Float1_03f4",
+     "nodeSID": "ClampFloat_03f3",
      "polarity": 0
     },
     {
      "id": "Float2",
-     "sID": "ClampFloat_Float2_03ee",
-     "nodeSID": "ClampFloat_03ec",
+     "sID": "ClampFloat_Float2_03f5",
+     "nodeSID": "ClampFloat_03f3",
      "polarity": 0
     },
     {
      "id": "Float3",
-     "sID": "ClampFloat_Float3_03ef",
-     "nodeSID": "ClampFloat_03ec",
+     "sID": "ClampFloat_Float3_03f6",
+     "nodeSID": "ClampFloat_03f3",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_03f0",
-     "nodeSID": "ClampFloat_03ec",
+     "sID": "ClampFloat_Float1_03f7",
+     "nodeSID": "ClampFloat_03f3",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_03f1",
-   "modifier": "0.5",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_03f2",
-     "nodeSID": "Float_03f1",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_03f3",
-   "modifier": "-1.0",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_03f4",
-     "nodeSID": "Float_03f3",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_03f5",
-   "modifier": "1.0",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_03f6",
-     "nodeSID": "Float_03f5",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "ClampFloat",
-   "sID": "ClampFloat_03f7",
-   "modifier": "",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "ClampFloat_Float1_03f8",
-     "nodeSID": "ClampFloat_03f7",
-     "polarity": 0
-    },
-    {
-     "id": "Float2",
-     "sID": "ClampFloat_Float2_03f9",
-     "nodeSID": "ClampFloat_03f7",
-     "polarity": 0
-    },
-    {
-     "id": "Float3",
-     "sID": "ClampFloat_Float3_03fa",
-     "nodeSID": "ClampFloat_03f7",
-     "polarity": 0
-    },
-    {
-     "id": "Float1",
-     "sID": "ClampFloat_Float1_03fb",
-     "nodeSID": "ClampFloat_03f7",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_03fc",
+   "sID": "Float_03f8",
    "modifier": "-1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_03fd",
-     "nodeSID": "Float_03fc",
+     "sID": "Float_Float1_03f9",
+     "nodeSID": "Float_03f8",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_03fe",
+   "sID": "Float_03fa",
    "modifier": "1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_03ff",
-     "nodeSID": "Float_03fe",
+     "sID": "Float_Float1_03fb",
+     "nodeSID": "Float_03fa",
      "polarity": 1
     }
    ]
   },
   {
    "id": "TimePlot",
-   "sID": "TimePlot_0400",
+   "sID": "TimePlot_03fc",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "TimePlot_String1_0401",
-     "nodeSID": "TimePlot_0400",
+     "sID": "TimePlot_String1_03fd",
+     "nodeSID": "TimePlot_03fc",
      "polarity": 0
     },
     {
      "id": "Color1",
-     "sID": "TimePlot_Color1_0402",
-     "nodeSID": "TimePlot_0400",
+     "sID": "TimePlot_Color1_03fe",
+     "nodeSID": "TimePlot_03fc",
      "polarity": 0
     },
     {
      "id": "String2",
-     "sID": "TimePlot_String2_0403",
-     "nodeSID": "TimePlot_0400",
+     "sID": "TimePlot_String2_03ff",
+     "nodeSID": "TimePlot_03fc",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "TimePlot_Float1_0404",
-     "nodeSID": "TimePlot_0400",
+     "sID": "TimePlot_Float1_0400",
+     "nodeSID": "TimePlot_03fc",
      "polarity": 0
     }
    ]
   },
   {
    "id": "String",
-   "sID": "String_0405",
-   "modifier": "B.clamp_in",
+   "sID": "String_0401",
+   "modifier": "B.vec_1",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "String_String1_0406",
-     "nodeSID": "String_0405",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_0407",
-   "modifier": "-7.0",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_0408",
-     "nodeSID": "Float_0407",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_0409",
-   "modifier": "3.0",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_040a",
-     "nodeSID": "Float_0409",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Modulo",
-   "sID": "Modulo_040b",
-   "modifier": "",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Modulo_Float1_040c",
-     "nodeSID": "Modulo_040b",
-     "polarity": 0
-    },
-    {
-     "id": "Float2",
-     "sID": "Modulo_Float2_040d",
-     "nodeSID": "Modulo_040b",
-     "polarity": 0
-    },
-    {
-     "id": "Float1",
-     "sID": "Modulo_Float1_040e",
-     "nodeSID": "Modulo_040b",
+     "sID": "String_String1_0402",
+     "nodeSID": "String_0401",
      "polarity": 1
     }
    ]
   },
   {
    "id": "ClampFloat",
-   "sID": "ClampFloat_040f",
+   "sID": "ClampFloat_0403",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_0410",
-     "nodeSID": "ClampFloat_040f",
+     "sID": "ClampFloat_Float1_0404",
+     "nodeSID": "ClampFloat_0403",
      "polarity": 0
     },
     {
      "id": "Float2",
-     "sID": "ClampFloat_Float2_0411",
-     "nodeSID": "ClampFloat_040f",
+     "sID": "ClampFloat_Float2_0405",
+     "nodeSID": "ClampFloat_0403",
      "polarity": 0
     },
     {
      "id": "Float3",
-     "sID": "ClampFloat_Float3_0412",
-     "nodeSID": "ClampFloat_040f",
+     "sID": "ClampFloat_Float3_0406",
+     "nodeSID": "ClampFloat_0403",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_0413",
-     "nodeSID": "ClampFloat_040f",
+     "sID": "ClampFloat_Float1_0407",
+     "nodeSID": "ClampFloat_0403",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_0414",
+   "sID": "Float_0408",
    "modifier": "-1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_0415",
-     "nodeSID": "Float_0414",
+     "sID": "Float_Float1_0409",
+     "nodeSID": "Float_0408",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_0416",
+   "sID": "Float_040a",
    "modifier": "1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_0417",
-     "nodeSID": "Float_0416",
+     "sID": "Float_Float1_040b",
+     "nodeSID": "Float_040a",
      "polarity": 1
     }
    ]
   },
   {
    "id": "TimePlot",
-   "sID": "TimePlot_0418",
+   "sID": "TimePlot_040c",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "TimePlot_String1_0419",
-     "nodeSID": "TimePlot_0418",
+     "sID": "TimePlot_String1_040d",
+     "nodeSID": "TimePlot_040c",
      "polarity": 0
     },
     {
      "id": "Color1",
-     "sID": "TimePlot_Color1_041a",
-     "nodeSID": "TimePlot_0418",
+     "sID": "TimePlot_Color1_040e",
+     "nodeSID": "TimePlot_040c",
      "polarity": 0
     },
     {
      "id": "String2",
-     "sID": "TimePlot_String2_041b",
-     "nodeSID": "TimePlot_0418",
+     "sID": "TimePlot_String2_040f",
+     "nodeSID": "TimePlot_040c",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "TimePlot_Float1_041c",
-     "nodeSID": "TimePlot_0418",
+     "sID": "TimePlot_Float1_0410",
+     "nodeSID": "TimePlot_040c",
      "polarity": 0
     }
    ]
   },
   {
    "id": "String",
-   "sID": "String_041d",
-   "modifier": "B.mod_neg",
+   "sID": "String_0411",
+   "modifier": "B.vec_2",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "String_String1_041e",
-     "nodeSID": "String_041d",
+     "sID": "String_String1_0412",
+     "nodeSID": "String_0411",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "ClampFloat",
+   "sID": "ClampFloat_0413",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_0414",
+     "nodeSID": "ClampFloat_0413",
+     "polarity": 0
+    },
+    {
+     "id": "Float2",
+     "sID": "ClampFloat_Float2_0415",
+     "nodeSID": "ClampFloat_0413",
+     "polarity": 0
+    },
+    {
+     "id": "Float3",
+     "sID": "ClampFloat_Float3_0416",
+     "nodeSID": "ClampFloat_0413",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_0417",
+     "nodeSID": "ClampFloat_0413",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_041f",
+   "sID": "Float_0418",
+   "modifier": "-1e+30",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_0419",
+     "nodeSID": "Float_0418",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_041a",
+   "modifier": "1e+30",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_041b",
+     "nodeSID": "Float_041a",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "TimePlot",
+   "sID": "TimePlot_041c",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "String1",
+     "sID": "TimePlot_String1_041d",
+     "nodeSID": "TimePlot_041c",
+     "polarity": 0
+    },
+    {
+     "id": "Color1",
+     "sID": "TimePlot_Color1_041e",
+     "nodeSID": "TimePlot_041c",
+     "polarity": 0
+    },
+    {
+     "id": "String2",
+     "sID": "TimePlot_String2_041f",
+     "nodeSID": "TimePlot_041c",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "TimePlot_Float1_0420",
+     "nodeSID": "TimePlot_041c",
+     "polarity": 0
+    }
+   ]
+  },
+  {
+   "id": "String",
+   "sID": "String_0421",
+   "modifier": "B.vec_3",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "String1",
+     "sID": "String_String1_0422",
+     "nodeSID": "String_0421",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "ClampFloat",
+   "sID": "ClampFloat_0423",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_0424",
+     "nodeSID": "ClampFloat_0423",
+     "polarity": 0
+    },
+    {
+     "id": "Float2",
+     "sID": "ClampFloat_Float2_0425",
+     "nodeSID": "ClampFloat_0423",
+     "polarity": 0
+    },
+    {
+     "id": "Float3",
+     "sID": "ClampFloat_Float3_0426",
+     "nodeSID": "ClampFloat_0423",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_0427",
+     "nodeSID": "ClampFloat_0423",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_0428",
    "modifier": "5.0",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_0420",
-     "nodeSID": "Float_041f",
+     "sID": "Float_Float1_0429",
+     "nodeSID": "Float_0428",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_0421",
-   "modifier": "0.0",
+   "sID": "Float_042a",
+   "modifier": "-1.0",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_0422",
-     "nodeSID": "Float_0421",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Modulo",
-   "sID": "Modulo_0423",
-   "modifier": "",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Modulo_Float1_0424",
-     "nodeSID": "Modulo_0423",
-     "polarity": 0
-    },
-    {
-     "id": "Float2",
-     "sID": "Modulo_Float2_0425",
-     "nodeSID": "Modulo_0423",
-     "polarity": 0
-    },
-    {
-     "id": "Float1",
-     "sID": "Modulo_Float1_0426",
-     "nodeSID": "Modulo_0423",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "ClampFloat",
-   "sID": "ClampFloat_0427",
-   "modifier": "",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "ClampFloat_Float1_0428",
-     "nodeSID": "ClampFloat_0427",
-     "polarity": 0
-    },
-    {
-     "id": "Float2",
-     "sID": "ClampFloat_Float2_0429",
-     "nodeSID": "ClampFloat_0427",
-     "polarity": 0
-    },
-    {
-     "id": "Float3",
-     "sID": "ClampFloat_Float3_042a",
-     "nodeSID": "ClampFloat_0427",
-     "polarity": 0
-    },
-    {
-     "id": "Float1",
-     "sID": "ClampFloat_Float1_042b",
-     "nodeSID": "ClampFloat_0427",
+     "sID": "Float_Float1_042b",
+     "nodeSID": "Float_042a",
      "polarity": 1
     }
    ]
@@ -7107,7 +7105,7 @@
   {
    "id": "Float",
    "sID": "Float_042c",
-   "modifier": "-1e+30",
+   "modifier": "1.0",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
@@ -7119,321 +7117,319 @@
    ]
   },
   {
+   "id": "ClampFloat",
+   "sID": "ClampFloat_042e",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_042f",
+     "nodeSID": "ClampFloat_042e",
+     "polarity": 0
+    },
+    {
+     "id": "Float2",
+     "sID": "ClampFloat_Float2_0430",
+     "nodeSID": "ClampFloat_042e",
+     "polarity": 0
+    },
+    {
+     "id": "Float3",
+     "sID": "ClampFloat_Float3_0431",
+     "nodeSID": "ClampFloat_042e",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_0432",
+     "nodeSID": "ClampFloat_042e",
+     "polarity": 1
+    }
+   ]
+  },
+  {
    "id": "Float",
-   "sID": "Float_042e",
+   "sID": "Float_0433",
+   "modifier": "-1e+30",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_0434",
+     "nodeSID": "Float_0433",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_0435",
    "modifier": "1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_042f",
-     "nodeSID": "Float_042e",
+     "sID": "Float_Float1_0436",
+     "nodeSID": "Float_0435",
      "polarity": 1
     }
    ]
   },
   {
    "id": "TimePlot",
-   "sID": "TimePlot_0430",
+   "sID": "TimePlot_0437",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "TimePlot_String1_0431",
-     "nodeSID": "TimePlot_0430",
+     "sID": "TimePlot_String1_0438",
+     "nodeSID": "TimePlot_0437",
      "polarity": 0
     },
     {
      "id": "Color1",
-     "sID": "TimePlot_Color1_0432",
-     "nodeSID": "TimePlot_0430",
+     "sID": "TimePlot_Color1_0439",
+     "nodeSID": "TimePlot_0437",
      "polarity": 0
     },
     {
      "id": "String2",
-     "sID": "TimePlot_String2_0433",
-     "nodeSID": "TimePlot_0430",
+     "sID": "TimePlot_String2_043a",
+     "nodeSID": "TimePlot_0437",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "TimePlot_Float1_0434",
-     "nodeSID": "TimePlot_0430",
+     "sID": "TimePlot_Float1_043b",
+     "nodeSID": "TimePlot_0437",
      "polarity": 0
     }
    ]
   },
   {
    "id": "String",
-   "sID": "String_0435",
-   "modifier": "B.mod_zero",
+   "sID": "String_043c",
+   "modifier": "B.clamp_hi",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "String_String1_0436",
-     "nodeSID": "String_0435",
+     "sID": "String_String1_043d",
+     "nodeSID": "String_043c",
      "polarity": 1
     }
    ]
   },
   {
-   "id": "Float",
-   "sID": "Float_0437",
-   "modifier": "2.0",
+   "id": "ClampFloat",
+   "sID": "ClampFloat_043e",
+   "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_0438",
-     "nodeSID": "Float_0437",
+     "sID": "ClampFloat_Float1_043f",
+     "nodeSID": "ClampFloat_043e",
+     "polarity": 0
+    },
+    {
+     "id": "Float2",
+     "sID": "ClampFloat_Float2_0440",
+     "nodeSID": "ClampFloat_043e",
+     "polarity": 0
+    },
+    {
+     "id": "Float3",
+     "sID": "ClampFloat_Float3_0441",
+     "nodeSID": "ClampFloat_043e",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_0442",
+     "nodeSID": "ClampFloat_043e",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_0439",
+   "sID": "Float_0443",
+   "modifier": "-5.0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_0444",
+     "nodeSID": "Float_0443",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_0445",
    "modifier": "-1.0",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_043a",
-     "nodeSID": "Float_0439",
+     "sID": "Float_Float1_0446",
+     "nodeSID": "Float_0445",
      "polarity": 1
     }
    ]
   },
   {
-   "id": "Power",
-   "sID": "Power_043b",
-   "modifier": "",
+   "id": "Float",
+   "sID": "Float_0447",
+   "modifier": "1.0",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Power_Float1_043c",
-     "nodeSID": "Power_043b",
-     "polarity": 0
-    },
-    {
-     "id": "Float2",
-     "sID": "Power_Float2_043d",
-     "nodeSID": "Power_043b",
-     "polarity": 0
-    },
-    {
-     "id": "Float1",
-     "sID": "Power_Float1_043e",
-     "nodeSID": "Power_043b",
+     "sID": "Float_Float1_0448",
+     "nodeSID": "Float_0447",
      "polarity": 1
     }
    ]
   },
   {
    "id": "ClampFloat",
-   "sID": "ClampFloat_043f",
+   "sID": "ClampFloat_0449",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_0440",
-     "nodeSID": "ClampFloat_043f",
+     "sID": "ClampFloat_Float1_044a",
+     "nodeSID": "ClampFloat_0449",
      "polarity": 0
     },
     {
      "id": "Float2",
-     "sID": "ClampFloat_Float2_0441",
-     "nodeSID": "ClampFloat_043f",
+     "sID": "ClampFloat_Float2_044b",
+     "nodeSID": "ClampFloat_0449",
      "polarity": 0
     },
     {
      "id": "Float3",
-     "sID": "ClampFloat_Float3_0442",
-     "nodeSID": "ClampFloat_043f",
+     "sID": "ClampFloat_Float3_044c",
+     "nodeSID": "ClampFloat_0449",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_0443",
-     "nodeSID": "ClampFloat_043f",
+     "sID": "ClampFloat_Float1_044d",
+     "nodeSID": "ClampFloat_0449",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_0444",
+   "sID": "Float_044e",
    "modifier": "-1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_0445",
-     "nodeSID": "Float_0444",
+     "sID": "Float_Float1_044f",
+     "nodeSID": "Float_044e",
      "polarity": 1
     }
    ]
   },
   {
    "id": "Float",
-   "sID": "Float_0446",
+   "sID": "Float_0450",
    "modifier": "1e+30",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "Float_Float1_0447",
-     "nodeSID": "Float_0446",
+     "sID": "Float_Float1_0451",
+     "nodeSID": "Float_0450",
      "polarity": 1
     }
    ]
   },
   {
    "id": "TimePlot",
-   "sID": "TimePlot_0448",
+   "sID": "TimePlot_0452",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "TimePlot_String1_0449",
-     "nodeSID": "TimePlot_0448",
+     "sID": "TimePlot_String1_0453",
+     "nodeSID": "TimePlot_0452",
      "polarity": 0
     },
     {
      "id": "Color1",
-     "sID": "TimePlot_Color1_044a",
-     "nodeSID": "TimePlot_0448",
+     "sID": "TimePlot_Color1_0454",
+     "nodeSID": "TimePlot_0452",
      "polarity": 0
     },
     {
      "id": "String2",
-     "sID": "TimePlot_String2_044b",
-     "nodeSID": "TimePlot_0448",
+     "sID": "TimePlot_String2_0455",
+     "nodeSID": "TimePlot_0452",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "TimePlot_Float1_044c",
-     "nodeSID": "TimePlot_0448",
+     "sID": "TimePlot_Float1_0456",
+     "nodeSID": "TimePlot_0452",
      "polarity": 0
     }
    ]
   },
   {
    "id": "String",
-   "sID": "String_044d",
-   "modifier": "B.pow_neg",
+   "sID": "String_0457",
+   "modifier": "B.clamp_lo",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "String_String1_044e",
-     "nodeSID": "String_044d",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Not",
-   "sID": "Not_044f",
-   "modifier": "",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Bool1",
-     "sID": "Not_Bool1_0450",
-     "nodeSID": "Not_044f",
-     "polarity": 0
-    },
-    {
-     "id": "Bool1",
-     "sID": "Not_Bool1_0451",
-     "nodeSID": "Not_044f",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Bool",
-   "sID": "Bool_0452",
-   "modifier": "0",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Bool1",
-     "sID": "Bool_Bool1_0453",
-     "nodeSID": "Bool_0452",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Not",
-   "sID": "Not_0454",
-   "modifier": "",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Bool1",
-     "sID": "Not_Bool1_0455",
-     "nodeSID": "Not_0454",
-     "polarity": 0
-    },
-    {
-     "id": "Bool1",
-     "sID": "Not_Bool1_0456",
-     "nodeSID": "Not_0454",
+     "sID": "String_String1_0458",
+     "nodeSID": "String_0457",
      "polarity": 1
     }
    ]
   },
   {
    "id": "ClampFloat",
-   "sID": "ClampFloat_0457",
+   "sID": "ClampFloat_0459",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_0458",
-     "nodeSID": "ClampFloat_0457",
+     "sID": "ClampFloat_Float1_045a",
+     "nodeSID": "ClampFloat_0459",
      "polarity": 0
     },
     {
      "id": "Float2",
-     "sID": "ClampFloat_Float2_0459",
-     "nodeSID": "ClampFloat_0457",
+     "sID": "ClampFloat_Float2_045b",
+     "nodeSID": "ClampFloat_0459",
      "polarity": 0
     },
     {
      "id": "Float3",
-     "sID": "ClampFloat_Float3_045a",
-     "nodeSID": "ClampFloat_0457",
+     "sID": "ClampFloat_Float3_045c",
+     "nodeSID": "ClampFloat_0459",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "ClampFloat_Float1_045b",
-     "nodeSID": "ClampFloat_0457",
-     "polarity": 1
-    }
-   ]
-  },
-  {
-   "id": "Float",
-   "sID": "Float_045c",
-   "modifier": "-1e+30",
-   "ownerFunctionSID": "",
-   "serializablePorts": [
-    {
-     "id": "Float1",
-     "sID": "Float_Float1_045d",
-     "nodeSID": "Float_045c",
+     "sID": "ClampFloat_Float1_045d",
+     "nodeSID": "ClampFloat_0459",
      "polarity": 1
     }
    ]
@@ -7441,7 +7437,7 @@
   {
    "id": "Float",
    "sID": "Float_045e",
-   "modifier": "1e+30",
+   "modifier": "0.5",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
@@ -7453,47 +7449,775 @@
    ]
   },
   {
+   "id": "Float",
+   "sID": "Float_0460",
+   "modifier": "-1.0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_0461",
+     "nodeSID": "Float_0460",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_0462",
+   "modifier": "1.0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_0463",
+     "nodeSID": "Float_0462",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "ClampFloat",
+   "sID": "ClampFloat_0464",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_0465",
+     "nodeSID": "ClampFloat_0464",
+     "polarity": 0
+    },
+    {
+     "id": "Float2",
+     "sID": "ClampFloat_Float2_0466",
+     "nodeSID": "ClampFloat_0464",
+     "polarity": 0
+    },
+    {
+     "id": "Float3",
+     "sID": "ClampFloat_Float3_0467",
+     "nodeSID": "ClampFloat_0464",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_0468",
+     "nodeSID": "ClampFloat_0464",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_0469",
+   "modifier": "-1e+30",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_046a",
+     "nodeSID": "Float_0469",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_046b",
+   "modifier": "1e+30",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_046c",
+     "nodeSID": "Float_046b",
+     "polarity": 1
+    }
+   ]
+  },
+  {
    "id": "TimePlot",
-   "sID": "TimePlot_0460",
+   "sID": "TimePlot_046d",
    "modifier": "",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "TimePlot_String1_0461",
-     "nodeSID": "TimePlot_0460",
+     "sID": "TimePlot_String1_046e",
+     "nodeSID": "TimePlot_046d",
      "polarity": 0
     },
     {
      "id": "Color1",
-     "sID": "TimePlot_Color1_0462",
-     "nodeSID": "TimePlot_0460",
+     "sID": "TimePlot_Color1_046f",
+     "nodeSID": "TimePlot_046d",
      "polarity": 0
     },
     {
      "id": "String2",
-     "sID": "TimePlot_String2_0463",
-     "nodeSID": "TimePlot_0460",
+     "sID": "TimePlot_String2_0470",
+     "nodeSID": "TimePlot_046d",
      "polarity": 0
     },
     {
      "id": "Float1",
-     "sID": "TimePlot_Float1_0464",
-     "nodeSID": "TimePlot_0460",
+     "sID": "TimePlot_Float1_0471",
+     "nodeSID": "TimePlot_046d",
      "polarity": 0
     }
    ]
   },
   {
    "id": "String",
-   "sID": "String_0465",
+   "sID": "String_0472",
+   "modifier": "B.clamp_in",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "String1",
+     "sID": "String_String1_0473",
+     "nodeSID": "String_0472",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_0474",
+   "modifier": "-7.0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_0475",
+     "nodeSID": "Float_0474",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_0476",
+   "modifier": "3.0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_0477",
+     "nodeSID": "Float_0476",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Modulo",
+   "sID": "Modulo_0478",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Modulo_Float1_0479",
+     "nodeSID": "Modulo_0478",
+     "polarity": 0
+    },
+    {
+     "id": "Float2",
+     "sID": "Modulo_Float2_047a",
+     "nodeSID": "Modulo_0478",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "Modulo_Float1_047b",
+     "nodeSID": "Modulo_0478",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "ClampFloat",
+   "sID": "ClampFloat_047c",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_047d",
+     "nodeSID": "ClampFloat_047c",
+     "polarity": 0
+    },
+    {
+     "id": "Float2",
+     "sID": "ClampFloat_Float2_047e",
+     "nodeSID": "ClampFloat_047c",
+     "polarity": 0
+    },
+    {
+     "id": "Float3",
+     "sID": "ClampFloat_Float3_047f",
+     "nodeSID": "ClampFloat_047c",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_0480",
+     "nodeSID": "ClampFloat_047c",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_0481",
+   "modifier": "-1e+30",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_0482",
+     "nodeSID": "Float_0481",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_0483",
+   "modifier": "1e+30",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_0484",
+     "nodeSID": "Float_0483",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "TimePlot",
+   "sID": "TimePlot_0485",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "String1",
+     "sID": "TimePlot_String1_0486",
+     "nodeSID": "TimePlot_0485",
+     "polarity": 0
+    },
+    {
+     "id": "Color1",
+     "sID": "TimePlot_Color1_0487",
+     "nodeSID": "TimePlot_0485",
+     "polarity": 0
+    },
+    {
+     "id": "String2",
+     "sID": "TimePlot_String2_0488",
+     "nodeSID": "TimePlot_0485",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "TimePlot_Float1_0489",
+     "nodeSID": "TimePlot_0485",
+     "polarity": 0
+    }
+   ]
+  },
+  {
+   "id": "String",
+   "sID": "String_048a",
+   "modifier": "B.mod_neg",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "String1",
+     "sID": "String_String1_048b",
+     "nodeSID": "String_048a",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_048c",
+   "modifier": "5.0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_048d",
+     "nodeSID": "Float_048c",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_048e",
+   "modifier": "0.0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_048f",
+     "nodeSID": "Float_048e",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Modulo",
+   "sID": "Modulo_0490",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Modulo_Float1_0491",
+     "nodeSID": "Modulo_0490",
+     "polarity": 0
+    },
+    {
+     "id": "Float2",
+     "sID": "Modulo_Float2_0492",
+     "nodeSID": "Modulo_0490",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "Modulo_Float1_0493",
+     "nodeSID": "Modulo_0490",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "ClampFloat",
+   "sID": "ClampFloat_0494",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_0495",
+     "nodeSID": "ClampFloat_0494",
+     "polarity": 0
+    },
+    {
+     "id": "Float2",
+     "sID": "ClampFloat_Float2_0496",
+     "nodeSID": "ClampFloat_0494",
+     "polarity": 0
+    },
+    {
+     "id": "Float3",
+     "sID": "ClampFloat_Float3_0497",
+     "nodeSID": "ClampFloat_0494",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_0498",
+     "nodeSID": "ClampFloat_0494",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_0499",
+   "modifier": "-1e+30",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_049a",
+     "nodeSID": "Float_0499",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_049b",
+   "modifier": "1e+30",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_049c",
+     "nodeSID": "Float_049b",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "TimePlot",
+   "sID": "TimePlot_049d",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "String1",
+     "sID": "TimePlot_String1_049e",
+     "nodeSID": "TimePlot_049d",
+     "polarity": 0
+    },
+    {
+     "id": "Color1",
+     "sID": "TimePlot_Color1_049f",
+     "nodeSID": "TimePlot_049d",
+     "polarity": 0
+    },
+    {
+     "id": "String2",
+     "sID": "TimePlot_String2_04a0",
+     "nodeSID": "TimePlot_049d",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "TimePlot_Float1_04a1",
+     "nodeSID": "TimePlot_049d",
+     "polarity": 0
+    }
+   ]
+  },
+  {
+   "id": "String",
+   "sID": "String_04a2",
+   "modifier": "B.mod_zero",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "String1",
+     "sID": "String_String1_04a3",
+     "nodeSID": "String_04a2",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_04a4",
+   "modifier": "2.0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_04a5",
+     "nodeSID": "Float_04a4",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_04a6",
+   "modifier": "-1.0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_04a7",
+     "nodeSID": "Float_04a6",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Power",
+   "sID": "Power_04a8",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Power_Float1_04a9",
+     "nodeSID": "Power_04a8",
+     "polarity": 0
+    },
+    {
+     "id": "Float2",
+     "sID": "Power_Float2_04aa",
+     "nodeSID": "Power_04a8",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "Power_Float1_04ab",
+     "nodeSID": "Power_04a8",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "ClampFloat",
+   "sID": "ClampFloat_04ac",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_04ad",
+     "nodeSID": "ClampFloat_04ac",
+     "polarity": 0
+    },
+    {
+     "id": "Float2",
+     "sID": "ClampFloat_Float2_04ae",
+     "nodeSID": "ClampFloat_04ac",
+     "polarity": 0
+    },
+    {
+     "id": "Float3",
+     "sID": "ClampFloat_Float3_04af",
+     "nodeSID": "ClampFloat_04ac",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_04b0",
+     "nodeSID": "ClampFloat_04ac",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_04b1",
+   "modifier": "-1e+30",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_04b2",
+     "nodeSID": "Float_04b1",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_04b3",
+   "modifier": "1e+30",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_04b4",
+     "nodeSID": "Float_04b3",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "TimePlot",
+   "sID": "TimePlot_04b5",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "String1",
+     "sID": "TimePlot_String1_04b6",
+     "nodeSID": "TimePlot_04b5",
+     "polarity": 0
+    },
+    {
+     "id": "Color1",
+     "sID": "TimePlot_Color1_04b7",
+     "nodeSID": "TimePlot_04b5",
+     "polarity": 0
+    },
+    {
+     "id": "String2",
+     "sID": "TimePlot_String2_04b8",
+     "nodeSID": "TimePlot_04b5",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "TimePlot_Float1_04b9",
+     "nodeSID": "TimePlot_04b5",
+     "polarity": 0
+    }
+   ]
+  },
+  {
+   "id": "String",
+   "sID": "String_04ba",
+   "modifier": "B.pow_neg",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "String1",
+     "sID": "String_String1_04bb",
+     "nodeSID": "String_04ba",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Not",
+   "sID": "Not_04bc",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Bool1",
+     "sID": "Not_Bool1_04bd",
+     "nodeSID": "Not_04bc",
+     "polarity": 0
+    },
+    {
+     "id": "Bool1",
+     "sID": "Not_Bool1_04be",
+     "nodeSID": "Not_04bc",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Bool",
+   "sID": "Bool_04bf",
+   "modifier": "0",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Bool1",
+     "sID": "Bool_Bool1_04c0",
+     "nodeSID": "Bool_04bf",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Not",
+   "sID": "Not_04c1",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Bool1",
+     "sID": "Not_Bool1_04c2",
+     "nodeSID": "Not_04c1",
+     "polarity": 0
+    },
+    {
+     "id": "Bool1",
+     "sID": "Not_Bool1_04c3",
+     "nodeSID": "Not_04c1",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "ClampFloat",
+   "sID": "ClampFloat_04c4",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_04c5",
+     "nodeSID": "ClampFloat_04c4",
+     "polarity": 0
+    },
+    {
+     "id": "Float2",
+     "sID": "ClampFloat_Float2_04c6",
+     "nodeSID": "ClampFloat_04c4",
+     "polarity": 0
+    },
+    {
+     "id": "Float3",
+     "sID": "ClampFloat_Float3_04c7",
+     "nodeSID": "ClampFloat_04c4",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "ClampFloat_Float1_04c8",
+     "nodeSID": "ClampFloat_04c4",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_04c9",
+   "modifier": "-1e+30",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_04ca",
+     "nodeSID": "Float_04c9",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "Float",
+   "sID": "Float_04cb",
+   "modifier": "1e+30",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "Float1",
+     "sID": "Float_Float1_04cc",
+     "nodeSID": "Float_04cb",
+     "polarity": 1
+    }
+   ]
+  },
+  {
+   "id": "TimePlot",
+   "sID": "TimePlot_04cd",
+   "modifier": "",
+   "ownerFunctionSID": "",
+   "serializablePorts": [
+    {
+     "id": "String1",
+     "sID": "TimePlot_String1_04ce",
+     "nodeSID": "TimePlot_04cd",
+     "polarity": 0
+    },
+    {
+     "id": "Color1",
+     "sID": "TimePlot_Color1_04cf",
+     "nodeSID": "TimePlot_04cd",
+     "polarity": 0
+    },
+    {
+     "id": "String2",
+     "sID": "TimePlot_String2_04d0",
+     "nodeSID": "TimePlot_04cd",
+     "polarity": 0
+    },
+    {
+     "id": "Float1",
+     "sID": "TimePlot_Float1_04d1",
+     "nodeSID": "TimePlot_04cd",
+     "polarity": 0
+    }
+   ]
+  },
+  {
+   "id": "String",
+   "sID": "String_04d2",
    "modifier": "B.not_chain",
    "ownerFunctionSID": "",
    "serializablePorts": [
     {
      "id": "String1",
-     "sID": "String_String1_0466",
-     "nodeSID": "String_0465",
+     "sID": "String_String1_04d3",
+     "nodeSID": "String_04d2",
      "polarity": 1
     }
    ]
@@ -8389,448 +9113,588 @@
    "port1SID": "TimePlot_Float1_02ea"
   },
   {
+   "port0SID": "ConditionalSetVector3_Vector31_02ac",
+   "port1SID": "Magnitude_Vector31_02ee"
+  },
+  {
+   "port0SID": "Magnitude_Float1_02ef",
+   "port1SID": "ClampFloat_Float1_02f1"
+  },
+  {
+   "port0SID": "Float_Float1_02f6",
+   "port1SID": "ClampFloat_Float2_02f2"
+  },
+  {
+   "port0SID": "Float_Float1_02f8",
+   "port1SID": "ClampFloat_Float3_02f3"
+  },
+  {
+   "port0SID": "String_String1_02ff",
+   "port1SID": "TimePlot_String1_02fa"
+  },
+  {
+   "port0SID": "ClampFloat_Float1_02f4",
+   "port1SID": "TimePlot_Float1_02fd"
+  },
+  {
    "port0SID": "CompareFloats_Bool1_0050",
-   "port1SID": "ClampFloat_Float1_02ee"
+   "port1SID": "ConditionalSetVector3_Bool1_0301"
   },
   {
-   "port0SID": "Float_Float1_02f3",
-   "port1SID": "ClampFloat_Float2_02ef"
+   "port0SID": "Float_Float1_030b",
+   "port1SID": "ConstructVector3_Float1_0306"
   },
   {
-   "port0SID": "Float_Float1_02f5",
-   "port1SID": "ClampFloat_Float3_02f0"
+   "port0SID": "Float_Float1_030d",
+   "port1SID": "ConstructVector3_Float2_0307"
   },
   {
-   "port0SID": "String_String1_02fc",
-   "port1SID": "TimePlot_String1_02f7"
+   "port0SID": "Float_Float1_030f",
+   "port1SID": "ConstructVector3_Float3_0308"
   },
   {
-   "port0SID": "ClampFloat_Float1_02f1",
-   "port1SID": "TimePlot_Float1_02fa"
+   "port0SID": "ConstructVector3_Vector31_0309",
+   "port1SID": "ConditionalSetVector3_Vector31_0302"
   },
   {
-   "port0SID": "Float_Float1_0303",
-   "port1SID": "ConditionalSetBool_Bool1_02fe"
+   "port0SID": "Float_Float1_0316",
+   "port1SID": "ConstructVector3_Float1_0311"
   },
   {
-   "port0SID": "Bool_Bool1_0305",
-   "port1SID": "ConditionalSetBool_Bool2_02ff"
+   "port0SID": "Float_Float1_0318",
+   "port1SID": "ConstructVector3_Float2_0312"
   },
   {
-   "port0SID": "Bool_Bool1_0307",
-   "port1SID": "ConditionalSetBool_Bool3_0300"
+   "port0SID": "Float_Float1_031a",
+   "port1SID": "ConstructVector3_Float3_0313"
   },
   {
-   "port0SID": "ConditionalSetBool_Bool1_0301",
-   "port1SID": "ClampFloat_Float1_0309"
+   "port0SID": "ConstructVector3_Vector31_0314",
+   "port1SID": "ConditionalSetVector3_Vector32_0303"
   },
   {
-   "port0SID": "Float_Float1_030e",
-   "port1SID": "ClampFloat_Float2_030a"
+   "port0SID": "ConditionalSetVector3_Vector31_0304",
+   "port1SID": "Magnitude_Vector31_031c"
   },
   {
-   "port0SID": "Float_Float1_0310",
-   "port1SID": "ClampFloat_Float3_030b"
+   "port0SID": "Magnitude_Float1_031d",
+   "port1SID": "ClampFloat_Float1_031f"
   },
   {
-   "port0SID": "String_String1_0317",
-   "port1SID": "TimePlot_String1_0312"
-  },
-  {
-   "port0SID": "ClampFloat_Float1_030c",
-   "port1SID": "TimePlot_Float1_0315"
-  },
-  {
-   "port0SID": "Float_Float1_0319",
-   "port1SID": "DivideFloats_Float1_031d"
-  },
-  {
-   "port0SID": "Float_Float1_031b",
-   "port1SID": "DivideFloats_Float2_031e"
-  },
-  {
-   "port0SID": "DivideFloats_Float1_031f",
-   "port1SID": "ClampFloat_Float1_0321"
+   "port0SID": "Float_Float1_0324",
+   "port1SID": "ClampFloat_Float2_0320"
   },
   {
    "port0SID": "Float_Float1_0326",
-   "port1SID": "ClampFloat_Float2_0322"
+   "port1SID": "ClampFloat_Float3_0321"
   },
   {
-   "port0SID": "Float_Float1_0328",
-   "port1SID": "ClampFloat_Float3_0323"
+   "port0SID": "String_String1_032d",
+   "port1SID": "TimePlot_String1_0328"
   },
   {
-   "port0SID": "String_String1_032f",
-   "port1SID": "TimePlot_String1_032a"
+   "port0SID": "ClampFloat_Float1_0322",
+   "port1SID": "TimePlot_Float1_032b"
   },
   {
-   "port0SID": "ClampFloat_Float1_0324",
-   "port1SID": "TimePlot_Float1_032d"
+   "port0SID": "CompareFloats_Bool1_0050",
+   "port1SID": "ClampFloat_Float1_032f"
   },
   {
-   "port0SID": "Float_Float1_0331",
-   "port1SID": "DivideFloats_Float1_0335"
+   "port0SID": "Float_Float1_0334",
+   "port1SID": "ClampFloat_Float2_0330"
   },
   {
-   "port0SID": "Float_Float1_0333",
-   "port1SID": "DivideFloats_Float2_0336"
+   "port0SID": "Float_Float1_0336",
+   "port1SID": "ClampFloat_Float3_0331"
   },
   {
-   "port0SID": "DivideFloats_Float1_0337",
-   "port1SID": "ClampFloat_Float1_0339"
+   "port0SID": "String_String1_033d",
+   "port1SID": "TimePlot_String1_0338"
   },
   {
-   "port0SID": "Float_Float1_033e",
-   "port1SID": "ClampFloat_Float2_033a"
+   "port0SID": "ClampFloat_Float1_0332",
+   "port1SID": "TimePlot_Float1_033b"
   },
   {
-   "port0SID": "Float_Float1_0340",
-   "port1SID": "ClampFloat_Float3_033b"
+   "port0SID": "Float_Float1_0344",
+   "port1SID": "ConditionalSetBool_Bool1_033f"
   },
   {
-   "port0SID": "String_String1_0347",
-   "port1SID": "TimePlot_String1_0342"
+   "port0SID": "Bool_Bool1_0346",
+   "port1SID": "ConditionalSetBool_Bool2_0340"
   },
   {
-   "port0SID": "ClampFloat_Float1_033c",
-   "port1SID": "TimePlot_Float1_0345"
+   "port0SID": "Bool_Bool1_0348",
+   "port1SID": "ConditionalSetBool_Bool3_0341"
   },
   {
-   "port0SID": "Float_Float1_0349",
-   "port1SID": "DivideFloats_Float1_034d"
+   "port0SID": "ConditionalSetBool_Bool1_0342",
+   "port1SID": "ClampFloat_Float1_034a"
   },
   {
-   "port0SID": "Float_Float1_034b",
-   "port1SID": "DivideFloats_Float2_034e"
+   "port0SID": "Float_Float1_034f",
+   "port1SID": "ClampFloat_Float2_034b"
   },
   {
-   "port0SID": "DivideFloats_Float1_034f",
-   "port1SID": "ClampFloat_Float1_0351"
+   "port0SID": "Float_Float1_0351",
+   "port1SID": "ClampFloat_Float3_034c"
   },
   {
-   "port0SID": "Float_Float1_0356",
-   "port1SID": "ClampFloat_Float2_0352"
+   "port0SID": "String_String1_0358",
+   "port1SID": "TimePlot_String1_0353"
   },
   {
-   "port0SID": "Float_Float1_0358",
-   "port1SID": "ClampFloat_Float3_0353"
+   "port0SID": "ClampFloat_Float1_034d",
+   "port1SID": "TimePlot_Float1_0356"
   },
   {
-   "port0SID": "String_String1_035f",
-   "port1SID": "TimePlot_String1_035a"
+   "port0SID": "CompareFloats_Bool1_0050",
+   "port1SID": "AddFloats_Float1_035a"
   },
   {
-   "port0SID": "ClampFloat_Float1_0354",
-   "port1SID": "TimePlot_Float1_035d"
+   "port0SID": "Float_Float1_035e",
+   "port1SID": "AddFloats_Float2_035b"
+  },
+  {
+   "port0SID": "AddFloats_Float1_035c",
+   "port1SID": "ClampFloat_Float1_0360"
   },
   {
    "port0SID": "Float_Float1_0365",
-   "port1SID": "AddFloats_Float1_0361"
+   "port1SID": "ClampFloat_Float2_0361"
   },
   {
-   "port0SID": "AddFloats_Float1_0363",
-   "port1SID": "ClampFloat_Float1_0367"
+   "port0SID": "Float_Float1_0367",
+   "port1SID": "ClampFloat_Float3_0362"
   },
   {
-   "port0SID": "Float_Float1_036c",
-   "port1SID": "ClampFloat_Float2_0368"
+   "port0SID": "String_String1_036e",
+   "port1SID": "TimePlot_String1_0369"
   },
   {
-   "port0SID": "Float_Float1_036e",
-   "port1SID": "ClampFloat_Float3_0369"
+   "port0SID": "ClampFloat_Float1_0363",
+   "port1SID": "TimePlot_Float1_036c"
   },
   {
-   "port0SID": "String_String1_0375",
-   "port1SID": "TimePlot_String1_0370"
+   "port0SID": "CompareFloats_Bool1_0050",
+   "port1SID": "MultiplyFloats_Float1_0372"
   },
   {
-   "port0SID": "ClampFloat_Float1_036a",
-   "port1SID": "TimePlot_Float1_0373"
+   "port0SID": "Float_Float1_0370",
+   "port1SID": "MultiplyFloats_Float2_0373"
   },
   {
-   "port0SID": "Float_Float1_037c",
-   "port1SID": "ConstructVector3_Float1_0377"
+   "port0SID": "MultiplyFloats_Float1_0374",
+   "port1SID": "ClampFloat_Float1_0376"
   },
   {
-   "port0SID": "Float_Float1_037e",
-   "port1SID": "ConstructVector3_Float2_0378"
+   "port0SID": "Float_Float1_037b",
+   "port1SID": "ClampFloat_Float2_0377"
   },
   {
-   "port0SID": "Float_Float1_0380",
-   "port1SID": "ConstructVector3_Float3_0379"
+   "port0SID": "Float_Float1_037d",
+   "port1SID": "ClampFloat_Float3_0378"
   },
   {
-   "port0SID": "ConstructVector3_Vector31_037a",
-   "port1SID": "Vector3Split_Vector31_0382"
+   "port0SID": "String_String1_0384",
+   "port1SID": "TimePlot_String1_037f"
   },
   {
-   "port0SID": "Vector3Split_Float1_0383",
-   "port1SID": "ClampFloat_Float1_0387"
+   "port0SID": "ClampFloat_Float1_0379",
+   "port1SID": "TimePlot_Float1_0382"
   },
   {
-   "port0SID": "Float_Float1_038c",
-   "port1SID": "ClampFloat_Float2_0388"
+   "port0SID": "Float_Float1_0386",
+   "port1SID": "DivideFloats_Float1_038a"
   },
   {
-   "port0SID": "Float_Float1_038e",
-   "port1SID": "ClampFloat_Float3_0389"
+   "port0SID": "Float_Float1_0388",
+   "port1SID": "DivideFloats_Float2_038b"
   },
   {
-   "port0SID": "String_String1_0395",
-   "port1SID": "TimePlot_String1_0390"
+   "port0SID": "DivideFloats_Float1_038c",
+   "port1SID": "ClampFloat_Float1_038e"
   },
   {
-   "port0SID": "ClampFloat_Float1_038a",
-   "port1SID": "TimePlot_Float1_0393"
+   "port0SID": "Float_Float1_0393",
+   "port1SID": "ClampFloat_Float2_038f"
   },
   {
-   "port0SID": "Vector3Split_Float2_0384",
-   "port1SID": "ClampFloat_Float1_0397"
+   "port0SID": "Float_Float1_0395",
+   "port1SID": "ClampFloat_Float3_0390"
   },
   {
-   "port0SID": "Float_Float1_039c",
-   "port1SID": "ClampFloat_Float2_0398"
+   "port0SID": "String_String1_039c",
+   "port1SID": "TimePlot_String1_0397"
+  },
+  {
+   "port0SID": "ClampFloat_Float1_0391",
+   "port1SID": "TimePlot_Float1_039a"
   },
   {
    "port0SID": "Float_Float1_039e",
-   "port1SID": "ClampFloat_Float3_0399"
+   "port1SID": "DivideFloats_Float1_03a2"
   },
   {
-   "port0SID": "String_String1_03a5",
-   "port1SID": "TimePlot_String1_03a0"
+   "port0SID": "Float_Float1_03a0",
+   "port1SID": "DivideFloats_Float2_03a3"
   },
   {
-   "port0SID": "ClampFloat_Float1_039a",
-   "port1SID": "TimePlot_Float1_03a3"
+   "port0SID": "DivideFloats_Float1_03a4",
+   "port1SID": "ClampFloat_Float1_03a6"
   },
   {
-   "port0SID": "Vector3Split_Float3_0385",
-   "port1SID": "ClampFloat_Float1_03a7"
+   "port0SID": "Float_Float1_03ab",
+   "port1SID": "ClampFloat_Float2_03a7"
   },
   {
-   "port0SID": "Float_Float1_03ac",
-   "port1SID": "ClampFloat_Float2_03a8"
+   "port0SID": "Float_Float1_03ad",
+   "port1SID": "ClampFloat_Float3_03a8"
   },
   {
-   "port0SID": "Float_Float1_03ae",
-   "port1SID": "ClampFloat_Float3_03a9"
+   "port0SID": "String_String1_03b4",
+   "port1SID": "TimePlot_String1_03af"
   },
   {
-   "port0SID": "String_String1_03b5",
-   "port1SID": "TimePlot_String1_03b0"
+   "port0SID": "ClampFloat_Float1_03a9",
+   "port1SID": "TimePlot_Float1_03b2"
   },
   {
-   "port0SID": "ClampFloat_Float1_03aa",
-   "port1SID": "TimePlot_Float1_03b3"
+   "port0SID": "Float_Float1_03b6",
+   "port1SID": "DivideFloats_Float1_03ba"
   },
   {
-   "port0SID": "Float_Float1_03bc",
-   "port1SID": "ClampFloat_Float1_03b7"
+   "port0SID": "Float_Float1_03b8",
+   "port1SID": "DivideFloats_Float2_03bb"
   },
   {
-   "port0SID": "Float_Float1_03be",
-   "port1SID": "ClampFloat_Float2_03b8"
+   "port0SID": "DivideFloats_Float1_03bc",
+   "port1SID": "ClampFloat_Float1_03be"
   },
   {
-   "port0SID": "Float_Float1_03c0",
-   "port1SID": "ClampFloat_Float3_03b9"
+   "port0SID": "Float_Float1_03c3",
+   "port1SID": "ClampFloat_Float2_03bf"
   },
   {
-   "port0SID": "ClampFloat_Float1_03ba",
-   "port1SID": "ClampFloat_Float1_03c2"
+   "port0SID": "Float_Float1_03c5",
+   "port1SID": "ClampFloat_Float3_03c0"
   },
   {
-   "port0SID": "Float_Float1_03c7",
-   "port1SID": "ClampFloat_Float2_03c3"
+   "port0SID": "String_String1_03cc",
+   "port1SID": "TimePlot_String1_03c7"
   },
   {
-   "port0SID": "Float_Float1_03c9",
-   "port1SID": "ClampFloat_Float3_03c4"
+   "port0SID": "ClampFloat_Float1_03c1",
+   "port1SID": "TimePlot_Float1_03ca"
   },
   {
-   "port0SID": "String_String1_03d0",
-   "port1SID": "TimePlot_String1_03cb"
+   "port0SID": "Float_Float1_03d2",
+   "port1SID": "AddFloats_Float1_03ce"
   },
   {
-   "port0SID": "ClampFloat_Float1_03c5",
-   "port1SID": "TimePlot_Float1_03ce"
-  },
-  {
-   "port0SID": "Float_Float1_03d7",
-   "port1SID": "ClampFloat_Float1_03d2"
+   "port0SID": "AddFloats_Float1_03d0",
+   "port1SID": "ClampFloat_Float1_03d4"
   },
   {
    "port0SID": "Float_Float1_03d9",
-   "port1SID": "ClampFloat_Float2_03d3"
+   "port1SID": "ClampFloat_Float2_03d5"
   },
   {
    "port0SID": "Float_Float1_03db",
-   "port1SID": "ClampFloat_Float3_03d4"
+   "port1SID": "ClampFloat_Float3_03d6"
   },
   {
-   "port0SID": "ClampFloat_Float1_03d5",
-   "port1SID": "ClampFloat_Float1_03dd"
+   "port0SID": "String_String1_03e2",
+   "port1SID": "TimePlot_String1_03dd"
   },
   {
-   "port0SID": "Float_Float1_03e2",
-   "port1SID": "ClampFloat_Float2_03de"
+   "port0SID": "ClampFloat_Float1_03d7",
+   "port1SID": "TimePlot_Float1_03e0"
   },
   {
-   "port0SID": "Float_Float1_03e4",
-   "port1SID": "ClampFloat_Float3_03df"
+   "port0SID": "Float_Float1_03e9",
+   "port1SID": "ConstructVector3_Float1_03e4"
   },
   {
-   "port0SID": "String_String1_03eb",
-   "port1SID": "TimePlot_String1_03e6"
+   "port0SID": "Float_Float1_03eb",
+   "port1SID": "ConstructVector3_Float2_03e5"
   },
   {
-   "port0SID": "ClampFloat_Float1_03e0",
-   "port1SID": "TimePlot_Float1_03e9"
+   "port0SID": "Float_Float1_03ed",
+   "port1SID": "ConstructVector3_Float3_03e6"
   },
   {
-   "port0SID": "Float_Float1_03f2",
-   "port1SID": "ClampFloat_Float1_03ed"
+   "port0SID": "ConstructVector3_Vector31_03e7",
+   "port1SID": "Vector3Split_Vector31_03ef"
   },
   {
-   "port0SID": "Float_Float1_03f4",
-   "port1SID": "ClampFloat_Float2_03ee"
+   "port0SID": "Vector3Split_Float1_03f0",
+   "port1SID": "ClampFloat_Float1_03f4"
   },
   {
-   "port0SID": "Float_Float1_03f6",
-   "port1SID": "ClampFloat_Float3_03ef"
+   "port0SID": "Float_Float1_03f9",
+   "port1SID": "ClampFloat_Float2_03f5"
   },
   {
-   "port0SID": "ClampFloat_Float1_03f0",
-   "port1SID": "ClampFloat_Float1_03f8"
+   "port0SID": "Float_Float1_03fb",
+   "port1SID": "ClampFloat_Float3_03f6"
   },
   {
-   "port0SID": "Float_Float1_03fd",
-   "port1SID": "ClampFloat_Float2_03f9"
+   "port0SID": "String_String1_0402",
+   "port1SID": "TimePlot_String1_03fd"
   },
   {
-   "port0SID": "Float_Float1_03ff",
-   "port1SID": "ClampFloat_Float3_03fa"
+   "port0SID": "ClampFloat_Float1_03f7",
+   "port1SID": "TimePlot_Float1_0400"
   },
   {
-   "port0SID": "String_String1_0406",
-   "port1SID": "TimePlot_String1_0401"
+   "port0SID": "Vector3Split_Float2_03f1",
+   "port1SID": "ClampFloat_Float1_0404"
   },
   {
-   "port0SID": "ClampFloat_Float1_03fb",
-   "port1SID": "TimePlot_Float1_0404"
+   "port0SID": "Float_Float1_0409",
+   "port1SID": "ClampFloat_Float2_0405"
   },
   {
-   "port0SID": "Float_Float1_0408",
-   "port1SID": "Modulo_Float1_040c"
+   "port0SID": "Float_Float1_040b",
+   "port1SID": "ClampFloat_Float3_0406"
   },
   {
-   "port0SID": "Float_Float1_040a",
-   "port1SID": "Modulo_Float2_040d"
+   "port0SID": "String_String1_0412",
+   "port1SID": "TimePlot_String1_040d"
   },
   {
-   "port0SID": "Modulo_Float1_040e",
-   "port1SID": "ClampFloat_Float1_0410"
+   "port0SID": "ClampFloat_Float1_0407",
+   "port1SID": "TimePlot_Float1_0410"
   },
   {
-   "port0SID": "Float_Float1_0415",
-   "port1SID": "ClampFloat_Float2_0411"
+   "port0SID": "Vector3Split_Float3_03f2",
+   "port1SID": "ClampFloat_Float1_0414"
   },
   {
-   "port0SID": "Float_Float1_0417",
-   "port1SID": "ClampFloat_Float3_0412"
+   "port0SID": "Float_Float1_0419",
+   "port1SID": "ClampFloat_Float2_0415"
   },
   {
-   "port0SID": "String_String1_041e",
-   "port1SID": "TimePlot_String1_0419"
+   "port0SID": "Float_Float1_041b",
+   "port1SID": "ClampFloat_Float3_0416"
   },
   {
-   "port0SID": "ClampFloat_Float1_0413",
-   "port1SID": "TimePlot_Float1_041c"
+   "port0SID": "String_String1_0422",
+   "port1SID": "TimePlot_String1_041d"
   },
   {
-   "port0SID": "Float_Float1_0420",
-   "port1SID": "Modulo_Float1_0424"
+   "port0SID": "ClampFloat_Float1_0417",
+   "port1SID": "TimePlot_Float1_0420"
   },
   {
-   "port0SID": "Float_Float1_0422",
-   "port1SID": "Modulo_Float2_0425"
+   "port0SID": "Float_Float1_0429",
+   "port1SID": "ClampFloat_Float1_0424"
   },
   {
-   "port0SID": "Modulo_Float1_0426",
-   "port1SID": "ClampFloat_Float1_0428"
+   "port0SID": "Float_Float1_042b",
+   "port1SID": "ClampFloat_Float2_0425"
   },
   {
    "port0SID": "Float_Float1_042d",
-   "port1SID": "ClampFloat_Float2_0429"
+   "port1SID": "ClampFloat_Float3_0426"
   },
   {
-   "port0SID": "Float_Float1_042f",
-   "port1SID": "ClampFloat_Float3_042a"
+   "port0SID": "ClampFloat_Float1_0427",
+   "port1SID": "ClampFloat_Float1_042f"
   },
   {
-   "port0SID": "String_String1_0436",
-   "port1SID": "TimePlot_String1_0431"
+   "port0SID": "Float_Float1_0434",
+   "port1SID": "ClampFloat_Float2_0430"
   },
   {
-   "port0SID": "ClampFloat_Float1_042b",
-   "port1SID": "TimePlot_Float1_0434"
+   "port0SID": "Float_Float1_0436",
+   "port1SID": "ClampFloat_Float3_0431"
   },
   {
-   "port0SID": "Float_Float1_0438",
-   "port1SID": "Power_Float1_043c"
+   "port0SID": "String_String1_043d",
+   "port1SID": "TimePlot_String1_0438"
   },
   {
-   "port0SID": "Float_Float1_043a",
-   "port1SID": "Power_Float2_043d"
+   "port0SID": "ClampFloat_Float1_0432",
+   "port1SID": "TimePlot_Float1_043b"
   },
   {
-   "port0SID": "Power_Float1_043e",
-   "port1SID": "ClampFloat_Float1_0440"
+   "port0SID": "Float_Float1_0444",
+   "port1SID": "ClampFloat_Float1_043f"
   },
   {
-   "port0SID": "Float_Float1_0445",
-   "port1SID": "ClampFloat_Float2_0441"
+   "port0SID": "Float_Float1_0446",
+   "port1SID": "ClampFloat_Float2_0440"
   },
   {
-   "port0SID": "Float_Float1_0447",
-   "port1SID": "ClampFloat_Float3_0442"
+   "port0SID": "Float_Float1_0448",
+   "port1SID": "ClampFloat_Float3_0441"
   },
   {
-   "port0SID": "String_String1_044e",
-   "port1SID": "TimePlot_String1_0449"
+   "port0SID": "ClampFloat_Float1_0442",
+   "port1SID": "ClampFloat_Float1_044a"
   },
   {
-   "port0SID": "ClampFloat_Float1_0443",
-   "port1SID": "TimePlot_Float1_044c"
+   "port0SID": "Float_Float1_044f",
+   "port1SID": "ClampFloat_Float2_044b"
   },
   {
-   "port0SID": "Bool_Bool1_0453",
-   "port1SID": "Not_Bool1_0450"
+   "port0SID": "Float_Float1_0451",
+   "port1SID": "ClampFloat_Float3_044c"
   },
   {
-   "port0SID": "Not_Bool1_0451",
-   "port1SID": "Not_Bool1_0455"
+   "port0SID": "String_String1_0458",
+   "port1SID": "TimePlot_String1_0453"
   },
   {
-   "port0SID": "Not_Bool1_0456",
-   "port1SID": "ClampFloat_Float1_0458"
-  },
-  {
-   "port0SID": "Float_Float1_045d",
-   "port1SID": "ClampFloat_Float2_0459"
+   "port0SID": "ClampFloat_Float1_044d",
+   "port1SID": "TimePlot_Float1_0456"
   },
   {
    "port0SID": "Float_Float1_045f",
-   "port1SID": "ClampFloat_Float3_045a"
+   "port1SID": "ClampFloat_Float1_045a"
   },
   {
-   "port0SID": "String_String1_0466",
-   "port1SID": "TimePlot_String1_0461"
+   "port0SID": "Float_Float1_0461",
+   "port1SID": "ClampFloat_Float2_045b"
   },
   {
-   "port0SID": "ClampFloat_Float1_045b",
-   "port1SID": "TimePlot_Float1_0464"
+   "port0SID": "Float_Float1_0463",
+   "port1SID": "ClampFloat_Float3_045c"
+  },
+  {
+   "port0SID": "ClampFloat_Float1_045d",
+   "port1SID": "ClampFloat_Float1_0465"
+  },
+  {
+   "port0SID": "Float_Float1_046a",
+   "port1SID": "ClampFloat_Float2_0466"
+  },
+  {
+   "port0SID": "Float_Float1_046c",
+   "port1SID": "ClampFloat_Float3_0467"
+  },
+  {
+   "port0SID": "String_String1_0473",
+   "port1SID": "TimePlot_String1_046e"
+  },
+  {
+   "port0SID": "ClampFloat_Float1_0468",
+   "port1SID": "TimePlot_Float1_0471"
+  },
+  {
+   "port0SID": "Float_Float1_0475",
+   "port1SID": "Modulo_Float1_0479"
+  },
+  {
+   "port0SID": "Float_Float1_0477",
+   "port1SID": "Modulo_Float2_047a"
+  },
+  {
+   "port0SID": "Modulo_Float1_047b",
+   "port1SID": "ClampFloat_Float1_047d"
+  },
+  {
+   "port0SID": "Float_Float1_0482",
+   "port1SID": "ClampFloat_Float2_047e"
+  },
+  {
+   "port0SID": "Float_Float1_0484",
+   "port1SID": "ClampFloat_Float3_047f"
+  },
+  {
+   "port0SID": "String_String1_048b",
+   "port1SID": "TimePlot_String1_0486"
+  },
+  {
+   "port0SID": "ClampFloat_Float1_0480",
+   "port1SID": "TimePlot_Float1_0489"
+  },
+  {
+   "port0SID": "Float_Float1_048d",
+   "port1SID": "Modulo_Float1_0491"
+  },
+  {
+   "port0SID": "Float_Float1_048f",
+   "port1SID": "Modulo_Float2_0492"
+  },
+  {
+   "port0SID": "Modulo_Float1_0493",
+   "port1SID": "ClampFloat_Float1_0495"
+  },
+  {
+   "port0SID": "Float_Float1_049a",
+   "port1SID": "ClampFloat_Float2_0496"
+  },
+  {
+   "port0SID": "Float_Float1_049c",
+   "port1SID": "ClampFloat_Float3_0497"
+  },
+  {
+   "port0SID": "String_String1_04a3",
+   "port1SID": "TimePlot_String1_049e"
+  },
+  {
+   "port0SID": "ClampFloat_Float1_0498",
+   "port1SID": "TimePlot_Float1_04a1"
+  },
+  {
+   "port0SID": "Float_Float1_04a5",
+   "port1SID": "Power_Float1_04a9"
+  },
+  {
+   "port0SID": "Float_Float1_04a7",
+   "port1SID": "Power_Float2_04aa"
+  },
+  {
+   "port0SID": "Power_Float1_04ab",
+   "port1SID": "ClampFloat_Float1_04ad"
+  },
+  {
+   "port0SID": "Float_Float1_04b2",
+   "port1SID": "ClampFloat_Float2_04ae"
+  },
+  {
+   "port0SID": "Float_Float1_04b4",
+   "port1SID": "ClampFloat_Float3_04af"
+  },
+  {
+   "port0SID": "String_String1_04bb",
+   "port1SID": "TimePlot_String1_04b6"
+  },
+  {
+   "port0SID": "ClampFloat_Float1_04b0",
+   "port1SID": "TimePlot_Float1_04b9"
+  },
+  {
+   "port0SID": "Bool_Bool1_04c0",
+   "port1SID": "Not_Bool1_04bd"
+  },
+  {
+   "port0SID": "Not_Bool1_04be",
+   "port1SID": "Not_Bool1_04c2"
+  },
+  {
+   "port0SID": "Not_Bool1_04c3",
+   "port1SID": "ClampFloat_Float1_04c5"
+  },
+  {
+   "port0SID": "Float_Float1_04ca",
+   "port1SID": "ClampFloat_Float2_04c6"
+  },
+  {
+   "port0SID": "Float_Float1_04cc",
+   "port1SID": "ClampFloat_Float3_04c7"
+  },
+  {
+   "port0SID": "String_String1_04d3",
+   "port1SID": "TimePlot_String1_04ce"
+  },
+  {
+   "port0SID": "ClampFloat_Float1_04c8",
+   "port1SID": "TimePlot_Float1_04d1"
   }
  ]
 }

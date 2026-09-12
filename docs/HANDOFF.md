@@ -27,25 +27,27 @@ Phase F's status; open decisions at the end). Read it before starting anything.
   `Pixel_Heart` (`Round(RandomFloat)` — world-RNG placeholder).
 - Battery → 46 channels, 4 tick-varying, **0 divergences**
   (`PASS: reference == O0 == O1 on every channel and trace`).
-- **Game-read policy truth (§17)** — the game ran the battery and exported all
-  46 `B.*` channels: div/mod-by-zero = IEEE inf/nan; `ConditionalSetFloat`
-  unwired-false = previous-tick HOLD; unwired input = 0; all 16 `Operation`
-  indices confirmed. **New game-sourced open items:** `ConditionalSetVector3`
-  unwired-false = **0, not hold**; Bool→Float coercion reads **0** in the game.
+- **Game-read policy truth (§17)** — the game ran the battery (50 ch, 1060
+  samples): div/mod-by-zero = IEEE inf/nan; `ConditionalSetFloat` **and**
+  `ConditionalSetVector3` unwired-false = **previous-tick HOLD** (confirmed via
+  `Magnitude`); unwired input = 0; all 16 `Operation` indices confirmed.
+  **New game-sourced open items:** the game is not memoized per tick
+  (`Vector3Split` reads 0 where `Magnitude` holds); same-tick variable reads are
+  visible; Bool→Float wires are dropped (no coercion).
+- **`bat` O0≠O1 root-caused to the CSE pass** (`tests/pass_bisect.rs`,
+  `PassManager::o1_prefix`) — CSE flips the aim (x==y). Not disabled yet (§17b).
 - v0.15f `parity_state.json` → `tick 422 / callbacks 3239 / points_done 1 /
   done:true / success:true`; quit flushed a **748471-byte** TimePlot.
 - Exact outcome parity **25/78 = 32.1%** — still brittle; the distributional
   metric is the headline now.
 
 ### Next actions, in order (see the plan for detail)
-1. **Phase A DONE** (reference↔VM closed). **Phase B DONE** (game policy read).
-   The two new game-sourced divergences are top priority: (a) confirm
-   `ConditionalSetVector3` = zero (second graph, no `Vector3Split`) and fix the
-   VM's `implicit_hold` if real; (b) confirm Bool→Float coercion with a bool used
-   arithmetically, then decide `as_float(Bool)`.
-2. **`bat` aim** — root-caused to a `ConditionalSetVector3`/aim chain that also
-   exposes an O0≠O1 pass bug (`docs/HANDOFF.md` §14 finding 1/2); bisect the O1
-   passes on `bat` (`fusion`/`cse`/`relay_removal`).
+1. **Phase A + B DONE.** A2 (hold) is game-**CONFIRMED** for Float and Vector.
+   Remaining interpreter/VM item: **`bat` O0≠O1 = the CSE pass** (§17b) — write a
+   focused CSE unit test on bat's aim cone before touching CSE.
+2. **Simulator/VM**: decide the two game-sourced open items (§17) — same-tick
+   variable visibility and the Bool→Float wire drop — only with a confirming
+   graph each; both change real-bot semantics, so measure first.
 3. **Phase C**: scale the multi-seed sweep (`--points 8`, ~50 seeds), then the
    never-run per-tick channel diff against the game auto-export.
 4. **Phase F4**: re-mine v0.15 fixtures and triage drift against the §18
@@ -541,38 +543,54 @@ python modhost/modctl.py wait --timeout 1200 ; python modhost/modctl.py quit
 python scripts/read_battery_from_game.py "<Saves>\Tennis\Timeplots"
 ```
 
-Result: **the game ran the battery and exported all 46 `B.*` channels**
-(215–216 samples; `point_winners [1]`, `done:true`). Raw game truth:
+Result (round 1, 46-ch): the game ran the battery and exported all `B.*`
+channels. Round 2 (`timeplot_2026-09-12_04-00-01`, 50-ch, seed 2, **1060
+samples**) added disambiguation channels and **superseded an initial misread**
+(a 16-sample window hid the steady state). Corrected game truth:
 
 | question | game value | verdict |
 |---|---|---|
-| `1/0`, `-1/0`, `0/0` | `1e30`, `-1e30`, `nan` | **IEEE inf/-inf/nan** — the VM/reference are right; the old reference guard was a bug |
+| `1/0`, `-1/0`, `0/0` | `1e30`, `-1e30`, `nan` | **IEEE inf/-inf/nan** — VM/reference right; the old reference guard was a bug |
 | `5 % 0` | `nan` | **IEEE NaN** |
-| `ConditionalSetFloat` unwired false | constant `7` | **HOLD** (previous tick) confirmed |
-| `ConditionalSetBool` unwired false | constant `0` | consistent with hold-false (Bool not float-observable) |
-| `ConditionalSetVector3` unwired false | `(0,1,0,1…)` / `(0,2,0,2…)` / `(0,3,0,3…)` | **ZERO, NOT hold** — ⚠ contradicts the VM (see below) |
+| `ConditionalSetFloat` unwired false | holds `7` across a **long false stretch** (`sel_wired`==22 constant) | **HOLD (previous tick) CONFIRMED** — A2 stands |
+| `ConditionalSetVector3` unwired false | `holdv_mag` holds `3.7417` across the same stretch | **HOLD CONFIRMED** (via `Magnitude`) |
+| `ConditionalSetVector3` read via `Vector3Split` | `hold_v_*` == `0` on the false ticks | ⚠ **consumer-path anomaly** (below) |
+| `ConditionalSetBool` unwired false | `0` | Bool not float-observable; consistent with hold-false |
 | unwired `AddFloats` input | `3` | unwired input = 0 confirmed |
 | all 16 `Operation` indices | abs 7, sqrt 2.645751, sign 1, ln 1.945910, e^ 1096.633, 10^ 1e7, asin/acos nan, … | **all match the VM/reference exactly** |
 | `ClampFloat` / vector round-trip / `Power(2,-1)` | 1/-1/0.5, 1.5/2.5/3.5, 0.5 | match |
-| same-tick var read (`B.latch_a` vs `B.latch_b`) | game: **identical** (`B_b == B_n`); sim: `latch_b == latch_a - 1` | ⚠ game shows same-tick store visibility; sim lags one tick |
-| Bool wired into a Float plot (`cmp_*`, `not_chain`, `coerce_*`) | **0 for every case** (5==5 shows 0) | game does **not** coerce Bool→Float through a Float input; our `as_float(Bool)` = 1.0 may be wrong |
+| same-tick var read (`B.latch_a` vs `B.latch_b`) | game: **identical** (`B_b == B_n`); sim: `latch_b == latch_a - 1` | ⚠ game exposes **same-tick store visibility**; the sim lags one tick |
+| Bool into a Float arithmetic input | `AddFloats(bool,0)`==0 **even when the bool is true**; `MultiplyFloats(bool,1)`==1 | ⚠ game appears to **drop the Bool→Float wire** (input takes the op identity: Add 0 / Mul 1) → **no coercion**; `as_float(Bool)`=1.0 is suspect |
 
-Two ⚠ rows are the new, game-sourced open items (the rest confirm A1–A3):
+**The ⚠ vector row is a consumer-path artifact, not "the game zeroes
+vectors".** `holdv_mag` (via `Magnitude`) holds the previous vector, while
+`hold_v_*` (via `Vector3Split`) reads zero for the *same* node — and `B.vec_*`
+proves `Vector3Split` is fine on a plain `ConstructVector3`. So the game's
+evaluation is **not globally memoized per tick**: a node feeding several
+consumers (here the `TimePlot` chains) is re-evaluated per consumer, and a
+self-latching conditional's later consumers see the value written earlier in the
+tick. The VM's global per-tick cache + double-buffered latch matches the *first*
+consumer (the dominant path for real bots) and therefore the `Magnitude`
+reading — so **A2 is right for parity**; the `Vector3Split`-after-`Magnitude`
+ordering is a genuine modelling gap, worth revisiting only if a real bot depends
+on it (HANDOFF §17 finding 1).
 
-1. **`ConditionalSetVector3` unwired-false is ZERO in the game, not a hold.**
-   The Float arm holds; the Vector arm does not. `lower.rs::implicit_hold`
-   applies the hold to *all* kinds, so the VM (and now the reference) is
-   **wrong for vectors**. Do not change blindly: confirm with a second graph
-   that isolates the vector node from `Vector3Split` before changing the VM.
-2. **Bool→Float coercion.** Every Bool-source channel reads 0 in the game. If
-   the game never coerces a Bool output into a Float input, `as_float(Bool(true))`
-   should be 0, not 1. This is TimePlot-observable only for the *coercion of a
-   value that reaches a float port*, so it needs a graph where the bool is used
-   arithmetically before being plotted.
+The two remaining ⚠ rows (same-tick var visibility, bool→float wire) are
+game-sourced open items; the sim was NOT changed on their account.
 
-Both are recorded as **open, game-sourced** divergences; the sim was NOT changed
-on their account (the evidence is strong for the vector case but the reading
-path `Vector3Split` is not fully ruled out).
+### 17b. `bat` O0≠O1 root-caused to the CSE pass (2026-09-12)
+
+`tests/pass_bisect.rs` (+ `PassManager::o1_prefix`) runs progressive O1
+prefixes: `ConstFold` and `RelayRemoval` == O0, but **CSE** flips `bat`'s aim
+from `(0.8833, 0.0264)` to `(0.8833, 0.8833)` (x==y — a multi-output/aliasing
+smell), and `Fusion`/`RegAlloc` inherit it. CSE is **not** disabled (one save of
+14; the cost metric is per-tick transitions) — the next step is a focused CSE
+unit test on bat's aim cone.
+
+```
+PASS_BISECT=bat cargo test --test pass_bisect -- --nocapture
+```
+
 
 
 

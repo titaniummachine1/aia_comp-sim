@@ -76,28 +76,37 @@ def verdict(channel: str, ys: "list[float]", info: dict) -> str:
         return "no samples"
     if info.get("kind") == "bool":
         return "bool source — game Float plot reads 0 (not game-comparable)"
-    first, last = ys[0], ys[-1]
+    # Collapse consecutive duplicates (the first sample can be a pre-tick 0).
     uniq = []
     for v in ys:
         if not uniq or uniq[-1] != v:
             uniq.append(v)
+    last = ys[-1]
+
     if channel.startswith("B.div_") or channel == "B.mod_zero":
         if last != last:  # NaN
             return "NaN (IEEE 0/0 or x%0)"
         if abs(last) > 1e29:
-            return f"{'IEEE inf' if channel != 'B.mod_zero' else 'IEEE nan-clamped'}"
+            return "IEEE inf"
         return f"guarded/zero ({last})"
-    if channel.startswith("B.hold_"):
-        held = last == first or len(uniq) <= 2
-        return ("HOLD (previous-tick)" if held else f"NOT held (alternates: {uniq[:6]})")
+    if channel.startswith("B.hold"):
+        # The reader does not see the condition, so it cannot decide "held vs
+        # zero-on-false" by itself; report the value distribution it does see.
+        zeros = sum(1 for v in ys if v == 0.0)
+        vals = sorted({round(v, 4) for v in ys})
+        return f"values {vals[:6]} ({zeros}/{len(ys)} zero)"
+    if channel.startswith("B.coerce_b2f"):
+        coerced = 1.0 in ys and 0.0 in ys
+        return ("coerces Bool->1.0/0.0" if coerced
+                else f"NO coercion (all {uniq[:4]})")
     if channel == "B.latch_b":
-        return f"initial={first} (0 => vars start at 0/false)"
+        return f"initial={ys[0]} (0 => vars start at 0/false)"
     if channel == "B.latch_a":
         return f"series {uniq[:6]} (expect 1,2,3,...)"
     if info.get("golden") is not None:
         ok = abs(last - info["golden"]) <= 1e-4
         return f"{'golden OK' if ok else 'GOLDEN MISMATCH'} (want {info['golden']})"
-    return f"first={first} last={last}"
+    return f"first={ys[0]} last={last}"
 
 
 def main() -> int:
