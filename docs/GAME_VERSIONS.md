@@ -45,9 +45,18 @@ parity — the four steps below.
 1. Point `modhost/` at the new `GameAssembly.dll` (metadata-driven — the
    probe resolves by managed names; RVAs are provenance labels).
 2. `python modhost/capture_fixtures.py --home <bot> --away <bot> --seed N`
-3. `python modhost/emit_rust_fixtures.py <run>`
+3. `python modhost/emit_rust_fixtures.py <run> [--out=<versioned fixture dir>]`
 4. `cargo test --test tennis_v014_solver_parity` — the replay reports
-   exactly which solver behavior drifted.
+   exactly which solver behavior drifted (it reads `tests/fixtures/tennis-v014`
+   and, when present, `tennis-v015`; a missing/empty per-version `shot_solver.jsonl`
+   makes that version skip cleanly).
+
+**v0.15f status (2026-09-12, HANDOFF §21):** the event-fixture snapshot now
+tolerates version-removed fields (`metadata_trace_field_optional` applied to the
+event snapshot/restore/match groups too), so the capture runs end-to-end on
+v0.15f: `curve` 29/29 complete, `serve_direct` 26, `simulate` 13, `nth_landing`
+10. The **shot** fixture still yields 0 rows, so the v0.15 solver gate is not yet
+meaningful. Build the v0.15 event probe with `build_paritymod_event_v015.ps1`.
 
 Start the mod host for a new version the same way v0.14/v0.15f were done:
 copy the pristine install to `modhost/v<ver>/`, keep the untouched launcher as

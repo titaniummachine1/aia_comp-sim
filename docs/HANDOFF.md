@@ -799,3 +799,43 @@ replays use the sim's own derived server. A first-server-matched sweep
 (`restart_sweep.jsonl`) remains the exact-parity path.
 
 
+## 21. Phase F4 — v0.15f fixture re-mine (partial, 2026-09-12)
+
+New tooling: `build_paritymod_event_v015.ps1` builds the v0.15f **event** probe
+(`Aialanders-paritymod-event-v015.exe`, distinct name so the v0.14 event probe
+is untouched); `emit_rust_fixtures.py` gained `--out=<dir>` so a new version's
+corpus lands in `tests/fixtures/tennis-v015/` without clobbering the pinned
+v0.14 fixtures.
+
+**Blocker found and fixed.** The event fixture failed on v0.15f with
+`event_fixture_failure reason=snapshot_fields_unavailable`. Root cause: the
+event snapshot helpers (`metadata_event_capture_group`,
+`metadata_event_group_matches`, `metadata_event_restore_group` + the
+`V014ServeFieldSpec` variants) failed the **whole** snapshot on any unreadable
+field, while the trace writer already honoured `metadata_trace_field_optional()`.
+They now tolerate the version-optional fields (and `required==0` serve fields),
+so a build that removed a field no longer aborts the capture. No-op for v0.14
+(all fields present).
+
+**After the fix** (v0.15f, titanium54 vs aia3 seed 20260907):
+
+| fixture | v0.15f |
+|---|---|
+| `curve_fixture` | **complete 29/29** |
+| `serve_direct` | 26 rows |
+| `simulate` | 13 rows |
+| `nth_landing` | 10 rows |
+| `shot_fixture` | **0 rows (still fails)** |
+| `getter_items` | waiting (`graph_not_ready` at the startup fixture) |
+
+Partial corpus emitted to `tests/fixtures/tennis-v015/` (curve / nth_landing /
+scene / simulate). `tests/tennis_v014_solver_parity.rs` is now version-
+parameterised: it reads `tennis-v014` for the gate (unchanged, 200/210) and
+**skips cleanly** for `tennis-v015` while the shot corpus is absent. Verified:
+both tests pass.
+
+**Next for F4:** mine the v0.15 **shot** fixture (the one the solver gate needs).
+`shot_fixture_success:false / shot_case_rows:0` means a `v014_shot_manager_fields`
+input or the `ComputeShotVelocity` signature/field layout moved in v0.15; add it
+to the optional allowlist or re-map it, then re-run the same recipe.
+

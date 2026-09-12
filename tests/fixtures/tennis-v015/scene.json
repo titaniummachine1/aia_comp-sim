@@ -1,0 +1,667 @@
+{
+ "kind": "shot_fixture_context",
+ "schema": "v014-shot-v1",
+ "manager_object": "0x000001c12e35fa80",
+ "ball_object": "0x000001c130adde00",
+ "manager_fields": {
+  "court_length": {
+   "managed_name": "courtLength",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    1103101952
+   ]
+  },
+  "net_height": {
+   "managed_name": "netHeight",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    1064514355
+   ]
+  },
+  "court_y": {
+   "managed_name": "courtY",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0
+   ]
+  },
+  "aim_net_gap": {
+   "managed_name": "aimNetGap",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    1056964608
+   ]
+  },
+  "flat_speed": {
+   "managed_name": "flatSpeed",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    1105199104
+   ]
+  },
+  "flat_lift": {
+   "managed_name": "flatLift",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    1017370378
+   ]
+  },
+  "topspin_speed": {
+   "managed_name": "topspinSpeed",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    1103101952
+   ]
+  },
+  "topspin_lift": {
+   "managed_name": "topspinLift",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    1034147594
+   ]
+  },
+  "slice_speed": {
+   "managed_name": "sliceSpeed",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    1098907648
+   ]
+  },
+  "slice_lift": {
+   "managed_name": "sliceLift",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    1025758986
+   ]
+  },
+  "lob_speed": {
+   "managed_name": "lobSpeed",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    1094713344
+   ]
+  },
+  "lob_lift": {
+   "managed_name": "lobLift",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    1086324736
+   ]
+  },
+  "drop_speed": {
+   "managed_name": "dropSpeed",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    1089680179
+   ]
+  },
+  "drop_lift": {
+   "managed_name": "dropLift",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    1049247089
+   ]
+  },
+  "min_charge_power": {
+   "managed_name": "minChargePower",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    1062836634
+   ]
+  },
+  "max_charge_power": {
+   "managed_name": "maxChargePower",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    1067869798
+   ]
+  },
+  "rally_shot_count": {
+   "managed_name": "rallyShotCount",
+   "word_count": 1,
+   "encoding": 1,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0
+   ]
+  },
+  "is_training_mode": {
+   "managed_name": "<IsTrainingMode>k__BackingField",
+   "word_count": 1,
+   "encoding": 2,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0
+   ]
+  },
+  "training_player_team": {
+   "managed_name": "<TrainingPlayerTeam>k__BackingField",
+   "word_count": 1,
+   "encoding": 1,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0
+   ]
+  }
+ },
+ "ball_fields": {
+  "last_hitter": {
+   "managed_name": "<LastHitter>k__BackingField",
+   "word_count": 2,
+   "encoding": 4,
+   "required": false,
+   "read_ok": true,
+   "value": null
+  },
+  "tennis_manager": {
+   "managed_name": "tennisManager",
+   "word_count": 2,
+   "encoding": 4,
+   "required": true,
+   "read_ok": true,
+   "value": "0x000001c12e35fa80"
+  },
+  "arcade_gravity": {
+   "managed_name": "arcadeGravity",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    3252682752
+   ]
+  },
+  "max_speed": {
+   "managed_name": "maxSpeed",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    1110966272
+   ]
+  },
+  "radius": {
+   "managed_name": "<Radius>k__BackingField",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    1050589266
+   ]
+  },
+  "slice_curve": {
+   "managed_name": "sliceCurve",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0
+   ]
+  },
+  "curve_team": {
+   "managed_name": "curveTeam",
+   "word_count": 1,
+   "encoding": 1,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0
+   ]
+  },
+  "last_hit_power": {
+   "managed_name": "lastHitPower",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0
+   ]
+  },
+  "flight_pace": {
+   "managed_name": "flightPace",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    1065353216
+   ]
+  },
+  "position": {
+   "managed_name": "<Position>k__BackingField",
+   "word_count": 3,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0,
+    1055622431,
+    0
+   ]
+  },
+  "velocity": {
+   "managed_name": "<Velocity>k__BackingField",
+   "word_count": 3,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0,
+    0,
+    0
+   ]
+  },
+  "last_strike_pos": {
+   "managed_name": "lastStrikePos",
+   "word_count": 3,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0,
+    1055622431,
+    0
+   ]
+  },
+  "peak_y_since_hit": {
+   "managed_name": "peakYSinceHit",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    1055622431
+   ]
+  },
+  "last_position": {
+   "managed_name": "lastPosition",
+   "word_count": 3,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0,
+    1055622431,
+    0
+   ]
+  },
+  "cached_predicted_bounce": {
+   "managed_name": "cachedPredictedBounce",
+   "word_count": 3,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0,
+    0,
+    0
+   ]
+  },
+  "cached_predicted_second_bounce": {
+   "managed_name": "cachedPredictedSecondBounce",
+   "word_count": 3,
+   "encoding": 3,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0,
+    0,
+    0
+   ]
+  },
+  "cached_predicted_bounce_time": {
+   "managed_name": "cachedPredictedBounceTime",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": false,
+   "value": null
+  },
+  "cached_predicted_second_bounce_time": {
+   "managed_name": "cachedPredictedSecondBounceTime",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": false,
+   "value": null
+  },
+  "has_cached_predicted_bounce": {
+   "managed_name": "hasCachedPredictedBounce",
+   "word_count": 1,
+   "encoding": 2,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0
+   ]
+  },
+  "has_cached_predicted_second_bounce": {
+   "managed_name": "hasCachedPredictedSecondBounce",
+   "word_count": 1,
+   "encoding": 2,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0
+   ]
+  },
+  "predicted_bounce_age": {
+   "managed_name": "predictedBounceAge",
+   "word_count": 1,
+   "encoding": 3,
+   "required": true,
+   "read_ok": false,
+   "value": null
+  },
+  "shot_bounce_count": {
+   "managed_name": "shotBounceCount",
+   "word_count": 1,
+   "encoding": 1,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0
+   ]
+  },
+  "pending_topspin_kick": {
+   "managed_name": "pendingTopspinKick",
+   "word_count": 1,
+   "encoding": 2,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0
+   ]
+  },
+  "pending_slice_bounce": {
+   "managed_name": "pendingSliceBounce",
+   "word_count": 1,
+   "encoding": 2,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0
+   ]
+  },
+  "pending_drop_bounce": {
+   "managed_name": "pendingDropBounce",
+   "word_count": 1,
+   "encoding": 2,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0
+   ]
+  },
+  "has_crossed_net": {
+   "managed_name": "<HasCrossedNet>k__BackingField",
+   "word_count": 1,
+   "encoding": 2,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0
+   ]
+  },
+  "in_play": {
+   "managed_name": "<InPlay>k__BackingField",
+   "word_count": 1,
+   "encoding": 2,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0
+   ]
+  },
+  "is_serve": {
+   "managed_name": "<IsServe>k__BackingField",
+   "word_count": 1,
+   "encoding": 2,
+   "required": true,
+   "read_ok": true,
+   "value": [
+    0
+   ]
+  }
+ },
+ "methods": [
+  {
+   "declaring_class": "TennisBall",
+   "name": "ComputeShotVelocity",
+   "args": 4,
+   "reviewed_rva": "0x0000000000c1a4a0",
+   "return_type": "UnityEngine.Vector3",
+   "method": {
+    "class": "TennisBall",
+    "name": "ComputeShotVelocity",
+    "args": 4,
+    "rva": "0x0000000000c1a9c0"
+   }
+  },
+  {
+   "declaring_class": "TennisBall",
+   "name": "RebuildLaunchForAim",
+   "args": 6,
+   "reviewed_rva": "0x0000000000c1f0a0",
+   "return_type": "System.Void",
+   "method": {
+    "class": "TennisBall",
+    "name": "RebuildLaunchForAim",
+    "args": 6,
+    "rva": "0x0000000000c1f680"
+   }
+  },
+  {
+   "declaring_class": "TennisBall",
+   "name": "SteerVelocityToAim",
+   "args": 6,
+   "reviewed_rva": "0x0000000000c20c70",
+   "return_type": "System.Void",
+   "method": {
+    "class": "TennisBall",
+    "name": "SteerVelocityToAim",
+    "args": 6,
+    "rva": "0x0000000000c21370"
+   }
+  },
+  {
+   "declaring_class": "TennisBall",
+   "name": "EnforceLobLoft",
+   "args": 5,
+   "reviewed_rva": "0x0000000000c1b9a0",
+   "return_type": "System.Void",
+   "method": {
+    "class": "TennisBall",
+    "name": "EnforceLobLoft",
+    "args": 5,
+    "rva": "0x0000000000c1bf80"
+   }
+  },
+  {
+   "declaring_class": "TennisBall",
+   "name": "get_BounceFloorY",
+   "args": 0,
+   "reviewed_rva": "0x0000000000c23950",
+   "return_type": "System.Single",
+   "method": {
+    "class": "TennisBall",
+    "name": "get_BounceFloorY",
+    "args": 0,
+    "rva": "0x0000000000c241e0"
+   }
+  },
+  {
+   "declaring_class": "TennisBall",
+   "name": "NetRight",
+   "args": 1,
+   "reviewed_rva": "0x0000000000c1e5c0",
+   "return_type": "UnityEngine.Vector3",
+   "method": {
+    "class": "TennisBall",
+    "name": "NetRight",
+    "args": 1,
+    "rva": "0x0000000000c1eba0"
+   }
+  },
+  {
+   "declaring_class": "TennisGameManager",
+   "name": "get_CourtY",
+   "args": 0,
+   "reviewed_rva": "0x0000000000aa02e0",
+   "return_type": "System.Single",
+   "method": {
+    "class": "TennisGameManager",
+    "name": "get_CourtY",
+    "args": 0,
+    "rva": "0x0000000000aa03f0"
+   }
+  },
+  {
+   "declaring_class": "TennisGameManager",
+   "name": "GetDefaultAimTarget",
+   "args": 1,
+   "reviewed_rva": "0x0000000000c2e8c0",
+   "return_type": "UnityEngine.Vector3",
+   "method": {
+    "class": "TennisGameManager",
+    "name": "GetDefaultAimTarget",
+    "args": 1,
+    "rva": "0x0000000000c2f1c0"
+   }
+  },
+  {
+   "declaring_class": "TennisGameManager",
+   "name": "get_CourtCenter",
+   "args": 0,
+   "reviewed_rva": "0x0000000000c40c40",
+   "return_type": "UnityEngine.Vector3",
+   "method": {
+    "class": "TennisGameManager",
+    "name": "get_CourtCenter",
+    "args": 0,
+    "rva": "0x0000000000c41540"
+   }
+  },
+  {
+   "declaring_class": "TennisGameManager",
+   "name": "get_CourtLength",
+   "args": 0,
+   "reviewed_rva": "0x0000000000c40da0",
+   "return_type": "System.Single",
+   "method": {
+    "class": "TennisGameManager",
+    "name": "get_CourtLength",
+    "args": 0,
+    "rva": "0x0000000000c416a0"
+   }
+  },
+  {
+   "declaring_class": "TennisGameManager",
+   "name": "get_NetHeight",
+   "args": 0,
+   "reviewed_rva": "0x0000000000c41520",
+   "return_type": "System.Single",
+   "method": {
+    "class": "TennisGameManager",
+    "name": "get_NetHeight",
+    "args": 0,
+    "rva": "0x0000000000c41e30"
+   }
+  }
+ ],
+ "scene_getters": {
+  "court_y": [
+   0
+  ],
+  "court_center": [
+   0,
+   0,
+   0
+  ],
+  "court_length": [
+   1105199104
+  ],
+  "net_height": [
+   1064514355
+  ],
+  "bounce_floor_y": [
+   1050589266
+  ],
+  "net_right_team0": [
+   0,
+   0,
+   3212836864
+  ],
+  "net_right_team1": [
+   0,
+   2147483648,
+   1065353216
+  ],
+  "default_aim_team0": [
+   1080033280,
+   0,
+   1077936128
+  ],
+  "default_aim_team1": [
+   3243413340,
+   0,
+   0
+  ]
+ },
+ "read_ok": true
+}
