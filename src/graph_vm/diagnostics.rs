@@ -157,10 +157,23 @@ pub fn assert_sound() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Mutex;
+
+    /// The registry is a process-global static, and cargo runs tests in
+    /// parallel threads. Every test here mutates it, so they must serialize —
+    /// otherwise another test's clear() can land between this test's
+    /// record_unimplemented() and assert_sound() and swallow the panic
+    /// (observed as a flaky #[should_panic] failure under load).
+    static DIAG_LOCK: Mutex<()> = Mutex::new(());
+
+    fn lock() -> std::sync::MutexGuard<'static, ()> {
+        DIAG_LOCK.lock().unwrap_or_else(|p| p.into_inner())
+    }
 
     /// The whole point: an unknown node must be loud, not silently Null.
     #[test]
     fn unknown_node_is_unimplemented_and_unsound() {
+        let _g = lock();
         clear();
         record_unimplemented("SomeNodeNobodyImplemented");
         assert_eq!(classify("SomeNodeNobodyImplemented"), Trust::Unimplemented);
@@ -172,6 +185,7 @@ mod tests {
     /// Draw/plot sinks feed no decision, so stubbing them cannot change play.
     #[test]
     fn side_effect_sinks_do_not_make_a_result_unsound() {
+        let _g = lock();
         clear();
         for n in ["DebugDrawLine", "TimePlot", "Stat"] {
             record_unimplemented(n);
@@ -185,6 +199,7 @@ mod tests {
     /// Approximations are trusted less than exact, but are not unsound.
     #[test]
     fn approximations_are_flagged_but_not_unsound() {
+        let _g = lock();
         clear();
         record_unimplemented("Spherecast");
         assert_eq!(classify("Spherecast"), Trust::Approximated);
@@ -196,6 +211,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "UNSOUND")]
     fn assert_sound_panics_on_unimplemented() {
+        let _g = lock();
         clear();
         record_unimplemented("TotallyMadeUpNode");
         assert_sound();

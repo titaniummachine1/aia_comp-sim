@@ -1074,3 +1074,60 @@ recatches when the toss is not struck). The input seed only changes RNG, not the
 toss gate, so a first serve that fails to auto-strike is a real (if rare) sim
 behaviour gap worth a look.
 
+
+## 26. Turn rule (double-hit guard) + the non-headless viewer
+
+### 26a. Turn rule
+
+User-confirmed: tennis is TURN-BASED - once a side strikes, only the OPPONENT may
+strike next; a side can never hit the ball it just hit, not even after a bounce.
+The sim had half of this (`strike_lock`, cleared on bounce = no re-strike while
+my shot is in flight) but allowed the striker to hit its own shot again after the
+bounce. Fixed in `on_swing_release`: the guard is now
+`strike_lock == Some(side) || hit_by == Some(side)` - `hit_by` (last striker,
+survives the bounce) IS the turn marker. Tests: `turn_rule_tests`
+(`a_side_cannot_strike_twice_in_a_row`, `the_turn_flips_when_the_opponent_strikes`).
+
+### 26b. `tennis_viewer` - the non-headless tennis simulator
+
+`cargo run --bin tennis_viewer -- --home titanium54 [--away aia3] [--seed 7]`
+(2D Bevy window, 1280x760, real-time fixed-dt; empty side = stock bot).
+Fixes that made it usable: B0001 query conflict -> `ParamSet`; camera scale
+20.0 -> 1.0 (was ~39 px of court); everything player/ball-shaped drawn as
+CIRCLES; scoreboard rebuilt (outline body + lit inner disc per set, spread
+between the score labels - the old sync rescaled every ring sub-spawn and
+clumped the board into one blob); reach rings anchored on the RACKET CENTER
+(what the model measures), not the player; blue backdrop (court lighter than
+apron for contrast); `PERFECT_RADIUS` 1.05 -> 1.0 (aia3 uses exactly 1.0).
+The top-down view drops the height axis, so the ball now renders with a ground
+SHADOW (true court XZ) plus height lift/scale, and the phase line shows
+`ball y` in metres - lobs/toss/net-tape flights read as 3D.
+Note: the running viewer locks `tennis_viewer.exe` - stop it before cargo test.
+
+### 26c. Diagnostics test race (fixed)
+
+`graph_vm::diagnostics` tests mutate a process-global registry from parallel
+test threads; under load another test's `clear()` landed between
+`record_unimplemented` and `assert_sound` and swallowed the expected panic
+(flaky `assert_sound_panics_on_unimplemented`). All four tests now serialize on
+a test mutex.
+
+### 26d. Is the sim fully 3D? (user question)
+
+Yes where it matters; the viewer is a projection of it, not the model:
+- Ball flight is full 3D: `ball.vel.y -= GRAVITY * pace^2 * h` (adaptive
+  substeps <= 0.2/|v|), floor bounce at `BOUNCE_FLOOR_Y`, net plane crossing
+  resolved at the interpolated crossing point with height
+  `at_net.y < NET_TAPE_HEIGHT` (tape/rebound at height - game
+  `ApplyNetRebound`), curve accel with decay, speed cap 46*pace.
+- Shots are solved in 3D per the game's own `ComputeShotVelocity`
+  (`vy = (target_y - from.y)/t + 0.5*g*t`, target on the bounce floor plane,
+  per-family speed/lift/flight-time tables).
+- Contact is a 3D sphere test against the racket center at `STRIKE_HEIGHT`
+  1.25 m (v0.15: swept segment test).
+- Parity evidence: shot solver 200/210 within 0.25 m/s on both v0.14 and v0.15
+  live-captured fixtures; curve 29/29; serve stance + early rally track in the
+  tick diff.
+- Deliberate simplifications (honest list): players are ground-plane 2D (the
+  game's movers are too) with a constant racket height instead of an animated
+  swing; aim scatter is uniform (no timing-deviation term yet).

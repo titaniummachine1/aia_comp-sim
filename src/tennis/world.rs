@@ -517,10 +517,14 @@ impl TennisWorld {
         if !self.ball_in_strike_range(side) {
             return;
         }
-        // No double hits: the striker may not re-strike their own shot while
-        // it is still in flight (swing-pulse bots must not reset the ball —
-        // the game never produces these faults).
-        if self.strike_lock == Some(side) {
+        // Turn rule (user-confirmed): once a side strikes, only the OPPONENT
+        // may strike next. A side may never hit the ball it just hit again -
+        // not even after a bounce. `hit_by` is the last striker and survives
+        // the bounce, so it *is* the turn marker; `strike_lock` is the
+        // within-flight latch (redundant, kept so a swing-pulse bot can never
+        // reset the ball it just served/hit). Before this, clearing the lock on
+        // bounce let the striker legally hit its own shot a second time.
+        if self.strike_lock == Some(side) || self.hit_by == Some(side) {
             return;
         }
         // Only the server may strike the tossed ball. A receiver swinging at
@@ -1047,4 +1051,74 @@ mod serve_clock_tests {
         assert!(TennisWorld::for_spec(0, GameSpec::tennis_v015()).interpolate_ball);
     }
 }
+
+#[cfg(test)]
+mod turn_rule_tests {
+    use super::*;
+
+    /// Park the ball exactly on `side`'s racket so it is in strike range.
+    fn rally_world_with_ball_on(side: Side) -> TennisWorld {
+        let mut w = TennisWorld::new(0);
+        w.phase = Phase::Rally;
+        let racket = w.player(side).racket_center();
+        w.ball = BallState::new(racket, Vec3::ZERO, ShotType::Flat.game_arg(), 0.0);
+        w
+    }
+
+    /// It is turn-based: after a side strikes, only the opponent may strike
+    /// next. The striker must NOT be able to hit the ball it just hit again,
+    /// even once the ball has bounced (the lock clears on bounce).
+    #[test]
+    fn a_side_cannot_strike_twice_in_a_row() {
+        let home = Side::Home;
+        let mut w = rally_world_with_ball_on(home);
+        let cmd = TennisCommand {
+            swing: true,
+            ..Default::default()
+        };
+        // Opponent struck last -> it is Home's turn.
+        w.hit_by = Some(home.other());
+        w.strike_lock = None;
+        w.on_swing_release(0, cmd, 0.9);
+        assert_eq!(w.hit_by, Some(home), "Home struck on its turn");
+        let after_first = w.ball.vel;
+        // Simulate the ball bouncing: the in-flight lock clears, but the turn
+        // is still the opponent's. A second Home swing must be a no-op.
+        w.strike_lock = None;
+        w.on_swing_release(0, cmd, 0.9);
+        assert_eq!(
+            w.ball.vel, after_first,
+            "Home must not hit its own shot again (double hit)"
+        );
+        assert_eq!(w.hit_by, Some(home));
+    }
+
+    /// The opponent's turn arrives when the opponent strikes; then the original
+    /// striker may hit again (the turn flips back).
+    #[test]
+    fn the_turn_flips_when_the_opponent_strikes() {
+        let home = Side::Home;
+        let away = home.other();
+        let mut w = rally_world_with_ball_on(home);
+        w.hit_by = Some(home); // Home already struck; turn is Away's
+        let cmd = TennisCommand {
+            swing: true,
+            ..Default::default()
+        };
+        // Away may not strike: the ball is on Home's racket, not in range.
+        w.on_swing_release(1, cmd, 0.9);
+        assert_eq!(w.hit_by, Some(home), "out-of-range Away swing is a no-op");
+        // Now give Away the ball and the turn: Away strikes.
+        let racket = w.player(away).racket_center();
+        w.ball = BallState::new(racket, Vec3::ZERO, ShotType::Flat.game_arg(), 0.0);
+        w.on_swing_release(1, cmd, 0.9);
+        assert_eq!(w.hit_by, Some(away), "Away struck on its turn");
+        // Turn is Home's again: move the ball to Home and strike.
+        let racket = w.player(home).racket_center();
+        w.ball = BallState::new(racket, Vec3::ZERO, ShotType::Flat.game_arg(), 0.0);
+        w.on_swing_release(0, cmd, 0.9);
+        assert_eq!(w.hit_by, Some(home), "turn flipped back to Home");
+    }
+}
+
 

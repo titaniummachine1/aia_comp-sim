@@ -50,6 +50,17 @@ path = "src/bin/titanium_matchtrace.rs"
 name = "flypast_count"
 path = "src/bin/flypast_count.rs"
 
+# Non-headless tennis match viewer (real-time, fixed-dt). Same 2D-in-Bevy
+# approach as soccer_sim. Watch two tennis bots play a point-by-point match.
+#   cargo run --bin tennis_viewer -- --home titanium54 --seed 7
+[[bin]]
+name = "tennis_viewer"
+path = "src/bin/tennis_viewer.rs"
+
+[[bin]]
+name = "tennis_tournament"
+path = "src/bin/tennis_tournament.rs"
+
 [features]
 # Day-to-day: `cargo run` (dev + fast_link). Bevy builds ONCE into target/debug,
 # then only THIS crate relinks. Do NOT flip features/profiles casually.

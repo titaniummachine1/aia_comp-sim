@@ -50,8 +50,9 @@ pub const STRIKE_RADIUS: f32 = 2.6;
 pub const STRIKE_HEIGHT: f32 = 1.25;
 pub const RACKET_FORWARD: f32 = 0.55;
 pub const RACKET_SIDE: f32 = 0.45;
-/// Charge quality tiers around the strike point.
-pub const PERFECT_RADIUS: f32 = 1.05;
+/// Charge quality tiers around the strike point (aia3 uses exactly 1.0 for the
+/// perfect-contact radius).
+pub const PERFECT_RADIUS: f32 = 1.0;
 pub const GOOD_RADIUS: f32 = 1.85;
 /// Swing charge: seconds to full windup, then the hit window.
 pub const CHARGE_WINDUP: f32 = 0.5;
