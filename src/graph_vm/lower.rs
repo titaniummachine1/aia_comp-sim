@@ -1344,7 +1344,11 @@ impl Lowerer {
     fn lower_function_call(&mut self, fn_node: &GraphNode) -> Reg {
         // Unity AIComp v0.63+ allows nested custom Function calls. Soft-cap
         // depth so runaway recursion cannot blow the stack / IR size.
-        if self.call_stack.len() > 64 {
+        // Raised 64 -> 128 together with graphc MAX_REC_DEPTH (game proven
+        // to 24589 traversals / 37 MB, v15f 2026-09-12); lowering itself
+        // runs on the dedicated 8 MB stack with the loud MAX_LOWER_DEPTH
+        // guard, so depth here is bounded by IR size, not stack.
+        if self.call_stack.len() > 128 {
             return self.emit_const_null(&fn_node.sid, "Any1");
         }
         let Some(def) = self.graph.create_functions.get(&fn_node.modifier).cloned() else {
