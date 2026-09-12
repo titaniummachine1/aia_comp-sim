@@ -454,7 +454,7 @@ pub fn resolve_for_version(
     let resolved = resolve(node_id, modifier);
     match version {
         GameVersion::SoccerV05 | GameVersion::TennisV012 => resolved.to_string(),
-        GameVersion::TennisV014 => {
+        GameVersion::TennisV014 | GameVersion::TennisV015 => {
             let aliased = tennis_v014::alias(resolved);
             aliased.to_string()
         }

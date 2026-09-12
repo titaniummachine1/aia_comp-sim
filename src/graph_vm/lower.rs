@@ -66,12 +66,17 @@ impl ApiSlotTable {
                  GameSpec (simulation) — pure graphs must not touch mode-owned nodes"
             );
         };
-        // v0.14 runtime admission: labels the capture does not pin are
+        // v0.14/v0.15 runtime admission: labels the capture does not pin are
         // rejected loudly (no invented aliases, no legacy-index guessing).
-        if spec.version == crate::mode::GameVersion::TennisV014 {
+        // v0.15's ABI is v0.14-identical (re-mine confirmed), so it shares the
+        // table.
+        if matches!(
+            spec.version,
+            crate::mode::GameVersion::TennisV014 | crate::mode::GameVersion::TennisV015
+        ) {
             assert!(
                 crate::graph::dropdowns::tennis_v014_admits(label),
-                "label {label:?} is not admitted by the TennisV014 runtime capture \
+                "label {label:?} is not admitted by the Tennis v0.14/v0.15 runtime capture \
                  (partial ABI — pin it in a capture or load with TennisV012)"
             );
         }

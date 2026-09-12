@@ -115,6 +115,12 @@ pub struct TennisWorld {
     /// forfeited to the opponent (game `serveDeadlineTick` /
     /// `<ServeCountdownDisplay>`).
     pub serve_clock_t: f32,
+    /// v0.15+: interpolate the ball between frames, so contact uses a swept
+    /// segment test (a fast ball must not skip the strike window in one tick).
+    /// Default `false` = v0.14 end-of-tick point test.
+    interpolate_ball: bool,
+    /// Ball position at the start of this tick — the swept-contact segment start.
+    pub ball_prev: Vec3,
     pub players: [TennisPlayer; 2], // [Home, Away]
     pub flight: FlightModel,
     pub stock: [StockBehavior; 2],
@@ -203,6 +209,8 @@ impl TennisWorld {
             serve_taped: false,
             serve_bounced: false,
             serve_clock_t: 0.0,
+            interpolate_ball: false,
+            ball_prev: Vec3::ZERO,
             players: [TennisPlayer::new(Side::Home), TennisPlayer::new(Side::Away)],
             flight: FlightModel,
             stock: [StockBehavior::Returner; 2],
@@ -226,6 +234,15 @@ impl TennisWorld {
             ),
         };
         w.setup_serve();
+        w
+    }
+
+    /// Build a world for an explicit game version. v0.15+ turns on the
+    /// frame-interpolated (swept) ball contact; v0.14 keeps the point test.
+    /// [`Self::new`] stays v0.14 so existing callers/results are unchanged.
+    pub fn for_spec(seed: u64, spec: crate::mode::GameSpec) -> Self {
+        let mut w = Self::new(seed);
+        w.interpolate_ball = spec.version.interpolates_ball();
         w
     }
 
@@ -323,7 +340,12 @@ impl TennisWorld {
             return false;
         }
         let racket = p.racket_center();
-        self.ball.pos.distance(racket) <= STRIKE_RADIUS
+        let distance = if self.interpolate_ball {
+            point_segment_distance(racket, self.ball_prev, self.ball.pos)
+        } else {
+            self.ball.pos.distance(racket)
+        };
+        distance <= STRIKE_RADIUS
     }
 
     fn recover_pending(&self, side: Side) -> bool {
@@ -338,6 +360,8 @@ impl TennisWorld {
         self.tick += 1;
         self.sim_time += FIXED_DT;
         self.phase_t += FIXED_DT;
+        // Start-of-tick ball position — the swept-contact segment start (v0.15).
+        self.ball_prev = self.ball.pos;
 
         // Serve clock (`serveDeadlineTick`). Runs across ServeSetup + Toss and
         // is NOT reset by a recatch re-toss, so a server that never gets the
@@ -695,7 +719,12 @@ impl TennisWorld {
         if self.ball.vel.y < 0.0 {
             let i = Self::idx(server);
             let racket = self.players[i].racket_center();
-            if self.ball.pos.distance(racket) <= STRIKE_RADIUS {
+            let distance = if self.interpolate_ball {
+                point_segment_distance(racket, self.ball_prev, self.ball.pos)
+            } else {
+                self.ball.pos.distance(racket)
+            };
+            if distance <= STRIKE_RADIUS {
                 let q = self.players[i].charge;
                 let cmd = cmds[i];
                 self.do_strike(i, cmd, q, true);
@@ -920,6 +949,19 @@ enum PointReason {
     Ace,
 }
 
+/// Shortest distance from `p` to the segment `a`–`b`. The v0.15 swept-contact
+/// test: a ball that moves further than `STRIKE_RADIUS` in one tick still
+/// counts as struck when its swept path crosses the racket sphere.
+fn point_segment_distance(p: Vec3, a: Vec3, b: Vec3) -> f32 {
+    let ab = b - a;
+    let len2 = ab.length_squared();
+    if len2 <= 1e-12 {
+        return p.distance(a);
+    }
+    let t = ((p - a).dot(ab) / len2).clamp(0.0, 1.0);
+    p.distance(a + ab * t)
+}
+
 /// Rally fallback aim when no opponent-court output was ever latched.
 /// Env-gated sweep (default "middle"); see do_strike call site.
 fn rally_fallback_target(world: &TennisWorld, side: Side) -> Vec2 {
@@ -993,6 +1035,16 @@ mod serve_clock_tests {
             w.serve_clock_t >= 1.0,
             "re-toss must not clear the serve clock"
         );
+    }
+
+    /// v0.15 turns on the interpolated (swept) ball contact; v0.14 keeps the
+    /// end-of-tick point test; `new()` stays v0.14.
+    #[test]
+    fn version_selects_swept_ball_contact() {
+        use crate::mode::GameSpec;
+        assert!(!TennisWorld::new(0).interpolate_ball);
+        assert!(!TennisWorld::for_spec(0, GameSpec::tennis_v014()).interpolate_ball);
+        assert!(TennisWorld::for_spec(0, GameSpec::tennis_v015()).interpolate_ball);
     }
 }
 

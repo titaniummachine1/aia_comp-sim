@@ -51,6 +51,14 @@ Phase F's status; open decisions at the end). Read it before starting anything.
 - **Phase C scale-up (§20b)**: reintroduced the 78-match game set (tournament
   row format) — sim home-win **55%** vs game **58%**, **TV distance = 0.078**.
   Exact per-match sequence parity stays low (RNG/first-server unpinned).
+- **Phase C first-server-matched sweep (§22)**: `restart_sweep.py --seeds 1-16
+  --points 8` → **exact parity 11/17 = 64.7%** (vs 32.1% unmatched!), hold rate
+  **53% vs 53%**; residual is *strength* (game 5.6-1.0 vs sim 3.8-2.1, TV 0.20) —
+  the remaining rally-quality gap.
+- **Simulator hub / v0.15 target (GAME_VERSIONS)**: `GameSpec::tennis_v015()` is
+  now the latest tennis spec (`tennis_v014()` explicit); the only v0.15
+  world-model delta is the **swept (frame-interpolated) ball contact**, gated by
+  `GameVersion::interpolates_ball()` + `TennisWorld::for_spec`. Lib **169/0**.
 - v0.15f `parity_state.json` → `tick 422 / callbacks 3239 / points_done 1 /
   done:true / success:true`; quit flushed a **748471-byte** TimePlot.
 - Exact outcome parity **25/78 = 32.1%** — still brittle; the distributional
@@ -855,4 +863,37 @@ the time-to-ground cache (§18/§20 triage map).
 and the non-solver v0.15 behaviours (frame interpolation, time-to-ground cache)
 — world-model work, not fixture work.
 
+
+## 22. Phase C — first-server-matched sweep (2026-09-12)
+
+`restart_sweep.py --seeds 1-16 --home titanium54 --away aia3 --points 8 --keep-alive`
+(v0.14 reset probe; one launch, restarted per seed) produced 16
+**first-server-matched** game matches (~4-5 min/seed). The chained
+`run_sim_seed_sweep.py` + `score_distribution.py` replayed and scored them:
+
+```
+exact (this run): 11/17 = 64.7%          <- WITH the game's own first server
+pairing titanium54 vs aia3: n=20
+  game: home 95%  hold 53%  pts 5.6-1.0
+  sim : home 75%  hold 53%  pts 3.8-2.1
+  TV distance 0.20     exact 13/20 (seq 3)
+```
+
+Three headline facts:
+
+1. **Exact per-match parity jumps to ~65% once the first server matches** (the
+   pooled tournament set without server matching was 32.1%). So the RNG /
+   first-server mismatch was the **dominant** source of exact-parity error, not
+   the world model.
+2. **Server-hold rate matches exactly (53% vs 53%)** — the serve/return model is
+   faithful on this pairing.
+3. The residual is **strength**: the game's titanium54 beats aia3 **5.6-1.0**
+   (home 95%), the sim only **3.8-2.1** (home 75%) — the sim **under-rates the
+   stronger bot**. That is the rally-quality cliff measured in §20
+   (`SwingHeld` 0.09 vs 0.54, `Chase`/`Mode` ~2× overshoot, `Bounced`
+   overshoot), and it is the next world-model target.
+
+Data: `modhost/restart_sweep.jsonl` (game) + `data/tennis/sim_seed_sweep.jsonl`
+(sim), both committed. Reproduce the sim side any time with
+`python scripts/score_distribution.py`.
 

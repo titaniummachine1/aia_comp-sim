@@ -58,13 +58,22 @@ pub enum GameVersion {
     /// evidence/parity-v014-vm/runtime-items.md`) are admitted, with the four
     /// documented LabelAliases bridging v0.12 spellings. Unknown → error.
     TennisV014,
+    /// Tennis: v0.15 live runtime order. The node/label ABI is
+    /// **v0.14-identical** (the v0.15 re-mine confirmed the shot solver and the
+    /// operation dropdowns are unchanged), so it reuses the v0.14 admit/alias
+    /// tables. v0.15's real differences are *world-model* (ball position is
+    /// interpolated between frames; the time-to-ground cache was fixed) — see
+    /// `docs/GAME_VERSIONS.md`.
+    TennisV015,
 }
 
 impl GameVersion {
     pub fn mode(self) -> GameMode {
         match self {
             GameVersion::SoccerV05 => GameMode::Soccer,
-            GameVersion::TennisV012 | GameVersion::TennisV014 => GameMode::Tennis,
+            GameVersion::TennisV012
+            | GameVersion::TennisV014
+            | GameVersion::TennisV015 => GameMode::Tennis,
         }
     }
 
@@ -72,8 +81,15 @@ impl GameVersion {
     pub fn latest_of(mode: GameMode) -> GameVersion {
         match mode {
             GameMode::Soccer => GameVersion::SoccerV05,
-            GameMode::Tennis => GameVersion::TennisV014,
+            GameMode::Tennis => GameVersion::TennisV015,
         }
+    }
+
+    /// Tennis v0.15+ interpolates the ball position between frames so a fast
+    /// ball can still be struck; the world uses this to pick a swept contact
+    /// test instead of an end-of-tick point test. (`docs/GAME_VERSIONS.md`.)
+    pub fn interpolates_ball(self) -> bool {
+        matches!(self, GameVersion::TennisV015)
     }
 }
 
@@ -122,7 +138,20 @@ impl GameSpec {
         }
     }
 
+    /// Tennis v0.14 (explicit pinned target — the simulator's physics is
+    /// v0.14-pinned, so this stays available even though [`Self::tennis_v015`]
+    /// is now the latest).
     pub fn tennis_v014() -> Self {
+        Self {
+            mode: GameMode::Tennis,
+            version: GameVersion::TennisV014,
+            variant: GameVariant::Standard,
+        }
+    }
+
+    /// Tennis v0.15f — the current target (latest tennis version). Node/label
+    /// ABI is v0.14-identical; world-model differences live in `tennis::world`.
+    pub fn tennis_v015() -> Self {
         Self::latest(GameMode::Tennis)
     }
 
@@ -313,7 +342,9 @@ mod tests {
 
     #[test]
     fn latest_defaults_are_per_mode() {
-        assert_eq!(GameSpec::latest(GameMode::Tennis).version, GameVersion::TennisV014);
+        assert_eq!(GameSpec::latest(GameMode::Tennis).version, GameVersion::TennisV015);
+        assert_eq!(GameSpec::tennis_v015().version, GameVersion::TennisV015);
+        assert_eq!(GameSpec::tennis_v014().version, GameVersion::TennisV014);
         assert_eq!(GameSpec::latest(GameMode::Soccer).version, GameVersion::SoccerV05);
         assert_eq!(
             GameSpec::tennis_builder().version,

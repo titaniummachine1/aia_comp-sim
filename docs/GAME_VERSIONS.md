@@ -65,3 +65,34 @@ copy the pristine install to `modhost/v<ver>/`, keep the untouched launcher as
 `Aialanders-original.exe`, build with `build_paritymod_v015.ps1` (or the v0.14
 script), then drive it with `MODHOST_GAMEDIR` + `MODHOST_PARITY_EXE`.
 
+## Simulator hub — adding a game or version
+
+The sim/VM is a hub: a **new game or version is a small config addition**, never
+a fork. The pieces:
+
+| Layer | Where | What a new version adds |
+|---|---|---|
+| game/mode | `src/mode.rs` `GameMode` | one variant (+ `node_prefix`, `controller_node`) |
+| version | `src/mode.rs` `GameVersion` | one variant (+ `mode()`, `latest_of()`) |
+| label table | `src/graph/dropdowns.rs` `resolve_for_version` | one match arm (reuse the closest table when the ABI is identical) |
+| VM admission | `src/graph_vm/lower.rs` intern gate | add the version to the admit `matches!` |
+| world model | `src/tennis/world.rs` `for_spec` + `GameVersion` predicates | one predicate per behaviour change |
+| compiler | `aia_graphc` `SUPPORTED_TARGETS` + `AIPyLib/<game>/<ver>.py` | one target + one stub |
+
+**Worked example — tennis v0.15f (2026-09-12):** the v0.15 re-mine (HANDOFF §21)
+showed the node/label ABI is **v0.14-identical** (shot solver and operation
+dropdowns unchanged), so v0.15 touches only three small places:
+
+- `GameVersion::TennisV015` (+ `mode()`/`latest_of()`), `GameSpec::tennis_v015()`
+  = latest; `tennis_v014()` stays explicit (the sim's physics is v0.14-pinned).
+- `resolve_for_version` and the lowerer's admit gate share the v0.14 tables.
+- the one **world-model** change, gated by `GameVersion::interpolates_ball()`:
+  v0.15 interpolates the ball between frames, so `TennisWorld::for_spec` picks a
+  **swept** contact test (`point_segment_distance`) instead of the end-of-tick
+  point test. `TennisWorld::new` stays v0.14 so existing results are unchanged.
+
+The time-to-ground cache fix needs **no** sim change: the sim computes
+predictions fresh (`src/predict/mod.rs`) and never cached them, i.e. it was
+already v0.15-correct there. So v0.15's real delta is just the swept contact.
+
+
