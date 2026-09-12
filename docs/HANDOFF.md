@@ -43,6 +43,11 @@ Phase F's status; open decisions at the end). Read it before starting anything.
   (`Score::award_serve`), not re-armed. Lib tests **167 passed / 0 failed**
   (was 164). Exact `serveDeadlineTick` window + scope (game vs set) still to be
   read from the probe (`modhost/read_serve_deadline.py`).
+- **Phase C channel diff RUN (§20)**: `scripts/channel_diff.py` rewritten; first
+  run shows `ChargePct` (game 0.28, sim **0.00**) as a total model error, fixed
+  by making `swing_hold_gate` the **default** (`AIA_SWING_MODEL=legacy` restores
+  the old default). Open: `SwingHeld` (sim 0.09 vs game 0.54), `Chase`/`Mode`
+  ~2× overshoot, `Bounced`/`Incoming` overshoot.
 - v0.15f `parity_state.json` → `tick 422 / callbacks 3239 / points_done 1 /
   done:true / success:true`; quit flushed a **748471-byte** TimePlot.
 - Exact outcome parity **25/78 = 32.1%** — still brittle; the distributional
@@ -722,4 +727,47 @@ cd aia_comp-sim && cargo test --test tennis_v014_solver_parity -- --nocapture
 then triage each drift row against the table above before touching the sim.
 
 
+
+## 20. Phase C — the per-tick channel diff has now RUN (2026-09-12)
+
+`scripts/channel_diff.py` was rewritten (clean GAME/SIM/Δ table, repeatable
+`--env K=V`, `--json`) and run for the first time. It compares the **sim** graph's
+TimePlot channels (`tennis_tournament --trace` + `AIA_TRACE_CHANNELS=1` → `hch`)
+against the **game's** native export of the same graph — no same-seed replay
+needed, so it isolates **model** drift (how often a sensor fires) from outcome
+drift.
+
+Run (titanium54 vs aia3, seed 7, points 4; game capture
+`captures/timeplots-20260910/timeplot_2026-09-10_15-27-03.json`):
+
+| channel | game (frac>0.5 / mean) | sim **before** | sim **after** (hold default) |
+|---|---|---|---|
+| `v44_ChargePct` | 0.292 / 0.279 | **0.000 / 0.000** | **0.249 / 0.254** |
+| `v44_SwingHeld` | 0.539 | 0.031 | 0.089 |
+| `v44_RacketDist` | 0.970 / 9.76 | 0.994 / 12.13 | 0.976 / 13.51 |
+| `v44_Chase` | 0.332 | 0.700 | 0.592 |
+| `v44_Mode` | 0.332 | 0.700 | 0.592 |
+| `v44_Incoming` | 0.150 | 0.407 | 0.240 |
+| `v44_Bounced` | 0.096 | 0.253 | 0.304 |
+| `v44_TIntercept` | 0.772 / 267.8 | 0.701 / 512.9 | 0.691 / 294.2 |
+| `v44_AimX` | 0.966 / 3.58 | 1.000 / 1.35 | 1.000 / 3.78 |
+| `v44_BallX` | 0.329 / 0.24 | 0.545 / −2.59 | 0.435 / −0.76 |
+
+Conclusions:
+
+1. **`ChargePct` was a total model error** — the game charges (mean 0.279) and the
+   default sim was pegged at **0.000**. The already-implemented `swing_hold_gate`
+   closes it (0.249). ⇒ the gate is now the **default**
+   (`AIA_SWING_MODEL=legacy` / `off` restores the old default so the recorded
+   sweep verdicts stay reproducible). AimX / TIntercept / RacketDist means also
+   line up much better under the gate.
+2. `SwingHeld` is still far off (sim 0.089 vs game 0.539) — the sim's hold is much
+   shorter than the game's 0.6-1.2 s approach holds. **Open.**
+3. `Chase`/`Mode` overshoot (sim 0.59-0.70 vs 0.33) — the sim's movement/decision
+   channels fire ~2× as often. **Open** (rally/movement model).
+4. `Bounced`/`Incoming` overshoot and `BallX` mean sign-flips — the sim spends
+   more of the point in the ball-approach phase and more on the far side. **Open.**
+
+This converts "rally aim semantics" from a guess into ranked, measurable gaps.
+Sim suite after the default flip: lib **168/0**, battery PASS, cert 12/14.
 

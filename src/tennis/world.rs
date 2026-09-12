@@ -165,10 +165,13 @@ pub struct TennisWorld {
     /// the default until that lands. Compiler bots that split walk/aim via
     /// t.aim() set AIA_AIM_MODEL=separate.
     separate_aim: bool,
-    /// Swing gate: when true (`AIA_SWING_MODEL=hold`), the world holds the
-    /// swing through the approach whenever the phase allows (see
-    /// step_players), reproducing the game's 0.6-1.2 s approach holds.
-    /// Independent from `separate_aim` for clean variant scoring.
+    /// Swing gate: when true, the world holds the swing through the approach
+    /// whenever the phase allows (see `step_players`), reproducing the game's
+    /// 0.6-1.2 s approach holds. **Default ON** since the per-tick channel diff
+    /// (HANDOFF section 20) matches the game (`SwingHeld` fires, `ChargePct`
+    /// mean 0.28); without the gate the sim's `ChargePct` is pegged 0.000.
+    /// `AIA_SWING_MODEL=legacy` (or `off`/`false`/`0`) restores the old default
+    /// so the recorded sweep verdicts stay reproducible.
     swing_hold_gate: bool,
 }
 
@@ -217,7 +220,10 @@ impl TennisWorld {
             last_cmd_aim: [Vec2::ZERO; 2],
             rally_aim_latch: [None; 2],
             separate_aim: std::env::var("AIA_AIM_MODEL").as_deref() == Ok("separate"),
-            swing_hold_gate: std::env::var("AIA_SWING_MODEL").as_deref() == Ok("hold"),
+            swing_hold_gate: !matches!(
+                std::env::var("AIA_SWING_MODEL").as_deref(),
+                Ok("legacy") | Ok("off") | Ok("false") | Ok("0")
+            ),
         };
         w.setup_serve();
         w
