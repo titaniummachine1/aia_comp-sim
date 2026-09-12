@@ -54,6 +54,10 @@ pub struct TennisPlayer {
     pub recover: f32,
     /// Last resolved aim (for sensors/debug).
     pub last_aim: Vec2,
+    /// Stamina meter [0, 1] (`Stamina.OnSimulationTick`): drains while
+    /// sprinting, regenerates while standing, walking is neutral. Feeds the
+    /// `Self/Opponent Stamina Pct` inputs; NOT reset at point boundaries.
+    pub stamina: f32,
 }
 
 impl TennisPlayer {
@@ -65,6 +69,7 @@ impl TennisPlayer {
             holding: false,
             recover: 0.0,
             last_aim: Vec2::ZERO,
+            stamina: 1.0,
         }
     }
 
@@ -448,6 +453,14 @@ impl TennisWorld {
             if dist > 1e-3 {
                 let step = (speed * FIXED_DT).min(dist);
                 p.pos += d / dist * step;
+                // Sprint movement drains stamina (measured -0.010/tick);
+                // walking is neutral (long flat plateaus in the timeplot).
+                if cmds[i].sprint {
+                    p.stamina = (p.stamina - STAMINA_SPRINT_DRAIN).max(0.0);
+                }
+            } else {
+                // Standing still regenerates (measured +0.001/tick).
+                p.stamina = (p.stamina + STAMINA_REGEN).min(1.0);
             }
             // Swing charge model: hold builds charge, release swings.
             // `TennisAutoSwing` gate (`AIA_SWING_MODEL=hold`): the game
@@ -1120,5 +1133,84 @@ mod turn_rule_tests {
         assert_eq!(w.hit_by, Some(home), "turn flipped back to Home");
     }
 }
+
+#[cfg(test)]
+mod stamina_tests {
+    use super::*;
+
+    /// Rally-phase world with the ball parked mid-court (no point resolves in
+    /// one step).
+    fn rally_world() -> TennisWorld {
+        let mut w = TennisWorld::new(0);
+        w.phase = Phase::Rally;
+        w.ball = BallState::new(
+            Vec3::new(-5.0, 1.0, 0.0),
+            Vec3::ZERO,
+            ShotType::Flat.game_arg(),
+            0.0,
+        );
+        w
+    }
+
+    /// Measured game rule: sprinting costs 0.010 stamina per tick.
+    #[test]
+    fn sprinting_drains_one_percent_per_tick() {
+        let mut w = rally_world();
+        let cmd = TennisCommand {
+            move_or_aim: Vec2::new(-8.0, 5.0), // far target: keeps moving
+            sprint: true,
+            ..Default::default()
+        };
+        w.step([Some(cmd), None]);
+        let got = w.player(Side::Home).stamina;
+        assert!(
+            (got - (1.0 - STAMINA_SPRINT_DRAIN)).abs() < 1e-6,
+            "sprint tick must drain {STAMINA_SPRINT_DRAIN}, got {got}"
+        );
+    }
+
+    /// Measured game rule: standing still regenerates 0.001 per tick. (Drain
+    /// first — regen clamps at the 1.0 ceiling.)
+    #[test]
+    fn standing_still_regenrates_a_tenth_percent_per_tick() {
+        let mut w = rally_world();
+        let sprint = TennisCommand {
+            move_or_aim: Vec2::new(-8.0, 5.0),
+            sprint: true,
+            ..Default::default()
+        };
+        w.step([Some(sprint), None]);
+        w.step([Some(sprint), None]);
+        let drained = w.player(Side::Home).stamina;
+        // Stand still: target the player's CURRENT position (they moved during
+        // the sprint ticks, so the old stance is a walk target, not "stand").
+        let here = w.player(Side::Home).pos;
+        let stand = TennisCommand {
+            move_or_aim: here,
+            ..Default::default()
+        };
+        w.step([Some(stand), None]);
+        let got = w.player(Side::Home).stamina;
+        assert!(
+            (got - (drained + STAMINA_REGEN)).abs() < 1e-6,
+            "standing tick must regen {STAMINA_REGEN} from {drained}, got {got}"
+        );
+    }
+
+    /// Measured game rule: walking (moving without sprint) is neutral — the
+    /// native timeplot shows flat plateaus during long rallies.
+    #[test]
+    fn walking_is_neutral() {
+        let mut w = rally_world();
+        let cmd = TennisCommand {
+            move_or_aim: Vec2::new(-8.0, 5.0),
+            sprint: false,
+            ..Default::default()
+        };
+        w.step([Some(cmd), None]);
+        assert!((w.player(Side::Home).stamina - 1.0).abs() < 1e-6);
+    }
+}
+
 
 

@@ -429,9 +429,11 @@ fn sync(
     }
     for (viz, mut t) in set.p5().iter_mut() {
         let p = w.player(viz.0);
-        t.translation.x = wx(p.pos.x);
+        // Real stamina meter (drains on sprint, regens standing).
+        let width = 1.6 * PPM * p.stamina.clamp(0.02, 1.0);
+        t.translation.x = wx(p.pos.x) - (1.6 * PPM - width) / 2.0;
         t.translation.y = wz(p.pos.y) + 1.3 * PPM;
-        t.scale = Vec3::new(1.6 * PPM, 0.22 * PPM, 1.0);
+        t.scale = Vec3::new(width, 0.22 * PPM, 1.0);
     }
     // Ball: lifted up-screen and grown with height (top-down camera: higher =
     // closer). The shadow stays at the true court XZ and shrinks with height,

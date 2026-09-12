@@ -1131,3 +1131,23 @@ Yes where it matters; the viewer is a projection of it, not the model:
 - Deliberate simplifications (honest list): players are ground-plane 2D (the
   game's movers are too) with a constant racket height instead of an animated
   swing; aim scatter is uniform (no timing-deviation term yet).
+
+### 26e. Stamina modelled (measured, was hardcoded 1.0)
+
+The sim reported `Self/Opponent Stamina Pct` as a constant 1.0 and the viewer
+stamina bar was decoration. Game truth (probe hooks `Stamina.OnSimulationTick`
+natively; native timeplot channel `v44_Stamina`, seed-10 match, 1928 ticks):
+
+- sprinting: **-0.010/tick** (118 drain ticks = bursts of 3-21 sprint ticks;
+  1.00 -> 0.10 across the match),
+- walking: **neutral** (flat plateaus of 100+ ticks mid-rally),
+- standing: **+0.001/tick** (345 regen ticks, fills during point pauses /
+  serve setup),
+- **no reset at point boundaries** (continuous meter across the match).
+
+Modelled as `TennisPlayer.stamina` with `STAMINA_SPRINT_DRAIN` /
+`STAMINA_REGEN` in params.rs; sensors now report the real meter; the viewer
+bar shows it; the graph-replayed `v44_Stamina` TimePlot channel now carries
+the sim value (same-name channel as the game for the tick diff).
+Open: whether low stamina reduces speed/power in the game (the v0.12
+rally/deuce fatigue formulas remain the pinned power/scatter mechanism).

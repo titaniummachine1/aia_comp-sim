@@ -60,6 +60,15 @@ pub const CHARGE_WINDOW: f32 = 0.4;
 pub const SWING_SECONDS: f32 = 0.2;
 pub const RECOVER_SECONDS: f32 = 0.16;
 
+// --- Stamina (game `Stamina.OnSimulationTick`, measured from the native
+// timeplot `v44_Stamina`, seed-10 match) ---
+/// Sprinting drains this much stamina per tick (measured: -0.010/tick runs of
+/// 3-21 ticks = 118 drain ticks over the match, 1.00 -> 0.10).
+pub const STAMINA_SPRINT_DRAIN: f32 = 0.01;
+/// Standing still regenerates this much per tick (measured: +0.0009..+0.0010
+/// runs, 345 regen ticks; long rallies show flat plateaus = walking neutral).
+pub const STAMINA_REGEN: f32 = 0.001;
+
 /// Player root ground Y (pinned word 1034595072 = 0.08333397).
 pub const PLAYER_GROUND_Y: f32 = 0.083_333_97;
 /// Serve toss release height above the player (config toss_height 2.55).

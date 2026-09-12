@@ -190,8 +190,8 @@ pub fn build_team_api(world: &super::world::TennisWorld, side: super::court::Sid
     setf(&mut api, "Shot: Ball", world.ball.shot as usize as f32);
     setf(&mut api, "Self Swing Charge Pct", world.charge_pct(side));
     setf(&mut api, "Opponent Swing Charge Pct", world.charge_pct(opponent));
-    setf(&mut api, "Self Stamina Pct", 1.0);
-    setf(&mut api, "Opponent Stamina Pct", 1.0);
+    setf(&mut api, "Self Stamina Pct", world.player(side).stamina);
+    setf(&mut api, "Opponent Stamina Pct", world.player(opponent).stamina);
     setf(&mut api, "Deuce Fatigue", world.deuce_fatigue() as f32);
     setf(&mut api, "Rally Fatigue", world.rally_fatigue() as f32);
     setf(&mut api, "Court Width", TENNIS_COURT_WIDTH);
