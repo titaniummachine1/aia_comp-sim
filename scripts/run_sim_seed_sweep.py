@@ -41,23 +41,43 @@ OUT = os.path.join(ROOT, "data", "tennis", "sim_seed_sweep.jsonl")
 BIN = ["cargo", "run", "-q", "--bin", "tennis_tournament", "--"]
 
 
-def load_game_rows(path: str) -> list[dict]:
-    """Completed, correctly-attributed game restart-sweep rows.
+def load_game_rows(path: str, allow_tournament: bool = True) -> list[dict]:
+    """Completed, correctly-attributed game rows.
 
-    `restart_epoch` is the attribution guard: the pre-fix driver read the boot
-    match's snapshot for the first sweep seed (same seed as launch). Rows
-    without an epoch cannot be trusted for (seed -> first_server), so they are
-    skipped loudly rather than silently mislabelled.
+    Two formats are accepted:
+    * **restart-sweep** (`restart_sweep.jsonl`): one launch, restarted per seed.
+      `restart_epoch` is the attribution guard — rows without it cannot be
+      trusted for (seed -> first_server) and are skipped loudly.
+    * **tournament** (`game_tournament_results*.jsonl`): a fresh launch per seed,
+      so the row is self-attributed; `state.serving_team` there is the *final*
+      server, not the opener, so `first_server` is left unknown (the hold metric
+      is skipped for them; the leader/TV distribution still applies).
     """
     rows = []
     skipped_stale = 0
+    tournament = 0
     for line in io.open(path, encoding="utf-8", errors="replace"):
         if not line.strip():
             continue
         r = json.loads(line)
         st = r.get("state") or {}
         if st.get("restart_epoch") is None:
-            skipped_stale += 1
+            if (allow_tournament and st.get("done") and st.get("point_winners")
+                    and not st.get("point_winners_truncated")
+                    and r.get("home") and r.get("away") and r.get("seed") is not None):
+                rows.append({
+                    "home": r.get("home"),
+                    "away": r.get("away"),
+                    "seed": int(r.get("seed")),
+                    "points": int(r.get("points") or st.get("points_target") or 8),
+                    "first_server": None,
+                    "game_winners": [w for w in st.get("point_winners", [])
+                                     if w != 4294967295],
+                    "source": "tournament",
+                })
+                tournament += 1
+            else:
+                skipped_stale += 1
             continue
         if not st.get("done") or not st.get("point_winners"):
             continue
@@ -71,10 +91,14 @@ def load_game_rows(path: str) -> list[dict]:
             "first_server": r.get("serving_team"),
             "game_winners": [w for w in st.get("point_winners", [])
                              if w != 4294967295],
+            "source": "restart",
         })
     if skipped_stale:
-        print(f"  note: skipped {skipped_stale} pre-fix rows (no restart_epoch)",
+        print(f"  note: skipped {skipped_stale} unattributable row(s)",
               file=sys.stderr)
+    if tournament:
+        print(f"  note: {tournament} tournament row(s) (first server unknown; "
+              f"hold metric skipped)", file=sys.stderr)
     return rows
 
 

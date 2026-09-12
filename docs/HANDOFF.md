@@ -48,6 +48,9 @@ Phase F's status; open decisions at the end). Read it before starting anything.
   by making `swing_hold_gate` the **default** (`AIA_SWING_MODEL=legacy` restores
   the old default). Open: `SwingHeld` (sim 0.09 vs game 0.54), `Chase`/`Mode`
   ~2× overshoot, `Bounced`/`Incoming` overshoot.
+- **Phase C scale-up (§20b)**: reintroduced the 78-match game set (tournament
+  row format) — sim home-win **55%** vs game **58%**, **TV distance = 0.078**.
+  Exact per-match sequence parity stays low (RNG/first-server unpinned).
 - v0.15f `parity_state.json` → `tick 422 / callbacks 3239 / points_done 1 /
   done:true / success:true`; quit flushed a **748471-byte** TimePlot.
 - Exact outcome parity **25/78 = 32.1%** — still brittle; the distributional
@@ -770,4 +773,29 @@ Conclusions:
 
 This converts "rally aim semantics" from a guess into ranked, measurable gaps.
 Sim suite after the default flip: lib **168/0**, battery PASS, cert 12/14.
+
+### 20b. Scale-up: 78-match distribution over the game's own result set (2026-09-12)
+
+`run_sim_seed_sweep.py` now also accepts the **tournament** row format
+(`game_tournament_results*.jsonl`: a fresh launch per seed, so self-attributed;
+`first_server` is not exposed, so the hold metric is skipped). Replaying all 78
+game matches (`points=8`) and scoring with `score_distribution.py`:
+
+```
+POOLED  game: n=77  home win 58%  mean points 5.0-3.0
+        sim : n=77  home win 55%  mean points 4.1-3.6
+        TV distance = 0.078  (0 = identical outcome distribution)
+```
+
+So across the 78-match set the sim's **aggregate outcome distribution is within
+0.078 TV of the game's** (home-win 55% vs 58%). Exact per-match sequence parity
+stays low (RNG draw sites + first-server still unpinned) — which is exactly why
+the plan demotes the exact metric and makes the distribution the headline. The
+sim's point margins are narrower (4.1-3.6 vs 5.0-3.0): the sim plays more
+balanced matches than the game. Open.
+
+Caveat: tournament rows do not expose the match's *first* server, so those
+replays use the sim's own derived server. A first-server-matched sweep
+(`restart_sweep.jsonl`) remains the exact-parity path.
+
 
