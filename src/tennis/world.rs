@@ -480,7 +480,13 @@ impl TennisWorld {
                     || (self.score.server() == side
                         && (self.phase == Phase::ServeSetup || self.phase == Phase::Toss)));
             let swinging = cmds[i].swing || gate_hold;
-            if swinging && p.recover <= 0.0 {
+            // The game's manager refuses to charge while the ball is IN HAND:
+            // SwingHeld reads 1 through the whole setup yet ChargePct stays
+            // 0.00 until the toss is released; the charge then ramps 0 -> 0.79
+            // over the ~20-tick rise and the strike fires at the toss apex.
+            // (Without this gate the sim charged from setup entry, hit 1.0 and
+            // served 36.4 m/s vs the game's ~33.8.)
+            if swinging && p.recover <= 0.0 && !self.ball_held {
                 if !p.holding {
                     p.holding = true;
                     p.charge = 0.0;

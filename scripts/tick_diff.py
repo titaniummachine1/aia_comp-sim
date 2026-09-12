@@ -110,6 +110,9 @@ def main() -> int:
                          "'none' (raw tick 0), 'auto', or a channel name")
     ap.add_argument("--json", action="store_true",
                     help="also emit a JSON map of per-channel mean|diff|")
+    ap.add_argument("--per-point", action="store_true",
+                    help="align each point at its own serve strike and report "
+                         "the per-point divergence horizon")
     a = ap.parse_args()
 
     def _release_after_place(v):
@@ -261,6 +264,73 @@ def main() -> int:
               f"setup={setup(gp, gr)} | sim placed@{sp} released@{sr} "
               f"setup={setup(sp, sr)}")
 
+    # ---- Per-point diff: align EVERY point at its own serve strike ----
+    # Whole-match tick alignment is only valid for the FIRST point: the sim's
+    # rallies run longer than the game's, so after point 1 the two sides sit in
+    # different phases and the per-channel means are cross-phase garbage.
+    # Each serve strike = a point start; align point k of the game with point k
+    # of the sim and report how long the sim tracks the game (first tick where
+    # BallX differs by > 1.5 m, i.e. the divergence horizon per point).
+    def serve_strikes(v):
+        """Serve strikes = the launch out of a SLOW phase: the game's held ball
+        drifts (idle animation) rather than freezing, so a plateau test finds
+        nothing; instead detect '>= 20 slow ticks then a sustained fast run'."""
+        out, i, n = [], 0, len(v)
+        speed = [abs(v[k] - v[k - 1]) for k in range(1, n)]
+        while i < n - 30:
+            # slow run
+            j = i
+            while j < len(speed) and speed[j] <= 0.2:
+                j += 1
+            if j - i >= 20:
+                rel = next((k for k in range(j, min(j + 5, len(speed)))
+                            if speed[k] > REL_EPS), None)
+                if rel is not None and all(
+                        sp > REL_EPS for sp in speed[rel:rel + 8]):
+                    out.append(rel + 1)
+                    i = rel + 20
+                    continue
+            i = max(j, i + 1) if j > i else i + 1
+        return out
+
+    bcx = bc
+    if bcx and a.per_point:
+        gs, ss = serve_strikes(g[bcx]), serve_strikes(s[bcx])
+        print(f"\nper-point alignment: game points {len(gs)} {gs[:8]}, "
+              f"sim points {len(ss)} {ss[:8]}")
+        rows_pp = []
+        for k, (g0, s0) in enumerate(zip(gs, ss)):
+            # Strike detection has +-1-2 ticks of granularity; pick the best
+            # per-point shift in [-3,3] (min summed |dX| over the first 20
+            # ticks) so the horizon measures real divergence, not detection lag.
+            best, bs = None, 0
+            for sh in range(-3, 4):
+                a0, b0 = g0 + sh, s0
+                if a0 < 0:
+                    continue
+                gv = g[bcx][a0:a0 + 20]
+                sv = s[bcx][b0:b0 + 20]
+                if len(gv) < 20 or len(sv) < 20:
+                    continue
+                cost = sum(abs(x - y) for x, y in zip(gv, sv))
+                if best is None or cost < best:
+                    best, bs = cost, sh
+            gv, sv = g[bcx][g0 + bs:], s[bcx][s0:]
+            n = min(len(gv), len(sv), 2000)
+            track = n
+            for i in range(1, n):
+                if _diverge(gv[i], sv[i]) and abs(gv[i] - sv[i]) > 1.5:
+                    track = i
+                    break
+            rows_pp.append((k, track, n))
+            print(f"  point {k}: shift {bs:+d}, diverges after {track} ticks "
+                  f"(window {n})", flush=True)
+        if rows_pp:
+            ts = [t for _, t, _ in rows_pp]
+            print(f"divergence horizon: mean {sum(ts)/len(ts):.0f} ticks "
+                  f"(~{(sum(ts)/len(ts))*0.02:.2f} s), "
+                  f"median {sorted(ts)[len(ts)//2]}, min {min(ts)}, "
+                  f"max {max(ts)}")
     if a.json:
         blob = {k: round(mad, 4) for mad, _, k in rows}
         blob["__aligned__"] = n

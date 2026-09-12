@@ -1151,3 +1151,36 @@ bar shows it; the graph-replayed `v44_Stamina` TimePlot channel now carries
 the sim value (same-name channel as the game for the tick diff).
 Open: whether low stamina reduces speed/power in the game (the v0.12
 rally/deuce fatigue formulas remain the pinned power/scatter mechanism).
+
+### 26f. Serve charge gate + per-point divergence horizon
+
+Game truth (settled export, v44_ sensors during setup): the bot holds SwingHeld=1
+for the WHOLE setup, yet the game manager keeps ChargePct at 0.00 until the toss
+is released, then ramps 0 -> 0.79 over ~20 ticks; the strike fires at the TOSS
+APEX at charge 0.79 (serve ~33.8 m/s). The sim charged from setup entry (1.0,
+36.4 m/s).
+
+Fixes (all measured, not guessed):
+- charge accrues only while the ball is NOT held (`!ball_held`) - the game
+  manager ignores the swing bit while the ball is in hand;
+- toss target = the contact height (`TOSS_APEX_Y` = `TOSS_STRIKE_Y` = 3.45) and
+  launch ~10.6 m/s so the rise takes 0.4 s = the measured 20-tick charge ramp;
+- `SETUP_SETTLE` 0.88 s so placement -> strike = ~64 ticks (game 64).
+
+Measured after: strike charge 0.76 (game 0.79), serve 33.4 m/s (game ~33.8),
+rise 20 ticks (game 20), placement->strike 66 (game 64), struck at the apex.
+Whole-match tick diff on seed 10: mean|diff| 6.58 -> 3.26; sim rally ticks
+4103 -> 2963 (game 1928).
+
+New tool: `tick_diff.py --per-point` aligns EACH point at its own serve strike
+(serve launches detected as slow->fast transitions; the game held ball drifts so
+plateau tests fail) with a +-3 tick best-shift search. Result on seed 10:
+points 0-2 track ~30 ticks (~0.6 s, the serve flight + first return) then
+diverge; later points cannot be compared 1:1 because the sim re-serves where
+the game does not, shifting point indices.
+
+Remaining divergence suspects (ranked):
+1. rally length (sim ~1.5-3x the game tick count per point; the largest gap);
+2. serve aim target inside the box (unmeasured);
+3. hitter decision channels (SwingHeld sim 0.09 vs game 0.54 during rallies);
+4. sim extra serves/faults where the game holds serve.
