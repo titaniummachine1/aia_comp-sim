@@ -9,26 +9,36 @@
 target; `tennis_builder()` covers graphs written by AIGamePyLibrary's
 v0.012 builder order.
 
-**The simulator is NOT yet adjusted for v0.15f (free) or Patreon builds.**
-Do not trust tennis parity numbers against those versions until the capture
-pipeline has been re-run against them.
+**The capture probe now runs on v0.15f too (2026-09-12).** The ParityMod
+bootstrap is metadata-driven, so it is largely version-agnostic, but two
+version-coupled assumptions had to be relaxed for v0.15f (see
+`docs/HANDOFF.md` §18):
+
+1. the `Stamina.OnSimulationTick` entry preamble was matched byte-for-byte,
+   including a RIP-relative displacement to a static field. That address moves
+   between builds, so the matcher now checks the **instruction shape** and
+   relocates the observed displacement (plus a "guard must point inside
+   GameAssembly" sanity check).
+2. three named ball fields were **removed** in v0.15f when the ball
+   time-to-ground caching bug was fixed (`cachedPredictedBounceTime`,
+   `cachedPredictedSecondBounceTime`, `predictedBounceAge`). The field-group
+   reader now treats an absent *version-optional* field as a version
+   difference (emits `null`, does not fail the snapshot).
+
+**Parity numbers from v0.15f are still NOT trustworthy:** the sim's solver
+fixtures are v0.14-mined, and v0.15 changed real behaviour (ball position is
+now interpolated between frames so fast balls can still be hit; the
+time-to-ground cache was fixed). Re-mine and triage before quoting v0.15
+parity — the four steps below.
 
 ## Version taxonomy
 
 | Suffix | Meaning |
 |---|---|
-| `v0.15f` | Latest **free** release ("f" = free) |
+| `v0.15f` | Latest **free** release ("f" = free); mod host at `modhost/v0.15f/` |
 | Patreon builds | Carry extra features (native timeplots export etc.) |
 | `v0.12` … `v0.14` | Older releases; the sim's pinned corpus is v0.12-era
   builder labels with v0.14 runtime parity |
-
-## Trying original game versions
-
-Zipped copies of past releases live in the release posts / Downloads
-(e.g. `Tennis_v0_12.zip` … `Tennis_v0_15f.zip`). Anyone can run the
-original game from those zips directly — no simulator needed. The same
-applies to the soccer game and any future game artifacts: keep the zips,
-run the originals, and use the simulator only as the offline copy.
 
 ## Re-targeting a new version
 
@@ -38,3 +48,9 @@ run the originals, and use the simulator only as the offline copy.
 3. `python modhost/emit_rust_fixtures.py <run>`
 4. `cargo test --test tennis_v014_solver_parity` — the replay reports
    exactly which solver behavior drifted.
+
+Start the mod host for a new version the same way v0.14/v0.15f were done:
+copy the pristine install to `modhost/v<ver>/`, keep the untouched launcher as
+`Aialanders-original.exe`, build with `build_paritymod_v015.ps1` (or the v0.14
+script), then drive it with `MODHOST_GAMEDIR` + `MODHOST_PARITY_EXE`.
+

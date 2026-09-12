@@ -585,6 +585,35 @@ impl OperationKind {
         }
     }
 
+    /// Non-panicking variant of [`Self::from_modifier`] — used where the game
+    /// itself tolerates a degenerate modifier (an empty `Operation` runs as a
+    /// constant 0 in the VM; see `lower.rs`).
+    pub fn try_from_modifier(modifier: &str) -> Option<Self> {
+        let m = modifier.trim();
+        if let Ok(i) = m.parse::<u32>() {
+            return Self::try_from_immediate(i);
+        }
+        Some(match m.to_ascii_lowercase().as_str() {
+            "abs" => Self::Abs,
+            "round" => Self::Round,
+            "floor" => Self::Floor,
+            "ceil" => Self::Ceil,
+            "sin" => Self::Sin,
+            "cos" => Self::Cos,
+            "tan" => Self::Tan,
+            "asin" => Self::Asin,
+            "acos" => Self::Acos,
+            "atan" => Self::Atan,
+            "sqrt" => Self::Sqrt,
+            "sign" | "signum" => Self::Sign,
+            "ln" => Self::Ln,
+            "log10" => Self::Log10,
+            "e^" => Self::Exp,
+            "10^" => Self::Pow10,
+            _ => return None,
+        })
+    }
+
     #[inline]
     pub fn as_u32(self) -> u32 {
         self as u32

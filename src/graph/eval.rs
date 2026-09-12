@@ -16,23 +16,73 @@ use crate::graph_vm::value::VmValue;
 use super::load::TeamGraph;
 use super::value::GraphValue;
 
+/// Initial value for a graph variable that has never been committed.
+///
+/// The VM's `RuntimeBrain::from_program` deliberately initialises persistent
+/// variables to `Bool(false)` (not `Null`) so alternating-toggle graphs work
+/// from tick 0 without a warmup. The reference must match that to be trace-
+/// identical. Phase B (game battery readout) is the authority that confirms it;
+/// until then this is the plan's recommended default.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum VarInit {
+    Null,
+    BoolFalse,
+}
+
+impl Default for VarInit {
+    fn default() -> Self {
+        VarInit::BoolFalse
+    }
+}
+
 /// Team brain that evaluates a loaded AIComp `.txt` graph each tick.
 #[derive(Debug, Clone)]
 pub struct GraphBrain {
     pub graph: TeamGraph,
     /// Last committed variable values (also used mid-tick during multi-pass).
     pub vars: HashMap<String, GraphValue>,
+    /// Previous-tick output value per **output port SID** — the game's implicit
+    /// hold register. A `ConditionalSet*` whose false arm is unwired reads its
+    /// own previous-tick output (Unity "Memory" cell); the VM mirrors this with
+    /// synthetic `__latch__<port_sid>` variables. Kept as a map so the
+    /// reference stays behaviourally identical to the VM on feedback graphs.
+    pub latch: HashMap<String, GraphValue>,
+    /// Uncommitted-variable initial value (see [`VarInit`]).
+    pub init_vars: VarInit,
     /// Optional TRACE for GraphBrain ≡ RuntimeBrain acceptance.
     trace: Option<ObservableTrace>,
 }
 
 impl GraphBrain {
     pub fn new(graph: TeamGraph) -> Self {
+        let init_vars = VarInit::default();
+        let mut vars = HashMap::new();
+        if init_vars == VarInit::BoolFalse {
+            // Mirror the VM: every interned variable starts as Bool(false).
+            for node in graph.nodes.values() {
+                if node.id == "GetVariable" || node.id == "SetVariable" {
+                    vars.entry(node.modifier.clone())
+                        .or_insert(GraphValue::Bool(false));
+                }
+            }
+        }
         Self {
             graph,
-            vars: HashMap::new(),
+            vars,
+            latch: HashMap::new(),
+            init_vars,
             trace: None,
         }
+    }
+
+    /// Override the uncommitted-variable initial value (used by tests and by
+    /// the Phase-B game adjudication).
+    pub fn with_var_init(mut self, init: VarInit) -> Self {
+        self.init_vars = init;
+        if init == VarInit::Null {
+            self.vars.clear();
+        }
+        self
     }
 
     pub fn with_trace(mut self) -> Self {
@@ -68,6 +118,8 @@ impl TeamBrain for GraphBrain {
                 None
             },
             current_pass: None,
+            latch_prev: std::mem::take(&mut self.latch),
+            latch_next: HashMap::new(),
         };
 
         // Unity runs settle once per tick, not 8 times.
@@ -132,6 +184,14 @@ impl TeamBrain for GraphBrain {
             self.trace = Some(trace);
         }
 
+        // Publish this tick's port outputs as the previous-tick latch. Ports
+        // that were not evaluated this tick keep their older value (the VM's
+        // `RuntimeState.vars` are equally persistent), so a branch taken only
+        // on some ticks still holds a meaningful value.
+        let mut latch = std::mem::take(&mut ctx.latch_prev);
+        latch.extend(ctx.latch_next.drain());
+        self.latch = latch;
+
         out
     }
 }
@@ -151,6 +211,10 @@ struct EvalCtx<'a> {
     trace: Option<ObservableTrace>,
     /// `Some(0..7)` during settle passes; `None` while evaluating controllers.
     current_pass: Option<usize>,
+    /// Previous-tick output per output port SID (read by implicit holds).
+    latch_prev: HashMap<String, GraphValue>,
+    /// This tick's output per output port SID (published after `think`).
+    latch_next: HashMap<String, GraphValue>,
 }
 
 impl<'a> EvalCtx<'a> {
@@ -300,6 +364,23 @@ impl<'a> EvalCtx<'a> {
                 let color = self.color_name(node_sid, "Color1");
                 crate::debug_draw::disc(center, radius, width, &color);
             }
+            // TimePlot: the channel name is a String constant on `String1`
+            // (same resolution the VM uses in `lower.rs`). Without this arm the
+            // reference emitted no channels at all, so no graph-internal value
+            // was observable through the reference interpreter.
+            "TimePlot" => {
+                let name = self
+                    .input_named(node_sid, "String1")
+                    .map(|v| v.as_string())
+                    .unwrap_or_default();
+                let value = self
+                    .input_named(node_sid, "Float1")
+                    .map(|v| v.as_float())
+                    .unwrap_or(0.0);
+                if !name.is_empty() {
+                    crate::debug_draw::plot(&name, value);
+                }
+            }
             _ => {}
         }
     }
@@ -345,8 +426,20 @@ impl<'a> EvalCtx<'a> {
             return GraphValue::Null;
         };
         let value = self.eval_node_output(&pref.node_sid, &pref.port_name);
+        // Every output port evaluated this tick becomes next tick's hold value.
+        self.latch_next
+            .insert(port_sid.to_string(), value.clone());
         self.cache_set(port_sid.to_string(), value.clone());
         value
+    }
+
+    /// Previous-tick output of `node_sid`'s `port_name` output — the game's
+    /// implicit hold when a `ConditionalSet*` false arm is unwired. `None` on
+    /// the first tick (or for a never-evaluated port); the caller then falls
+    /// back to the kind's zero, matching the VM's Null-initialised latch var.
+    fn hold_value(&self, node_sid: &str, port_name: &str) -> Option<GraphValue> {
+        let out_sid = self.graph.output_port_sid(node_sid, port_name)?;
+        self.latch_prev.get(&out_sid).cloned()
     }
 
     fn eval_node_output(&mut self, node_sid: &str, port_name: &str) -> GraphValue {
@@ -507,29 +600,34 @@ impl<'a> EvalCtx<'a> {
             "AddFloats" => bin_f(self, node_sid, |a, b| a + b),
             "SubtractFloats" => bin_f(self, node_sid, |a, b| a - b),
             "MultiplyFloats" => bin_f(self, node_sid, |a, b| a * b),
-            "DivideFloats" => bin_f(
-                self,
-                node_sid,
-                |a, b| {
-                    if b.abs() < 1e-12 {
-                        0.0
-                    } else {
-                        a / b
-                    }
-                },
-            ),
+            // IEEE semantics — author-confirmed game truth
+            // (`tests/graph_vm_div_probe.rs`): the game yields +inf/-inf/nan,
+            // never a guarded 0. The VM's `OpCode::Div` already is IEEE; the
+            // old `1e-12` guard here was a *reference* bug.
+            "DivideFloats" => bin_f(self, node_sid, |a, b| a / b),
             "Power" => bin_f(self, node_sid, |a, b| a.powf(b)),
-            "Modulo" => bin_f(
-                self,
-                node_sid,
-                |a, b| {
-                    if b.abs() < 1e-12 {
-                        0.0
-                    } else {
-                        a % b
-                    }
-                },
-            ),
+            // `x % 0.0` = NaN in IEEE, matching the VM's `OpCode::Mod`.
+            "Modulo" => bin_f(self, node_sid, |a, b| a % b),
+            // clamp(value, min, max) — mirrors the VM's `OpCode::Clamp`
+            // exactly (inverted bounds tolerated; f32 max/min ignore NaN).
+            // Without this arm the reference evaluated every ClampFloat to
+            // Null/0, which silently zeroed every downstream value.
+            "ClampFloat" => {
+                let v = self
+                    .input_named(node_sid, "Float1")
+                    .map(|x| x.as_float())
+                    .unwrap_or(0.0);
+                let a = self
+                    .input_named(node_sid, "Float2")
+                    .map(|x| x.as_float())
+                    .unwrap_or(0.0);
+                let b = self
+                    .input_named(node_sid, "Float3")
+                    .map(|x| x.as_float())
+                    .unwrap_or(0.0);
+                let (lo, hi) = if a <= b { (a, b) } else { (b, a) };
+                GraphValue::Float(v.max(lo).min(hi))
+            }
             "Lerp" => {
                 let a = self
                     .input_named(node_sid, "Float1")
@@ -555,8 +653,16 @@ impl<'a> EvalCtx<'a> {
                     .input_named(node_sid, "Float1")
                     .map(|v| v.as_float())
                     .unwrap_or(0.0);
-                let kind = crate::graph::dropdowns::OperationKind::from_modifier(&node.modifier);
-                GraphValue::Float(kind.eval(a))
+                // Game-tolerated degenerate: an empty modifier (7 mined graphs).
+                // The VM lowers it to constant 0 with an approximation record;
+                // the reference must match instead of panicking.
+                match crate::graph::dropdowns::OperationKind::try_from_modifier(&node.modifier) {
+                    Some(kind) => GraphValue::Float(kind.eval(a)),
+                    None => {
+                        crate::graph_vm::diagnostics::record_approximated("Operation(empty)");
+                        GraphValue::Float(0.0)
+                    }
+                }
             }
 
             "AbsFloat" | "Absolute" => {
@@ -674,10 +780,14 @@ impl<'a> EvalCtx<'a> {
                     .input_named(node_sid, "Bool2")
                     .map(|v| v.as_bool())
                     .unwrap_or(false);
-                let f = self
-                    .input_named(node_sid, "Bool3")
-                    .map(|v| v.as_bool())
-                    .unwrap_or(false);
+                // Unwired false arm = previous-tick HOLD, not `false`.
+                let f = match self.input_named(node_sid, "Bool3") {
+                    Some(v) => v.as_bool(),
+                    None => self
+                        .hold_value(node_sid, port_name)
+                        .map(|v| v.as_bool())
+                        .unwrap_or(false),
+                };
                 GraphValue::Bool(if cond { t } else { f })
             }
             "ConditionalSetFloatV2" | "ConditionalSetFloat" => {
@@ -689,10 +799,14 @@ impl<'a> EvalCtx<'a> {
                     .input_named(node_sid, "Float1")
                     .map(|v| v.as_float())
                     .unwrap_or(0.0);
-                let f = self
-                    .input_named(node_sid, "Float2")
-                    .map(|v| v.as_float())
-                    .unwrap_or(0.0);
+                // Unwired false arm = previous-tick HOLD, not `0.0`.
+                let f = match self.input_named(node_sid, "Float2") {
+                    Some(v) => v.as_float(),
+                    None => self
+                        .hold_value(node_sid, port_name)
+                        .map(|v| v.as_float())
+                        .unwrap_or(0.0),
+                };
                 GraphValue::Float(if cond { t } else { f })
             }
             "ConditionalSetVector3" => {
@@ -704,10 +818,14 @@ impl<'a> EvalCtx<'a> {
                     .input_named(node_sid, "Vector31")
                     .map(|v| v.as_vec())
                     .unwrap_or(Vec3::ZERO);
-                let f = self
-                    .input_named(node_sid, "Vector32")
-                    .map(|v| v.as_vec())
-                    .unwrap_or(Vec3::ZERO);
+                // Unwired false arm = previous-tick HOLD, not ZERO.
+                let f = match self.input_named(node_sid, "Vector32") {
+                    Some(v) => v.as_vec(),
+                    None => self
+                        .hold_value(node_sid, port_name)
+                        .map(|v| v.as_vec())
+                        .unwrap_or(Vec3::ZERO),
+                };
                 GraphValue::Vec(if cond { t } else { f })
             }
 

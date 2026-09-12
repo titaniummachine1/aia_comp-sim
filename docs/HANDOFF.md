@@ -1,10 +1,69 @@
-# SESSION HANDOFF — aia_comp-sim tennis parity (updated 2026-09-10, evening)
+# SESSION HANDOFF — aia_comp-sim tennis parity (updated 2026-09-12)
 
-**Read this + `docs/TENNIS_V014_PARITY_NOTES.md`; generic method now lives in
-`docs/RE_PLAYBOOK.md` (read it first for anything new).** Goal framing from
-the user, verbatim: **"We don't clone the game 1:1 — if we play any 2 AIs
-against each other the results must be the same as in the game."**
-(Viewer/editor = QOL only; Bevy non-headless viewer deferred by user.)
+**Read this + `docs/RE_PLAYBOOK.md` (generic method; §8 = version re-target) +
+`docs/TENNIS_V014_PARITY_NOTES.md`.** Goal framing from the user, verbatim:
+**"We don't clone the game 1:1 — if we play any 2 AIs against each other the
+results must be the same as in the game."** (Viewer/editor = QOL only.)
+
+## 0. LATEST SESSION (2026-09-12) — READ THIS FIRST
+
+**Plan of record: `C:\gitProjects\implementation_plan.md`** (phases A–F, with
+Phase F's status; open decisions at the end). Read it before starting anything.
+
+### Landed this session
+| Area | What | Where |
+|---|---|---|
+| Ground truth | Multi-seed distributional parity harness (game sweep → sim replay → TV distance) | `scripts/run_sim_seed_sweep.py`, `scripts/score_distribution.py`, §13 |
+| Interpreter | Corpus certification: reference `GraphBrain` vs shipping O1 VM vs pass-free O0 VM, per-tick traces | `tests/tennis_interpreter_certification.rs`, §14 |
+| Interpreter | Semantics battery: 46 TimePlot channels probing every ambiguous semantic | `scripts/gen_interpreter_battery.py`, `tests/interpreter_semantics_battery.rs`, §15 |
+| Interpreter | `compare_traces` now diffs the tennis controller (was vacuous for tennis) | `src/graph_vm/trace.rs` |
+| Interpreter | **2 reference gaps FIXED**: `GraphBrain` had no `TimePlot` arm (emitted no channels) and no `ClampFloat` arm (zeroed everything downstream) → cert went **7/12 → 9/12 clean** | `src/graph/eval.rs` |
+| v0.15f mod | Mod host + build script + launcher; probe runs a **full match** on v0.15f | `modhost/v0.15f/`, `build_paritymod_v015.ps1`, `launch_v015.cmd`, §18 |
+| v0.15f mod | **2 version blockers FIXED**: instruction-shape preamble matching; version-optional field allowlist | `paritymod-src/metadata_probe.h` |
+
+### Pinned numbers (do not regress silently)
+- `cargo test --lib` → **164 passed, 0 failed, 2 ignored**.
+- Certification → **12/14 clean**; remaining: `bat` (aim + O0≠O1),
+  `Pixel_Heart` (`Round(RandomFloat)` — world-RNG placeholder).
+- Battery → 46 channels, 4 tick-varying, **0 divergences**
+  (`PASS: reference == O0 == O1 on every channel and trace`).
+- **Game-read policy truth (§17)** — the game ran the battery and exported all
+  46 `B.*` channels: div/mod-by-zero = IEEE inf/nan; `ConditionalSetFloat`
+  unwired-false = previous-tick HOLD; unwired input = 0; all 16 `Operation`
+  indices confirmed. **New game-sourced open items:** `ConditionalSetVector3`
+  unwired-false = **0, not hold**; Bool→Float coercion reads **0** in the game.
+- v0.15f `parity_state.json` → `tick 422 / callbacks 3239 / points_done 1 /
+  done:true / success:true`; quit flushed a **748471-byte** TimePlot.
+- Exact outcome parity **25/78 = 32.1%** — still brittle; the distributional
+  metric is the headline now.
+
+### Next actions, in order (see the plan for detail)
+1. **Phase A DONE** (reference↔VM closed). **Phase B DONE** (game policy read).
+   The two new game-sourced divergences are top priority: (a) confirm
+   `ConditionalSetVector3` = zero (second graph, no `Vector3Split`) and fix the
+   VM's `implicit_hold` if real; (b) confirm Bool→Float coercion with a bool used
+   arithmetically, then decide `as_float(Bool)`.
+2. **`bat` aim** — root-caused to a `ConditionalSetVector3`/aim chain that also
+   exposes an O0≠O1 pass bug (`docs/HANDOFF.md` §14 finding 1/2); bisect the O1
+   passes on `bat` (`fusion`/`cse`/`relay_removal`).
+3. **Phase C**: scale the multi-seed sweep (`--points 8`, ~50 seeds), then the
+   never-run per-tick channel diff against the game auto-export.
+4. **Phase F4**: re-mine v0.15 fixtures and triage drift against the §18
+   changelog map before touching the sim.
+
+### Housekeeping / gotchas for the next session
+- **Nothing is committed.** `aia_comp-sim`, `aia_graphc` and `AIA_tennis` are
+  all dirty; stage deliberately (never `git add -A` — `AIA_tennis` holds
+  `c`, `titan`, `opencode.json`, `v0.15f/`, `v0.14*/`, upstream trees).
+- Never commit game binaries. `modhost/v0.15f/` and `modhost/paritymod/*.exe`
+  are working artifacts.
+- Long runs (builds, game launches, test suites) must go through **scheduled
+  tasks** — the agent shell kills child process trees. `.cmd` launchers, logs
+  to `%TEMP%`.
+- The tool's ~30 s command cap is real: `Start-Sleep 25` + work is the safe
+  budget; poll in slices.
+
+
 
 ## 1. Locations (canonical)
 
@@ -104,6 +163,11 @@ sim_pairs_results.jsonl with PowerShell `Set-Content` (use python).
 
 ## 6. Open work queue (SIMULATOR session — top-down)
 
+0. **Ground-truth harness — LANDED 2026-09-12 (see §13).** Scale the game
+   restart sweep (`--points 8`, ~50 seeds/pairing), then
+   `scripts/run_sim_seed_sweep.py` + `scripts/score_distribution.py`. Score
+   distributions (home-win / server-hold / TV distance); the exact per-seed %
+   is a secondary column until first-server mapping + RNG draw sites are pinned.
 1. **Rally aim semantics (§4C)** — the 32.1% → ? lever. Live receive
    capture (probe) + latch-variant sweep vs the 78-row game set.
 2. **Re-merge + re-score** when `aia_tour_fix2_w4` lands (titanium34 +
@@ -183,3 +247,406 @@ python scripts\score_parity.py
    channel (44 channels available).
 5. Commit after every landed item; never empty sim_pairs_results.jsonl
    via PowerShell (BOM — see §4A note).
+
+---
+
+# SESSION 2026-09-12 — compiler modes/compaction + parity harness (done)
+
+## 10. What landed (sim side)
+
+- **Compiler optimization modes + source-free compaction** (repo
+  `aia_graphc`, see its `PROGRESS.md` Session 10). For the sim the relevant
+  artifacts are:
+  - `scripts/run_compiler_mode_parity.py` regenerates
+    `data/compiler_probes/mode_parity/{o0,o1,o2}.txt` (+ `.desc.json`) from
+    one behavior-bearing bot.
+  - `tests/compiler_mode_parity.rs`: the SAME bot at o0/o1/o2 emits
+    **identical controller output for 40 ticks**; o0 keeps working
+    TimePlot channels, o1/o2 strip them. This is the guard that the
+    compiler modes never change strength.
+  - `tests/titanium_compact_parity.rs` (opt-in): set `TITANIUM_ORIG` +
+    `TITANIUM_COMPACT` (a `graphc-rs` o2 output) and it runs both, home
+    side, tick for tick. Validated: Titanium 4.64 MB → 1.54 MB, 60 ticks
+    identical.
+  - `tests/compiler_probe.rs` pins updated to probe **93 nodes/O0 90/O1 80**
+    (was 94/91/80; the one-node drop is a safe identity fold).
+- lib suite now **164 green**; `compiler_probe` + `compiler_mode_parity`
+  green.
+
+## 11. Best path from here (decided)
+
+Compiler is effectively **v1** (feature-complete). The blocker for any
+further compiler work is **sim parity being unmeasurable**, so the next
+session is sim-first:
+
+1. **Valid ground truth first**: statistical parity harness (multi-seed
+   outcome *distributions* per pairing) + matched start conditions. The
+   exact metric is unusable (first-server 8/78; RNG shelved).
+2. **Certify the interpreter** (separates VM bugs from world-model bugs):
+   sweep many real saves (AIA/AIA3/Titanium) + compiler outputs through
+   `GraphBrain` vs `graph_vm` with `ObservableTrace`/`compare_traces`,
+   asserting identical var commits + controllers. Extends the existing
+   `runtime_aia_trace_matches_graph_brain` to a corpus.
+3. **Then** the known tennis gaps: rally-aim semantics, first-server
+   mapping, serve regime, the 18 "uncertain" getters (ROADMAP).
+
+## 12. Enabler in flight — restart match WITHOUT relaunching the game
+
+Goal: fast multi-seed parity sampling (a launch is ~90 s + wedge-prone).
+Existing groundwork in `modhost`:
+- `paritymod-src/metadata_probe.h` already has `reset_match` (invokes
+  `TennisGameManager.ResetMatch`), `rngtest` (`Random.InitState` +
+  `RandomRangeInt`), `methods` (dump a class's methods by name), `snapshot`,
+  `quit`; driven by `reset_sweep.py` (`reset_sweep.jsonl`).
+- Startup path (natural trace) does `Random.InitState(seed)` then
+  `TennisGameManager.QueueStartMatchWhenGraphsReady()`.
+- Next: a `restart_match` cmd that re-seeds + `ResetMatch` +
+  `QueueStartMatchWhenGraphsReady` in one shot (and, if the methods exist,
+  reloads team graphs so home/away can change per sample). Method names are
+  discovered with the existing `methods` probe — no full decompile needed
+  (IL2CPP names, per `RE_PLAYBOOK.md`).
+
+### Status: game-verified (2026-09-12) + native timeplot export
+
+- `restart_match` (optional `seed`/`points`): `CoreRandom.InitState(seed)` ->
+  `ResetMatch()` -> `QueueStartMatchWhenGraphsReady()`, re-arms per-point
+  accounting, logs `seed_ok`/`reset_ok`/`queue_ok` + before/after
+  `ServingTeam` + RNG. **Verified**: sweeps seeds in-place without
+  relaunch (`python modhost/restart_sweep.py --seeds 1-3 --points 1`);
+  the epoch advances in ~2 s while the match is live.
+- `restart_epoch` added to `parity_state.json`: the first sweep seed used to
+  read the *boot* match's snapshot (same seed as the launch), so drivers now
+  wait for `restart_epoch > prev` and attribution is exact.
+- Native timeplot export via `TimePlot.ExportToJson` (singleton via
+  `get_Instance`), invoked by the mod on: `restart_match`
+  (`reason:restart`, before `ResetMatch`), `quit` (`reason:quit`), a new
+  on-demand `{"cmd":"export_timeplot"}` (`reason:api`), and an interactive
+  close via a `UnityWndClass` subclass flushing on `WM_CLOSE` /
+  `WM_ENDSESSION` (no preamble pinning; build now links `user32`). Each call
+  logs a `parity_cmd`/`export_timeplot` row with `ok`/seed/epoch/serving/team.
+- `restart_sweep.py` names each export from the home graph's tick-0 samples
+  (`timeplot_naming.py`):
+  `timeplot_<time>_<left>_vs_<right>_<hB|aB>_srv<S>_seed<N>.json`
+  (`hB` = home on -X/near; home-on-left from -Z; both are flippable
+  constants). Verified end-to-end: boot match -> `srv1_seed1`, restart to
+  seed2 captures seed1 -> `srv0_seed1`, ... final `quit` export ->
+  `srv0_seed3`.
+- Rebuilt: `build_paritymod_reset.ps1` -> `Aialanders-paritymod-reset.exe`
+  (68952 B). Remaining gap: in the sampled seeds the layout token was always
+  `hB` (home consistently on -X); confirm the convention on a match where the
+  camera/side actually flips before trusting `aB`.
+
+## 13. Ground-truth harness — multi-seed distributional parity (2026-09-12)
+
+The §11 item 1 ("valid ground truth first") now has a working three-stage
+pipeline. It exists because the exact per-seed metric is brittle while the
+seed->first-server mapping and RNG draw sites are unpinned.
+
+1. **Game (multi-seed):** `modhost/restart_sweep.py --seeds 1-50 --points 8`
+   restarts one live match per seed and appends to `restart_sweep.jsonl`,
+   one row per seed carrying `state.point_winners` (the outcome), `seed`,
+   `serving_team` (that seed's SETUP server) and `state.restart_epoch`.
+   **`restart_epoch` is the attribution guard** — pre-fix rows lack it and are
+   discarded (the first sweep seed used to read the boot match's snapshot).
+2. **Sim (matched replay):** `scripts/run_sim_seed_sweep.py` reads those rows
+   and replays each `(home, away, seed)` headless with the same `--points` and
+   `AIA_FIRST_SERVER` derived from `serving_team`, appending to
+   `data/tennis/sim_seed_sweep.jsonl` (append, resume-safe; `--game`, `--home`,
+   `--max-ticks`, `--timeout`). Prints the exact per-seed verdict as it goes.
+3. **Score (read-only):** `scripts/score_distribution.py` joins the two files
+   on `(home, away, seed, first_server)` and reports, per pairing and pooled:
+   **home win rate, server-hold rate, mean points for/against** and the
+   **total-variation distance** between the game and sim leader distributions.
+   Exact per-seed agreement is a secondary column, never the headline.
+   `--min-seeds N` flags pairings too thin to trust (rates are noise below it).
+
+Verified end-to-end 2026-09-12 on the 3 post-fix sweep rows
+(titanium54 vs aia3, points=1, matched servers): `agree-seq` 2/3, and the
+scorer reports game vs sim home-win 67% vs 100%, server-hold 33% vs 67%,
+TV 0.33 — i.e. exactly the kind of stable, sample-size-aware signal wanted.
+**Scale before interpreting:** the current sample is 3 seeds / points 1, so the
+rates are noise. Run the game sweep at `--points 8` for ~50 seeds per pairing,
+then re-run stages 2-3.
+
+## 14. Interpreter certification — reference `GraphBrain` vs the VM (2026-09-12)
+
+> **UPDATED 2026-09-12 (Phase A) — now 12/14 clean.** `Adam` was a *false*
+> divergence (NaN-aware comparator, §16); `nqvxf22` was a second empty-`Operation`
+> panic (same fix as Adam). Remaining: `bat` (aim `(0,0)` vs VM, and O0≠O1) and
+> `Pixel_Heart` (`Round(RandomFloat)` — a world-RNG placeholder, not an
+> interpreter bug). Full landings table in §16.
+
+HANDOFF §11.2 landed as `tests/tennis_interpreter_certification.rs`.
+
+Prerequisite change: `compare_traces` now also diffs the **tennis controller**.
+Before this it only compared the 4 soccer `commands`, which a tennis graph
+leaves at their defaults — so a tennis trace identity passed vacuously. Soccer
+behavior is unchanged (both sides `None`).
+
+What it does: for each tennis save in a curated corpus it drives the reference
+tree-walker (`graph::GraphBrain`) and **two** VM builds — the shipping O1 VM
+(`RuntimeBrain::compile_for`, byte-identical lowering to `TennisBrain::compile`)
+and a pass-free O0 VM (`Lowerer::compile_for` + `ProgramBuilder.pack` +
+`RuntimeBrain::from_program`) — through a live `TennisWorld` for 40 ticks,
+comparing Pass 1..8 commits + `TennisController` every tick. The O0 arm is what
+attributes a divergence: **O1-only => optimizer/pass bug; O0 and O1 both =>
+lowering/interpreter bug.**
+
+Report-only by default so CI stays green; `TENNIS_CERT_STRICT=1` fails on any
+divergence. `TENNIS_CERT_MAX` (default 12) / `TENNIS_CERT_TICKS` (default 40).
+Per-bot panics are caught and reported (with the bot name) so one bad save
+cannot abort the corpus.
+
+First run (2026-09-12, before the §15 `ClampFloat` fix): **12 graphs, 7 clean**.
+After that fix: **9 clean** — `titanium54`, `aia3`, `aia`, `ignore_ball31`,
+`sim_titanium31`, `cross_court`, `open_court`, `alternator`,
+`graphc_serve_latch`. Findings, in priority order:
+
+1. **Aim-request divergence — RESOLVED for `titanium54`/`sim_titanium31`,
+   `bat` remains.** The reference's aim x was systematically **0.0**
+   (titanium54 `(0.0,5.0)` vs VM `(1.3538578,5.0)`; sim_titanium31
+   `(0.0,6.0)` vs `(3.0625,6.0)`; bat `(0.0,0.0)` vs `(0.8833,0.8833)`).
+   Root cause: **a missing `ClampFloat` arm in `GraphBrain`** (§15), which
+   zeroed the entire aim subtree in the REFERENCE — not a VM bug. With the
+   reference able to clamp, `titanium54` and `sim_titanium31` are clean. `bat`
+   still diverges (aim `(0,0)` vs VM `(0.8833,…)`) and additionally has
+   O0 != O1 (finding 2). Tool: `scripts/analyze_aim_chain.py <bot> [--depth N]`
+   walks the aim chain on the save JSON with no compile; bat's aim source is a
+   `ConditionalSetVector3` gated by `TennisGetBool 'Is Self Serving'` whose
+   false branch is a `ConditionalSetVector3 mod='1'` — the next target.
+2. **`bat`: O0 != O1** — aim `(0.8833,0.0264)` (o0) vs `(0.8833,0.8833)` (o1).
+   A genuine O1 pass divergence, independent of the reference: the first known
+   counterexample to "O1 never changes behavior" outside the single soccer
+   probe.
+3. **`Adam` panics the reference** on an empty `Operation` modifier
+   (`dropdowns::OperationKind::from_modifier("")`). Both interpreters reject
+   "" by design ("never returns a default op"), but `GraphBrain`
+   force-evaluates every SetVariable / debug sink / root function, so it hits a
+   node the DCE'd VM never touches. This is the open `T_op_empty` probe
+   question (the game's policy for an empty Operation modifier) — do not
+   "fix" it by defaulting until that is read from the game.
+4. **`Pixel_Heart`: `shot_type` diverges** (reference 0.0 vs VM 1.0, in BOTH O0
+   and O1) while move/aim/swing/sprint agree — a shot-type dropdown wire
+   divergence, independent of the aim chain. Unexplained; next after `bat`.
+
+Commands:
+```
+cargo test --test tennis_interpreter_certification -- --nocapture
+TENNIS_CERT_STRICT=1 cargo test --test tennis_interpreter_certification -- --nocapture
+```
+
+## 15. Interpreter semantics battery — behaviour proof via TimePlot channels (2026-09-12)
+
+> **UPDATED 2026-09-12 (Phase A/B):** all three divergence classes below are
+> **CLOSED** (§16) — the battery now reports
+> `PASS: reference == O0 == O1 on every channel and trace`. The same graph was
+> then loaded in the **game** and the `B.*` channels read back (§17): IEEE
+> inf/nan, Float hold, unwired=0 and all 16 `Operation` indices are confirmed;
+> **Vector hold** and **Bool→Float coercion** are new game-sourced open items.
+> The fixture now also emits a channel sidecar
+> (`data/interpreter_probes/semantics_battery.channels.json`).
+
+`scripts/gen_interpreter_battery.py` -> `data/interpreter_probes/semantics_battery.txt`
+(371 nodes, 46 `B.*` channels). `tests/interpreter_semantics_battery.rs` runs the
+reference vs **O0** (channels + trace) and the reference vs **O1** (trace only,
+because O1 strips debug sinks) for 12 ticks, every tick. Report-only by default;
+`BATTERY_STRICT=1` fails on any divergence. Companion to §14: that one replays
+what real bots happen to touch, this one probes semantics directly. The same
+`.txt` is game-loadable (a tennis bot with a direct-wired idle controller), so a
+game TimePlot export can be diffed channel-by-channel the same way.
+
+**Two reference gaps found and fixed to make it observable at all:**
+1. `GraphBrain::exec_debug_draw` had **no `TimePlot` arm** — the reference
+   emitted zero channels, so no graph-internal value was observable through it.
+2. `GraphBrain::eval_node_output` had **no `ClampFloat` arm** — every clamped
+   graph evaluated to Null/0 and silently zeroed all downstream values (the VM
+   always had both; note eval.rs *does* guard Div/Mod by 1e-12, the VM does not).
+
+**Divergent (reference vs shipping VM), 3 classes:**
+- **Div/Mod-by-zero policy.** Reference guards `|b| < 1e-12 -> 0.0`; the VM
+  computes IEEE inf/nan (visible as ±1e30 after the battery's own clamp).
+  `B.div_p0`/`B.div_n0`/`B.div_00`, `B.mod_zero`.
+- **ConditionalSet unwired-false HOLD rule.** On the false arm the reference
+  returns zero/false; the VM holds the previous tick's value (the game
+  "Memory" behaviour per the `lower.rs` comment). `B.hold_f` ref 0 vs VM 7,
+  `B.hold_b` 0 vs 1, `B.hold_v_*` 0 vs 1/2/3 — diverging exactly on the ticks
+  the false arm is taken.
+- **Initial latch value.** Reference starts `Null`; VM starts `Bool(false)`
+  (deliberate — `runtime_brain.rs`). Trace Pass 1 tick 0, var `B_b`:
+  Null vs Bool(false). Coerced reads mask it (both read as 0.0).
+
+**Agreed — previously unproven, now measured identical in both:**
+- unwired `AddFloats` input reads 0 (`B.null_add` = 3).
+- `Modulo(-7, 3)` = -1 (sign policy shared).
+- `CompareFloats` (5,5) = 1,0,0,1,1 for indices 0..4; (3<5) = 1.
+- `ClampFloat` hi/lo/pass-through = 1/-1/0.5.
+- `Power(2,-1)` = 0.5; `Not(Not(true))` = 1.
+- all 16 `Operation` indices resolve (`op_0`=7 abs, `op_10`=2.645751 sqrt 7,
+  `op_11`=1 sign, `op_12`=1.945910 ln 7, `op_14`=1096.633 e^7, ...).
+- vector construct/split round trip = 1.5/2.5/3.5.
+- same-tick store order agrees (`B.latch_a`=12, `B.latch_b`=11 at tick 12) —
+  the read/write ordering inside a tick is identical in both interpreters.
+
+Still unproven (deliberately not in the battery): `Operation` with an EMPTY
+modifier (both interpreters panic by design, §14 finding 3) and `Lerp`/`Min`/`Max`.
+
+```
+python scripts/gen_interpreter_battery.py
+cargo test --test interpreter_semantics_battery -- --nocapture
+BATTERY_STRICT=1 cargo test --test interpreter_semantics_battery -- --nocapture
+```
+
+## 16. Phase A — reference↔VM closure LANDED (2026-09-12)
+
+The three §15 divergence classes are closed and the battery is fully clean:
+
+| Fix | Where | Result |
+|---|---|---|
+| Div/Mod `1e-12` guards removed → IEEE `a/b`, `a%b` | `src/graph/eval.rs` | `B.div_*`/`B.mod_zero` divergences gone |
+| ConditionalSet unwired-false **previous-tick HOLD** (per-port latch) | `src/graph/eval.rs` (`latch`, `hold_value`) | `B.hold_*` divergences gone |
+| `init_vars` switch (`VarInit::Null`/`BoolFalse`), default `BoolFalse` | `src/graph/eval.rs` | `B_b` tick-0 trace divergence gone |
+| Empty `Operation` modifier tolerated (0.0 + approximation record) | `src/graph/eval.rs`, `dropdowns::try_from_modifier` | `Adam`/`nqvxf22` no longer panic the reference |
+| NaN-aware trace comparison (`VmValue::same_value`, `nan_eq`) | `src/graph_vm/values.rs`, `trace.rs` | `Adam`'s `Vector(NaN,NaN,NaN)` no longer a false divergence |
+
+`cargo test --lib` = **164 passed / 0 failed / 2 ignored**;
+battery = `PASS: reference == O0 == O1 on every channel and trace`
+(46 channels, 4 tick-varying);
+certification (`TENNIS_CERT_MAX=14`) = **12/14 clean** —
+`titanium54, aia3, aia, Adam, ignore_ball31, sim_titanium31, cross_court,
+open_court, alternator, graphc_serve_latch, graphc_rival, nqvxf22`.
+Only `bat` (aim, o0≠o1) and `Pixel_Heart` (`RandomFloat`) remain.
+
+`Pixel_Heart` root cause (was "unexplained", §14 finding 4): its controller
+`Float1` (shot type) is `Operation mod='1'` (Round) of **`RandomFloat`**. The
+reference deliberately has no RNG stream (0.0); the VM uses a persistent
+SplitMix64 placeholder. Both are placeholders for the game's seeded
+`UnityEngine.Random` (RNG-from-world is explicitly shelved), so this is a
+*world-RNG* divergence, not an interpreter bug.
+
+## 17. Phase B — game adjudication of the policy questions (2026-09-12)
+
+`scripts/gen_interpreter_battery.py` now also emits
+`data/interpreter_probes/semantics_battery.channels.json` (per channel: `kind`,
+`policy`+`question`, or `golden`). `scripts/read_battery_from_game.py` parses a
+game TimePlot export (reusing `modhost/parse_timeplots.py`'s locale-comma rule)
+and prints the game's value + a verdict per channel.
+
+Run (one launch, v0.14 natural-traced probe `Aialanders-paritymod-reset.exe`):
+
+```
+copy data/interpreter_probes/semantics_battery.txt "<Saves>\Tennis\"
+set MODHOST_PARITY_EXE=...\paritymod\Aialanders-paritymod-reset.exe
+python modhost/modctl.py launch --home semantics_battery --away aia3 --seed 1 --points 1
+python modhost/modctl.py wait --timeout 1200 ; python modhost/modctl.py quit
+python scripts/read_battery_from_game.py "<Saves>\Tennis\Timeplots"
+```
+
+Result: **the game ran the battery and exported all 46 `B.*` channels**
+(215–216 samples; `point_winners [1]`, `done:true`). Raw game truth:
+
+| question | game value | verdict |
+|---|---|---|
+| `1/0`, `-1/0`, `0/0` | `1e30`, `-1e30`, `nan` | **IEEE inf/-inf/nan** — the VM/reference are right; the old reference guard was a bug |
+| `5 % 0` | `nan` | **IEEE NaN** |
+| `ConditionalSetFloat` unwired false | constant `7` | **HOLD** (previous tick) confirmed |
+| `ConditionalSetBool` unwired false | constant `0` | consistent with hold-false (Bool not float-observable) |
+| `ConditionalSetVector3` unwired false | `(0,1,0,1…)` / `(0,2,0,2…)` / `(0,3,0,3…)` | **ZERO, NOT hold** — ⚠ contradicts the VM (see below) |
+| unwired `AddFloats` input | `3` | unwired input = 0 confirmed |
+| all 16 `Operation` indices | abs 7, sqrt 2.645751, sign 1, ln 1.945910, e^ 1096.633, 10^ 1e7, asin/acos nan, … | **all match the VM/reference exactly** |
+| `ClampFloat` / vector round-trip / `Power(2,-1)` | 1/-1/0.5, 1.5/2.5/3.5, 0.5 | match |
+| same-tick var read (`B.latch_a` vs `B.latch_b`) | game: **identical** (`B_b == B_n`); sim: `latch_b == latch_a - 1` | ⚠ game shows same-tick store visibility; sim lags one tick |
+| Bool wired into a Float plot (`cmp_*`, `not_chain`, `coerce_*`) | **0 for every case** (5==5 shows 0) | game does **not** coerce Bool→Float through a Float input; our `as_float(Bool)` = 1.0 may be wrong |
+
+Two ⚠ rows are the new, game-sourced open items (the rest confirm A1–A3):
+
+1. **`ConditionalSetVector3` unwired-false is ZERO in the game, not a hold.**
+   The Float arm holds; the Vector arm does not. `lower.rs::implicit_hold`
+   applies the hold to *all* kinds, so the VM (and now the reference) is
+   **wrong for vectors**. Do not change blindly: confirm with a second graph
+   that isolates the vector node from `Vector3Split` before changing the VM.
+2. **Bool→Float coercion.** Every Bool-source channel reads 0 in the game. If
+   the game never coerces a Bool output into a Float input, `as_float(Bool(true))`
+   should be 0, not 1. This is TimePlot-observable only for the *coercion of a
+   value that reaches a float port*, so it needs a graph where the bool is used
+   arithmetically before being plotted.
+
+Both are recorded as **open, game-sourced** divergences; the sim was NOT changed
+on their account (the evidence is strong for the vector case but the reading
+path `Vector3Split` is not fully ruled out).
+
+
+
+Goal: mod the latest free release the same way v0.14 was modded, then start
+v0.15 parity. **Status: the probe runs a full match on v0.15f** — seed, hook,
+snapshot, ticks, point resolved, quit, and a TimePlot auto-export.
+
+- Host: `modhost/v0.15f/` = copy of the pristine `AIA_tennis/v0.015f/` install
+  with the untouched launcher preserved as `Aialanders-original.exe`
+  (667648 B). `GameAssembly.dll` is 128212480 B (v0.14: 128072704 B).
+- Build: `modhost/build_paritymod_v015.ps1` → `paritymod/Aialanders-paritymod-reset-v015.exe`
+  (same sources/flags as the v0.14 reset build; distinct output name).
+- Driven by `MODHOST_GAMEDIR=modhost/v0.15f` +
+  `MODHOST_PARITY_EXE=…paritymod-reset-v015.exe` (no driver change).
+
+The metadata-driven design paid off: **3167 methods, 1943 fields, 1786 class
+catalog rows, 109 managed classes all resolved by name**, and both graphs
+loaded Sim-ready with byte-identical structure to v0.14 (titanium54
+5383 nodes / 7932 conns; aia3 54/46). Exactly **two** version-coupled
+assumptions had to be relaxed:
+
+1. **`Stamina.OnSimulationTick` preamble was matched byte-for-byte.**
+   The first 16 bytes contain `cmp byte ptr [rip+disp32], imm8` where the
+   disp32 is a *static-field address*: v0.14 `…,14,215,122,6,0` vs v0.15f
+   `…,94,228,124,6,0`. The instruction is identical; only the address moved.
+   The matcher now compares the **instruction shape** (bytes 0..7 and 12..15)
+   and skips the disp32, and adds a version-tolerant sanity check that the
+   re-encoded guard points *inside* GameAssembly. (The trampoline already
+   re-encoded from the OBSERVED bytes, so pinning the address was pure
+   build-coupling.) Failure signature before the fix:
+   `natural_hook_status.reason = "preamble_mismatch"` → `installed:false` →
+   `natural_trace_status = stamina_hook_install_failed`.
+
+2. **Three named ball fields no longer exist in v0.15f.** The field-group
+   reader treats a missing named field as a read error → `ok=0` →
+   `state_read_ok:false` → terminal `seed_or_initial_snapshot_failed`.
+   Diffing the v0.14 vs v0.15f initial snapshots showed the field *name sets*
+   identical (31 ball fields) but three values `null` in v0.15f:
+
+   | field | v0.14 | v0.15f |
+   |---|---|---|
+   | `cachedPredictedBounceTime` | `System.Single` @0x140 | **removed** |
+   | `cachedPredictedSecondBounceTime` | `System.Single` @0x144 | **removed** |
+   | `predictedBounceAge` | `System.Single` @0x14c | **removed** |
+   | `hasCachedPredictedBounce` | @0x148 | @0x140 (moved) |
+
+   These are exactly the ball bounce-time *cache* fields — the v0.15 changelog's
+   "fixed an issue with ball time to ground being cached". `metadata_probe.h`
+   now has an explicit `metadata_trace_field_optional()` allowlist: an absent
+   optional field emits `null` without failing the group, so a typo or a real
+   read error still fails loudly.
+
+Verdict rows from the working run: `natural_hook_status.installed:true`
+(`installed_dynamic_method_entry`), `parity_state.json` reaching
+`tick 422, callbacks 3239, points_done 1, point_winners [0], done:true,
+success:true`, and `quit` flushing a **748471-byte** TimePlot
+(the failed runs wrote 4304-byte stubs).
+
+### v0.15 changelog → parity impact (authoritative triage map)
+
+| v0.15 change | Parity impact |
+|---|---|
+| **Ball position interpolated between frames** so fast balls can still be hit | **Real behaviour change.** Contact/swing-range detection must become a swept/continuous test against the interpolated position. Sim surface: `src/tennis/ball.rs`, `src/tennis/world.rs` (`Ball In Swing Range`, hit resolution). Expect this to be the main v0.15↔v0.14 divergence. |
+| **Ball time-to-ground caching fixed** | **Real behaviour change.** Matches the removal of the three cache fields above. The public `Ball Time To Ground` getter / `TryPredictNthLandingFrom` path is the parity surface; the sim's `src/predict/mod.rs` cache assumption is exactly what v0.15 changed — and the v0.14 landing residual (8/10, curve-on-bounce) may be a symptom of the same caching. |
+| Space opens a searchable node menu | QoL/UI only — **no parity impact** |
+
+### Next (Phase F4+)
+
+```
+python modhost/capture_fixtures.py --home titanium54 --away aia3 --seed 20260907
+python modhost/emit_rust_fixtures.py <run>
+cd aia_comp-sim && cargo test --test tennis_v014_solver_parity -- --nocapture
+```
+then triage each drift row against the table above before touching the sim.
+
+
+

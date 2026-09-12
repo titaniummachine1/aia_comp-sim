@@ -63,4 +63,25 @@ impl VmValue {
             _ => Vec2::ZERO,
         }
     }
+
+    /// NaN-aware equality for trace comparison. IEEE says `NaN != NaN`, but a
+    /// trace comparator must treat two NaNs as *the same value* (both
+    /// interpreters computed the same non-number) — otherwise every graph that
+    /// legitimately propagates NaN reports a false divergence.
+    pub fn same_value(self, other: VmValue) -> bool {
+        match (self, other) {
+            (VmValue::Float(a), VmValue::Float(b)) => nan_eq(a, b),
+            (VmValue::Bool(a), VmValue::Bool(b)) => a == b,
+            (VmValue::Vector(a), VmValue::Vector(b)) => {
+                nan_eq(a.x, b.x) && nan_eq(a.y, b.y) && nan_eq(a.z, b.z)
+            }
+            (VmValue::Null, VmValue::Null) => true,
+            _ => false,
+        }
+    }
+}
+
+/// `a == b`, except two NaNs are considered equal.
+pub fn nan_eq(a: f32, b: f32) -> bool {
+    a == b || (a.is_nan() && b.is_nan())
 }

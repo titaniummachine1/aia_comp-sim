@@ -41,8 +41,8 @@ fn compiler_probe_channels_read_golden_values() {
     assert!(o1_ops < o0_ops, "O1 must fold the const chains (CC.const/CC.gcd)");
     // Pinned cost (transitions primary, size secondary — update deliberately
     // when the bot changes; any silent drift means the optimizer regressed).
-    assert_eq!(file_nodes, 94, "probe size drift");
-    assert_eq!(o0_ops, 91, "O0 transition drift");
+    assert_eq!(file_nodes, 93, "probe size drift");
+    assert_eq!(o0_ops, 90, "O0 transition drift");
     assert_eq!(o1_ops, 80, "O1 transition drift");
 
     // Goldens, ticks 1..=10 (hand-verified; see scripts/run_compiler_probe.py).

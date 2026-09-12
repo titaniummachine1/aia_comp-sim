@@ -153,9 +153,12 @@ pub struct TennisWorld {
     /// Aim model: when true (`AIA_AIM_MODEL=separate`), rally + serve
     /// latches read the pre-gate aim request (`TennisCommand.aim`,
     /// resolved through `Controller <- AutoMove(V32) <- AutoAim`) while
-    /// movement keeps using `move_or_aim`. When false (default), both
-    /// latches read `move_or_aim` (legacy behavior for graphs without an
-    /// aim path and for all pre-change replays).
+    /// movement keeps using `move_or_aim`. DEFAULT false (legacy wire):
+    /// measured 2026-09-11 on the 78-row game set with the current sim,
+    /// separate scored 18/78 vs legacy 24/78 — the native-bot aim path is
+    /// not yet modelled faithfully (AutoAim clamp missing), so legacy stays
+    /// the default until that lands. Compiler bots that split walk/aim via
+    /// t.aim() set AIA_AIM_MODEL=separate.
     separate_aim: bool,
     /// Swing gate: when true (`AIA_SWING_MODEL=hold`), the world holds the
     /// swing through the approach whenever the phase allows (see

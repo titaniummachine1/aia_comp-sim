@@ -1,0 +1,214 @@
+{
+ "B.clamp_hi": {
+  "golden": 1.0,
+  "kind": "float",
+  "policy": false
+ },
+ "B.clamp_in": {
+  "golden": 0.5,
+  "kind": "float",
+  "policy": false
+ },
+ "B.clamp_lo": {
+  "golden": -1.0,
+  "kind": "float",
+  "policy": false
+ },
+ "B.cmp_0": {
+  "golden": 1.0,
+  "kind": "bool",
+  "policy": false
+ },
+ "B.cmp_1": {
+  "golden": 0.0,
+  "kind": "bool",
+  "policy": false
+ },
+ "B.cmp_2": {
+  "golden": 0.0,
+  "kind": "bool",
+  "policy": false
+ },
+ "B.cmp_3": {
+  "golden": 1.0,
+  "kind": "bool",
+  "policy": false
+ },
+ "B.cmp_4": {
+  "golden": 1.0,
+  "kind": "bool",
+  "policy": false
+ },
+ "B.cmp_lt": {
+  "golden": 1.0,
+  "kind": "bool",
+  "policy": false
+ },
+ "B.coerce_b2f": {
+  "kind": "float",
+  "policy": true,
+  "question": "bool->float coercion"
+ },
+ "B.coerce_f2b": {
+  "kind": "bool",
+  "policy": true,
+  "question": "float->bool condition coercion"
+ },
+ "B.div_00": {
+  "kind": "float",
+  "policy": true,
+  "question": "div-by-zero policy (0/0)"
+ },
+ "B.div_n0": {
+  "kind": "float",
+  "policy": true,
+  "question": "div-by-zero policy (-1/0)"
+ },
+ "B.div_p0": {
+  "kind": "float",
+  "policy": true,
+  "question": "div-by-zero policy (1/0)"
+ },
+ "B.hold_b": {
+  "kind": "bool",
+  "policy": true,
+  "question": "ConditionalSetBool unwired-false hold rule"
+ },
+ "B.hold_f": {
+  "kind": "float",
+  "policy": true,
+  "question": "ConditionalSetFloat unwired-false hold rule"
+ },
+ "B.hold_v_1": {
+  "kind": "float",
+  "policy": true,
+  "question": "ConditionalSetVector3 unwired-false hold rule"
+ },
+ "B.hold_v_2": {
+  "kind": "float",
+  "policy": true,
+  "question": "ConditionalSetVector3 unwired-false hold rule"
+ },
+ "B.hold_v_3": {
+  "kind": "float",
+  "policy": true,
+  "question": "ConditionalSetVector3 unwired-false hold rule"
+ },
+ "B.latch_a": {
+  "kind": "float",
+  "policy": true,
+  "question": "variable read/write order"
+ },
+ "B.latch_b": {
+  "kind": "float",
+  "policy": true,
+  "question": "variable initial value"
+ },
+ "B.mod_neg": {
+  "kind": "float",
+  "policy": false
+ },
+ "B.mod_zero": {
+  "kind": "float",
+  "policy": true,
+  "question": "modulo-by-zero policy"
+ },
+ "B.not_chain": {
+  "golden": 1.0,
+  "kind": "bool",
+  "policy": false
+ },
+ "B.null_add": {
+  "kind": "float",
+  "policy": true,
+  "question": "unwired arithmetic input policy"
+ },
+ "B.op_0": {
+  "kind": "float",
+  "policy": false
+ },
+ "B.op_1": {
+  "kind": "float",
+  "policy": false
+ },
+ "B.op_10": {
+  "kind": "float",
+  "policy": false
+ },
+ "B.op_11": {
+  "kind": "float",
+  "policy": false
+ },
+ "B.op_12": {
+  "kind": "float",
+  "policy": false
+ },
+ "B.op_13": {
+  "kind": "float",
+  "policy": false
+ },
+ "B.op_14": {
+  "kind": "float",
+  "policy": false
+ },
+ "B.op_15": {
+  "kind": "float",
+  "policy": false
+ },
+ "B.op_2": {
+  "kind": "float",
+  "policy": false
+ },
+ "B.op_3": {
+  "kind": "float",
+  "policy": false
+ },
+ "B.op_4": {
+  "kind": "float",
+  "policy": false
+ },
+ "B.op_5": {
+  "kind": "float",
+  "policy": false
+ },
+ "B.op_6": {
+  "kind": "float",
+  "policy": false
+ },
+ "B.op_7": {
+  "kind": "float",
+  "policy": false
+ },
+ "B.op_8": {
+  "kind": "float",
+  "policy": false
+ },
+ "B.op_9": {
+  "kind": "float",
+  "policy": false
+ },
+ "B.pow_neg": {
+  "golden": 0.5,
+  "kind": "float",
+  "policy": false
+ },
+ "B.sel_wired": {
+  "kind": "float",
+  "policy": false
+ },
+ "B.vec_1": {
+  "golden": 1.5,
+  "kind": "float",
+  "policy": false
+ },
+ "B.vec_2": {
+  "golden": 2.5,
+  "kind": "float",
+  "policy": false
+ },
+ "B.vec_3": {
+  "golden": 3.5,
+  "kind": "float",
+  "policy": false
+ }
+}

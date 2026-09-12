@@ -12,7 +12,7 @@ mod value;
 #[cfg(test)]
 mod operation_probe_test;
 
-pub use eval::GraphBrain;
+pub use eval::{GraphBrain, VarInit};
 pub use load::{
     index_graph, load_graph, load_team_graph, RawConnection, RawGraph, RawNode, RawPort,
     TeamGraph,

@@ -1,0 +1,3 @@
+{"home":"titanium54","away":"aia3","seed":"1","points":1,"first_server":"home","game_winners":[0],"sim_winners":[0],"sim_games":[0,0],"sim_pts":[1,0],"sim_ticks":221,"parity":"agree-seq"}
+{"home":"titanium54","away":"aia3","seed":"2","points":1,"first_server":"away","game_winners":[0],"sim_winners":[0],"sim_games":[0,0],"sim_pts":[1,0],"sim_ticks":195,"parity":"agree-seq"}
+{"home":"titanium54","away":"aia3","seed":"3","points":1,"first_server":"home","game_winners":[1],"sim_winners":[0],"sim_games":[0,0],"sim_pts":[1,0],"sim_ticks":289,"sim_leader":"home","game_leader":"away","parity":"disagree"}
