@@ -107,6 +107,24 @@ pub fn default_aim_target(attacker: Side) -> Vec2 {
     Vec2::new(attacker.other().sign() * COURT_LENGTH * 0.48, 0.0)
 }
 
+/// `TennisAutoAim`: the game's smart clamp on the aim target — it keeps the
+/// aim inside the legal play area (the opponent's half, inside the singles
+/// sidelines) whether serving or rallying. User-confirmed: the node simply
+/// clamps the Vector3 it is given; nothing has to be fed to the controller.
+///
+/// Applied to the GRAPH's aim *before* the execution scatter/strike, so a wild
+/// aim cannot leave the court while a genuinely mistimed/mis-hit shot can
+/// still land out (the game has Out points).
+pub fn clamp_aim_target(attacker: Side, target: Vec2) -> Vec2 {
+    let dir = attacker.other().sign(); // toward the opponent
+    let half_len = COURT_LENGTH * 0.5;
+    let half_w = COURT_SINGLES_WIDTH * 0.5;
+    Vec2::new(
+        (target.x * dir).clamp(0.5, half_len) * dir,
+        target.y.clamp(-half_w, half_w),
+    )
+}
+
 /// Serve-area depth behind the baseline (game-measured 2026-09-11 with
 /// in-editor debug lines): home server X in [-16.25, -14.0], away mirrored.
 /// The server stays outside the playable area; the boundary is inclusive

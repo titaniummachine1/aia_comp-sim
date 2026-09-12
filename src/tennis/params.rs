@@ -169,6 +169,17 @@ pub const POINT_PAUSE: f32 = 1.15;
 /// Serve-setup settle before the toss launches (game-measured: ball placed at
 /// the server -> strike = 64 ticks; settle 44 + ~20 rise/charge ticks = 64).
 pub const SETUP_SETTLE: f32 = 0.88;
+// --- Hit timing (user-confirmed rule + 146 measured game contacts) ---
+// The game's AutoSwing strikes when the ball reaches the PERFECT boundary
+// (measured contact RacketDist: median 1.33 m, p25 1.17, p75 1.61; only 12%
+// inside 1.0). Tier rule:
+//   first tick inside PERFECT_RADIUS  -> PERFECT
+//   2nd+ tick inside PERFECT_RADIUS   -> LATE
+//   first tick inside STRIKE_RADIUS   -> EARLY (the racket tip)
+//   2nd+ tick inside STRIKE_RADIUS    -> LATE
+/// Auto-contact uses the perfect window (the game never swings at the tip).
+pub const AUTO_STRIKE_RADIUS: f32 = PERFECT_RADIUS;
+
 /// Serve clock: the server must get the serve under way within this window.
 /// On expiry the game **awards the serve to the opponent** (a refusal /
 /// delay-of-game forfeit of the serve for the rest of the game) — simulated by

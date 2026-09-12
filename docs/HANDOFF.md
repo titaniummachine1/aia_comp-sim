@@ -1184,3 +1184,39 @@ Remaining divergence suspects (ranked):
 2. serve aim target inside the box (unmeasured);
 3. hitter decision channels (SwingHeld sim 0.09 vs game 0.54 during rallies);
 4. sim extra serves/faults where the game holds serve.
+
+### 26g. Hit timing: the tier rule, the measured contact distribution, auto-aim
+
+User-confirmed timing semantics (the missing term):
+- within 2.6 m = the whole racket reach; contacting at the tip = EARLY;
+- ball inside a zone for >1 tick and struck on the 2nd+ tick = LATE;
+- first tick inside the PERFECT radius = PERFECT.
+
+Measured (146 game contacts across the 15 sweep exports, derived from
+v44_RacketDist): median contact distance 1.33 m (p25 1.17, p75 1.61); only 12%
+inside 1.0, 62% in 1.0-1.6, 26% over. So the game's bell curve is centred at the
+PERFECT-WINDOW BOUNDARY (AutoSwing hits as soon as the ball reaches it), not at
+zero. The game exposes NO tier channel (v44_AimTier and v49_FatActive are
+constant 0 in the bot's graph), so the tier must be derived from RacketDist.
+
+Implemented:
+- `TennisPlayer.zone_ticks` / `perfect_ticks` track consecutive ticks inside
+  each radius (swept distance under v0.15, point distance under v0.14);
+- `HitTier` (`world.last_hit_tier`) classifies each strike by the rule above
+  (the toss/serve is always PERFECT - struck at the apex);
+- the manager's AUTO-contact now requires the PERFECT window (`window_ok =
+  perfect_ticks >= 1 || an explicit bot swing`), matching the measured contact
+  distance; before, the sim auto-struck on entry to the 2.6 m zone and contacts
+  sat at 0.07-0.6 m ("ball on the racket") vs the game's 1.2-1.4 m;
+- `court::clamp_aim_target` = the `TennisAutoAim` smart clamp (user-confirmed):
+  the graph's aim is forced into the legal play area BEFORE the execution
+  scatter, so a wild aim cannot leave the court while a mistimed shot still
+  can (Out points exist in the game).
+
+Effect on seed 10 (whole-match tick diff): mean|diff| 3.26 -> 2.40; divergence
+horizon 8 -> 16 ticks (~0.33 s), median 1 -> 18, points 0-2 track 30 ticks.
+Suite: lib 176/0/2.
+
+Still open: sim rallies remain ~2x the game length (4058 vs 1928 ticks / 8
+points) - waiting for the perfect window makes the sim connect more reliably,
+so the miss/error side of the game is still missing.

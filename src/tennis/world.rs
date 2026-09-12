@@ -43,6 +43,16 @@ pub enum EndReason {
     SetWon(Side),
 }
 
+/// Hit-timing tier of the last strike (see `params` for the rule; the game
+/// does not expose this channel, so it is derived from the zone tick counts).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum HitTier {
+    None,
+    Perfect,
+    Early,
+    Late,
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct TennisPlayer {
     pub side: Side,
@@ -59,6 +69,10 @@ pub struct TennisPlayer {
     /// sprinting, regenerates while standing, walking is neutral. Feeds the
     /// `Self/Opponent Stamina Pct` inputs; NOT reset at point boundaries.
     pub stamina: f32,
+    /// Consecutive ticks the ball has been inside STRIKE_RADIUS / PERFECT_RADIUS
+    /// of the racket center (hit-timing state; see `params` for the tier rule).
+    pub zone_ticks: u32,
+    pub perfect_ticks: u32,
 }
 
 impl TennisPlayer {
@@ -71,6 +85,8 @@ impl TennisPlayer {
             recover: 0.0,
             last_aim: Vec2::ZERO,
             stamina: 1.0,
+            zone_ticks: 0,
+            perfect_ticks: 0,
         }
     }
 
@@ -158,6 +174,8 @@ pub struct TennisWorld {
     /// still un-bounced) and out-of-arena attribution (position heuristic
     /// is fallback only).
     hit_by: Option<Side>,
+    /// Hit-timing tier of the most recent strike (derived; see [`HitTier`]).
+    pub last_hit_tier: HitTier,
     /// Raw command aims per side ([0]=Home, [1]=Away) — diagnostics for the
     /// aim-semantics investigation (trace only).
     pub last_cmd_aim: [Vec2; 2],
@@ -231,6 +249,7 @@ impl TennisWorld {
             serve_aim_latch: None,
             strike_lock: None,
             hit_by: None,
+            last_hit_tier: HitTier::None,
             last_cmd_aim: [Vec2::ZERO; 2],
             rally_aim_latch: [None; 2],
             separate_aim: std::env::var("AIA_AIM_MODEL").as_deref() == Ok("separate"),
@@ -463,6 +482,25 @@ impl TennisWorld {
                 // Standing still regenerates (measured +0.001/tick).
                 p.stamina = (p.stamina + STAMINA_REGEN).min(1.0);
             }
+            // Hit-timing state: consecutive ticks the ball sits inside each
+            // zone (the tier rule -- first perfect tick = PERFECT, 2nd+ = LATE,
+            // first 2.6-zone tick = EARLY).
+            let racket = p.racket_center();
+            let d_ball = if self.interpolate_ball {
+                point_segment_distance(racket, self.ball_prev, self.ball.pos)
+            } else {
+                self.ball.pos.distance(racket)
+            };
+            p.zone_ticks = if d_ball <= STRIKE_RADIUS {
+                p.zone_ticks + 1
+            } else {
+                0
+            };
+            p.perfect_ticks = if d_ball <= PERFECT_RADIUS {
+                p.perfect_ticks + 1
+            } else {
+                0
+            };
             // Swing charge model: hold builds charge, release swings.
             // `TennisAutoSwing` gate (`AIA_SWING_MODEL=hold`): the game
             // holds the swing through the approach (54% of ticks, 0.6-1.2 s
@@ -510,9 +548,15 @@ impl TennisWorld {
                     || (self.ball.vel.y > 0.0 && self.ball.pos.y >= TOSS_STRIKE_Y)
                     || self.ball.vel.y < 0.0;
                 let striking_phase = self.phase == Phase::Rally || tossing;
+                // The manager's auto-swing strikes only inside the PERFECT
+                // window (measured: game contacts cluster at the perfect
+                // boundary); an explicit bot swing may connect anywhere in the
+                // 2.6 m zone, which the tier rule scores as EARLY/LATE.
+                let window_ok = p.perfect_ticks >= 1 || cmds[i].swing;
                 if striking_phase
                     && !foul_risk
                     && in_toss_window
+                    && window_ok
                     && self.ball_in_strike_range(side)
                 {
                     let q = p.charge;
@@ -574,6 +618,21 @@ impl TennisWorld {
     /// strike (serve-in-flight flags + phase → Rally).
     fn do_strike(&mut self, i: usize, cmd: TennisCommand, q: f32, serving: bool) {
         let side = if i == 0 { Side::Home } else { Side::Away };
+        // Hit-timing tier from the zone tick counts (the serve is a tossed
+        // ball struck at the apex -> always PERFECT).
+        self.last_hit_tier = if serving {
+            HitTier::Perfect
+        } else if self.players[i].perfect_ticks == 1 {
+            HitTier::Perfect
+        } else if self.players[i].perfect_ticks >= 2 || self.players[i].zone_ticks >= 2 {
+            HitTier::Late
+        } else if self.players[i].zone_ticks == 1 {
+            HitTier::Early
+        } else {
+            HitTier::None
+        };
+        self.players[i].zone_ticks = 0;
+        self.players[i].perfect_ticks = 0;
         let shot = resolve_shot_type(cmd.shot_type, &mut self.vm_rng[Self::idx(side)]);
         // --- Anti-stalemate fatigue (recovered v0.12 formulas) ---
         self.rally_hits += 1;
@@ -615,6 +674,10 @@ impl TennisWorld {
                 latched.unwrap_or(fallback)
             }
         };
+        // `TennisAutoAim` smart clamp (user-confirmed): the graph's aim is
+        // forced inside the legal play area BEFORE the execution scatter, so a
+        // wild aim cannot leave the court (a mistimed shot still can).
+        target = court::clamp_aim_target(side, target);
         // Aim scatter: two Unity RNG draws (lateral, then depth) at active
         // fatigue, scaled by the recovered rates and court size.
         if active > 0 {
@@ -1225,6 +1288,44 @@ mod stamina_tests {
         };
         w.step([Some(cmd), None]);
         assert!((w.player(Side::Home).stamina - 1.0).abs() < 1e-6);
+    }
+}
+
+#[cfg(test)]
+mod hit_tier_tests {
+    use super::*;
+
+    /// The tier rule (user-confirmed): first tick in the perfect radius =
+    /// PERFECT, 2nd+ tick in either zone = LATE, first 2.6-zone tick = EARLY.
+    #[test]
+    fn tier_follows_the_zone_tick_rule() {
+        let cmd = TennisCommand {
+            swing: true,
+            ..Default::default()
+        };
+        let cases = [
+            (1u32, 0u32, HitTier::Early),    // first tick in the 2.6 zone
+            (2, 0, HitTier::Late),           // 2nd tick in the 2.6 zone
+            (1, 1, HitTier::Perfect),        // first tick in the perfect zone
+            (3, 2, HitTier::Late),           // 2nd tick in the perfect zone
+        ];
+        for (z26, z10, want) in cases {
+            let mut w = TennisWorld::new(0);
+            w.phase = Phase::Rally;
+            w.players[0].zone_ticks = z26;
+            w.players[0].perfect_ticks = z10;
+            w.do_strike(0, cmd, 0.9, false);
+            assert_eq!(w.last_hit_tier, want, "z26={z26} z10={z10}");
+        }
+    }
+
+    /// The serve is a tossed ball struck at the apex: always PERFECT.
+    #[test]
+    fn serve_strike_is_perfect() {
+        let mut w = TennisWorld::new(0);
+        w.phase = Phase::Toss;
+        w.do_strike(0, TennisCommand::default(), 0.8, true);
+        assert_eq!(w.last_hit_tier, HitTier::Perfect);
     }
 }
 
