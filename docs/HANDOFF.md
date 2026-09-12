@@ -34,8 +34,10 @@ Phase F's status; open decisions at the end). Read it before starting anything.
   **New game-sourced open items:** the game is not memoized per tick
   (`Vector3Split` reads 0 where `Magnitude` holds); same-tick variable reads are
   visible; Bool→Float wires are dropped (no coercion).
-- **`bat` O0≠O1 root-caused to the CSE pass** (`tests/pass_bisect.rs`,
-  `PassManager::o1_prefix`) — CSE flips the aim (x==y). Not disabled yet (§17b).
+- **`bat` O0≠O1 FIXED (§17b)**: `RandomF` was mis-marked `Pure`, so CSE merged its
+  draws (`ConstructVec(r,r,r)`) — now `OpEffect::Write`. `PASS_BISECT=bat` →
+  `all prefixes == O0`. bat's remaining cert divergence = the same world-RNG
+  placeholder as `Pixel_Heart` (`RandomFloat → 0.0`), not an optimizer bug.
 - **Serve-clock refusal modelled (§17c)**: `SERVE_CLOCK = 5.0`; on expiry the
   serve is **awarded to the opponent** for the rest of the game
   (`Score::award_serve`), not re-armed. Lib tests **167 passed / 0 failed**
@@ -583,17 +585,28 @@ on it (HANDOFF §17 finding 1).
 The two remaining ⚠ rows (same-tick var visibility, bool→float wire) are
 game-sourced open items; the sim was NOT changed on their account.
 
-### 17b. `bat` O0≠O1 root-caused to the CSE pass (2026-09-12)
+### 17b. `bat` O0≠O1 — root cause FOUND and FIXED: `RandomF` was CSE'd (2026-09-12)
 
-`tests/pass_bisect.rs` (+ `PassManager::o1_prefix`) runs progressive O1
-prefixes: `ConstFold` and `RelayRemoval` == O0, but **CSE** flips `bat`'s aim
-from `(0.8833, 0.0264)` to `(0.8833, 0.8833)` (x==y — a multi-output/aliasing
-smell), and `Fusion`/`RegAlloc` inherit it. CSE is **not** disabled (one save of
-14; the cost metric is per-tick transitions) — the next step is a focused CSE
-unit test on bat's aim cone.
+`tests/pass_bisect.rs` (+ `PassManager::o1_prefix`) localised the flip to the CSE
+pass. `tests/cse_ir_diff.rs` dumped bat's IR before/after CSE and showed the bug
+outright: CSE had merged the three `RandomF` instructions, turning
+`ConstructVec(RandomF, RandomF, RandomF)` into `ConstructVec(r, r, r)` (the aim's
+components became identical) and dropping two RNG draws.
+
+Root cause: `OpCode::effect()` listed **`RandomF` as `Pure`**. It is not — each
+evaluation draws a new value from the per-tick stream, so two textual `RandomF`s
+are different values. Fixed by classifying `RandomF` as `OpEffect::Write` (it
+advances VM RNG state), which keeps it out of CSE and const-fold. Regression test:
+`cse::tests::does_not_cse_random_f`.
+
+Result: `PASS_BISECT=bat` now reports **`all prefixes == O0`**; lib **168/0**;
+battery PASS. bat's remaining certification divergence is now the *same* single
+cause as `Pixel_Heart` — the reference has no RNG stream (`RandomFloat → 0.0`), a
+world-RNG placeholder (RNG-from-world is shelved) — **not** an optimizer bug.
 
 ```
 PASS_BISECT=bat cargo test --test pass_bisect -- --nocapture
+CSE_DIFF=bat  cargo test --test cse_ir_diff  -- --nocapture
 ```
 
 

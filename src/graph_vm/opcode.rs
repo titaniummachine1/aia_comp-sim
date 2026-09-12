@@ -99,9 +99,16 @@ impl OpCode {
             }
             Eq | Ne | Lt | Gt | Le | Ge | And | Or | Not | Nor | Nand => OpEffect::Pure,
             ConstructVec | SplitVec | AddVec | SubVec | ScaleVec | ScaleAddVec | Normalize
-            | Magnitude | Distance | Dot | Cross | RandomF | Select | Move | Operation
+            | Magnitude | Distance | Dot | Cross | Select | Move | Operation
             | IsNull => OpEffect::Pure,
             LoadApi | LoadVar | Keypress => OpEffect::ReadOnly,
+            // `RandomF` is NOT pure: every evaluation draws a new value from the
+            // per-tick stream, so two textual `RandomF`s are different values and
+            // must not be merged. CSE merging them collapsed bat's
+            // `ConstructVec(RandomF,RandomF,RandomF)` into one draw (the aim's
+            // components became identical) — the `bat` O0!=O1 bisect finding
+            // (HANDOFF 17b). Classified `Write`: it advances VM RNG state.
+            RandomF => OpEffect::Write,
             StoreVar => OpEffect::Write,
             Call | Return => OpEffect::Write,
             EmitController | EmitTennisController | EmitFaceoff | Debug | TimePlot

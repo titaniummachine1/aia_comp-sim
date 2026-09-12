@@ -204,6 +204,22 @@ mod tests {
     }
 
     #[test]
+    fn does_not_cse_random_f() {
+        // Each RandomF draws from the stream; merging them collapses
+        // ConstructVec(RandomF,RandomF,RandomF) into one value (bat aim bug).
+        let mut ir = LoweredIR {
+            instructions: vec![
+                inst(Some(Reg(0)), OpCode::RandomF, &[], "r1"),
+                inst(Some(Reg(1)), OpCode::RandomF, &[], "r2"),
+                inst(Some(Reg(2)), OpCode::RandomF, &[], "r3"),
+            ],
+            ..LoweredIR::new()
+        };
+        Cse.run(&mut ir);
+        assert_eq!(ir.instructions.len(), 3, "RandomF draws must not be merged");
+    }
+
+    #[test]
     fn load_var_cse_is_invalidated_by_store() {
         let mut ir = LoweredIR {
             instructions: vec![
