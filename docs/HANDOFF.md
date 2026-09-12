@@ -897,3 +897,62 @@ Data: `modhost/restart_sweep.jsonl` (game) + `data/tennis/sim_seed_sweep.jsonl`
 (sim), both committed. Reproduce the sim side any time with
 `python scripts/score_distribution.py`.
 
+## 23. Fair tick-by-tick comparison → the serve-setup phase is the first gap (2026-09-12)
+
+`scripts/tick_diff.py` replays the SAME (seed, first server) the game's restart
+sweep used and diffs the graph's `v44_*` TimePlot channels sample-by-sample
+against the sim's `hch` trace — the fair comparison the distributional diff
+cannot give. First run (`--seed 1 --srv 1`, game
+`timeplot_2026-09-12_05-13-22_..._srv1_seed1.json`):
+
+```
+game_n=1923   sim_n=2723   44 shared channels   mean|diff| 10.18
+first-diff: tick 0 for positions/ball, tick 39 for AimX/AimZ/AimZAdj
+```
+
+Side-by-side samples (game/sim) expose **why tick 0 differs** — it is not a
+phase shift (best offset = 0), it is the **serve-setup window**:
+
+| t | `v44_BallX` g/s | `v44_OppX` g/s | `v44_SelfX` g/s |
+|---|---|---|---|
+| 0 | 0.00 / 14.92 | 8.23 / 14.92 | −14.84 / −14.00 |
+| 24 | −14.55 / 14.92 | 8.14 / 14.92 | −14.84 / −14.00 |
+| 100 | −4.17 / −3.05 | 4.65 / 10.03 | ... |
+
+Findings:
+
+1. **The game runs the graph before the ball is placed**: its ball reads `0.00`
+   for ~23 ticks, and the players sit at *spawn* positions (home −14.84, away
+   8.23) — **not** at the serve/receive stances. The sim teleports the server to
+   its serve stance (14.917) with the ball in hand from tick 0.
+   ⇒ the fair comparison needs the sim to start from the game's captured initial
+   state (`trace_initial` / `serve_fixture_context`), not its own stance.
+2. **The serve setup is ~4× longer in the sim**: the game's ball leaves the hand
+   by ~tick 24 (0.5 s); the sim's at ~tick 100 (2 s) — the sim's `0.6 s` settle
+   + toss vs the game's actual. Matches the §20/§22 picture (the sim plays longer
+   points).
+3. **Serve-phase aim already agrees**: `v44_AimX`/`AimZ`/`AimZAdj` match for the
+   first ~39 ticks, then drift — so the stance/serve branch is right; the rally
+   aim is where it leaves.
+
+### 23b. The shot-deviation model has no timing term (the "bell curve" question)
+
+The sim's only aim perturbation is **fatigue scatter**
+(`world.rs::do_strike`): `unity.range(-1,1) * FATIGUE_LATERAL * singles_width *
+active` laterally, `* FATIGUE_DEPTH * court_length * active` in depth. That is a
+**zero-mean uniform** draw; there is no bell curve, and **no early/late contact
+term at all** — so "is the bell centred on the smallest-deviation point?" cannot
+be answered from the sim side.
+
+The game's timing/accuracy deviation lives in its **contact-grading methods**
+(`GradeServeContact`, `GradeRallyContact`, `EvaluateHitAccuracy` — in
+`metadata_probe.h`), which we have **not captured**: the shot fixture feeds
+`ComputeShotVelocity(from, aim, power, shot_type, is_serve)` and has **no contact
+timing input**. So the next fixture is a **contact-grading capture**: vary the
+contact-timing offset, read the graded error, and fit the deviation-vs-timing
+curve (then replace/augment the fatigue-only scatter with it).
+
+**Priority after §23:** (1) make the sim start from the game's captured initial
+state so ticks align from the first meaningful sample; (2) shorten/µ-match the
+serve setup; (3) build the contact-grading fixture.
+
