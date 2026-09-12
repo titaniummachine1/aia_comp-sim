@@ -36,6 +36,11 @@ Phase F's status; open decisions at the end). Read it before starting anything.
   visible; Bool→Float wires are dropped (no coercion).
 - **`bat` O0≠O1 root-caused to the CSE pass** (`tests/pass_bisect.rs`,
   `PassManager::o1_prefix`) — CSE flips the aim (x==y). Not disabled yet (§17b).
+- **Serve-clock refusal modelled (§17c)**: `SERVE_CLOCK = 5.0`; on expiry the
+  serve is **awarded to the opponent** for the rest of the game
+  (`Score::award_serve`), not re-armed. Lib tests **167 passed / 0 failed**
+  (was 164). Exact `serveDeadlineTick` window + scope (game vs set) still to be
+  read from the probe (`modhost/read_serve_deadline.py`).
 - v0.15f `parity_state.json` → `tick 422 / callbacks 3239 / points_done 1 /
   done:true / success:true`; quit flushed a **748471-byte** TimePlot.
 - Exact outcome parity **25/78 = 32.1%** — still brittle; the distributional
@@ -592,6 +597,43 @@ PASS_BISECT=bat cargo test --test pass_bisect -- --nocapture
 ```
 
 
+
+
+### 17c. Serve-clock refusal — 5 s, then the serve is awarded to the opponent (2026-09-12)
+
+User-observed game rule: after the server idles, a **5 s countdown**
+(`<ServeCountdownDisplay>`) runs; when it hits 0 the **opponent is awarded the
+serve** (no point is scored). The sim previously had `SERVE_CLOCK = 15.0`
+(unmeasured, from the first commit) and on expiry just **re-armed the same
+server** — the rule was missing.
+
+Implemented (`aia_comp-sim`):
+- `params::SERVE_CLOCK = 5.0` (was 15.0), documented as the observed countdown.
+- `Score::award_serve(side)` + `Score.serve_override`: the awarded serve lasts
+  the rest of the **current game**; `award_point` clears the override so rotation
+  resumes at the next game. `Score.serve_forfeits` counts them.
+- `TennisWorld.serve_clock_t` spans ServeSetup + Toss and is **not** reset by a
+  recatch re-toss; `on_serve_deadline()` awards the serve to the opponent and
+  re-runs `setup_serve()`. The old `phase_t >= SERVE_CLOCK → setup_serve` re-arm
+  is gone.
+- Tests: `score::tests::serve_clock_forfeit_awards_the_serve_to_the_opponent`,
+  `world::serve_clock_tests::{serve_clock_expiry_awards_the_serve_to_the_opponent,
+  serve_clock_survives_a_recatch}`. Lib **167 passed / 0 failed**; battery PASS;
+  cert still 12/14.
+
+The sim's serve is automatic (auto-toss + `TennisAutoSwing` auto-strike), so the
+clock does not fire in normal play — it fires only if the serve phase stalls,
+which is the game's refusal case.
+
+**Still to pin from the game** (the probe already lists these in
+`metadata_trace_manager_fields`, `paritymod-src/metadata_probe.h`):
+`serveDeadlineTick` (is the window 5 s, or a longer deadline with a 5 s
+display?), `<ServeCountdownDisplay>`, `lastServeCountdownShown`, and whether the
+awarded serve lasts the game or the whole set. Reader added:
+`modhost/read_serve_deadline.py <probe-startup.jsonl>` (works once the capture
+contains `manager_fields` rows).
+
+## 18. v0.15f re-target — mod VERIFIED end-to-end (2026-09-12)
 
 
 Goal: mod the latest free release the same way v0.14 was modded, then start

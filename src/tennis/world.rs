@@ -110,6 +110,11 @@ pub struct TennisWorld {
     pub serve_taped: bool,
     /// The serve's first bounce happened (receiver may now volley).
     pub serve_bounced: bool,
+    /// Seconds into the current serve phase (ServeSetup + Toss, **not** reset by
+    /// a recatch re-toss). When it reaches [`params::SERVE_CLOCK`] the serve is
+    /// forfeited to the opponent (game `serveDeadlineTick` /
+    /// `<ServeCountdownDisplay>`).
+    pub serve_clock_t: f32,
     pub players: [TennisPlayer; 2], // [Home, Away]
     pub flight: FlightModel,
     pub stock: [StockBehavior; 2],
@@ -194,6 +199,7 @@ impl TennisWorld {
             serve_in_flight: false,
             serve_taped: false,
             serve_bounced: false,
+            serve_clock_t: 0.0,
             players: [TennisPlayer::new(Side::Home), TennisPlayer::new(Side::Away)],
             flight: FlightModel,
             stock: [StockBehavior::Returner; 2],
@@ -326,6 +332,16 @@ impl TennisWorld {
         self.tick += 1;
         self.sim_time += FIXED_DT;
         self.phase_t += FIXED_DT;
+
+        // Serve clock (`serveDeadlineTick`). Runs across ServeSetup + Toss and
+        // is NOT reset by a recatch re-toss, so a server that never gets the
+        // serve away forfeits it to the opponent when it expires.
+        if matches!(self.phase, Phase::ServeSetup | Phase::Toss) {
+            self.serve_clock_t += FIXED_DT;
+            if self.serve_clock_t >= SERVE_CLOCK {
+                self.on_serve_deadline();
+            }
+        }
 
         let cmds = [
             commands[0].unwrap_or_else(|| self.stock_command(Side::Home)),
@@ -611,6 +627,17 @@ impl TennisWorld {
         );
         self.phase = Phase::ServeSetup;
         self.phase_t = 0.0;
+        self.serve_clock_t = 0.0;
+    }
+
+    /// Serve-clock expiry: the game awards the serve to the opponent
+    /// (`serveDeadlineTick` / `<ServeCountdownDisplay>` reaching 0). No point
+    /// is scored — only the serve changes hands, for the rest of the game
+    /// (`Score::award_serve` clears the override when the game ends).
+    fn on_serve_deadline(&mut self) {
+        let forfeiter = self.score.server();
+        self.score.award_serve(forfeiter.other());
+        self.setup_serve();
     }
 
     fn step_serve_setup(&mut self, cmds: &[TennisCommand; 2]) {
@@ -676,11 +703,8 @@ impl TennisWorld {
             return;
         }
         // Ball hanging in the strike window: server may swing (handled by
-        // on_swing_release via the Toss phase). Serve clock timeout → re-serve.
-        if self.phase_t >= SERVE_CLOCK {
-            let _ = server;
-            self.setup_serve();
-        }
+        // on_swing_release via the Toss phase). The serve clock is handled
+        // centrally in `step` (it must survive recatches).
     }
 
     fn step_flight(&mut self, _cmds: &[TennisCommand; 2]) {
@@ -934,3 +958,35 @@ fn resolve_shot_type(value: f32, rng: &mut SplitMix64) -> ShotType {
         }
     }
 }
+#[cfg(test)]
+mod serve_clock_tests {
+    use super::*;
+
+    /// The serve clock is a refusal forfeit: when it expires the opponent is
+    /// awarded the serve (no point scored), and the new server's clock restarts.
+    #[test]
+    fn serve_clock_expiry_awards_the_serve_to_the_opponent() {
+        let mut w = TennisWorld::new(0);
+        let before = w.score.server();
+        w.phase = Phase::ServeSetup;
+        w.serve_clock_t = SERVE_CLOCK; // deadline already reached
+        w.step([None, None]);
+        assert_eq!(w.score.server(), before.other());
+        assert_eq!(w.score.serve_forfeits[before as usize], 1);
+        assert_eq!(w.serve_clock_t, 0.0, "the new server's clock restarts");
+    }
+
+    /// The clock spans the whole serve: a recatch re-toss must not clear it.
+    #[test]
+    fn serve_clock_survives_a_recatch() {
+        let mut w = TennisWorld::new(0);
+        w.phase = Phase::Toss;
+        w.serve_clock_t = 1.0;
+        w.toss();
+        assert!(
+            w.serve_clock_t >= 1.0,
+            "re-toss must not clear the serve clock"
+        );
+    }
+}
+

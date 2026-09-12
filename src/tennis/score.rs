@@ -19,6 +19,14 @@ pub struct Score {
     pub sets: [u32; 2],
     /// 0 = home, 1 = away. Drawn or decided from the seed.
     pub first_server: usize,
+    /// Serve-clock refusal: when set, this side serves the current game
+    /// instead of the rotation (`award_serve`), and normal rotation resumes
+    /// when the game ends. Mirrors the game's `serveDeadlineTick` expiry
+    /// (the 5 s `ServeCountdownDisplay` runs out → the opponent is awarded
+    /// the serve).
+    pub serve_override: Option<usize>,
+    /// How many times each side lost the serve to the clock.
+    pub serve_forfeits: [u32; 2],
     /// Serve number within the current point (1st/2nd).
     pub serve_number: u32,
     /// Lifetime counters (sensors expose these).
@@ -37,6 +45,8 @@ impl Score {
             games: [0, 0],
             sets: [0, 0],
             first_server,
+            serve_override: None,
+            serve_forfeits: [0; 2],
             serve_number: 1,
             aces: [0; 2],
             faults: [0; 2],
@@ -47,14 +57,27 @@ impl Score {
         }
     }
 
-    /// Server of the current point: rotates every completed game.
+    /// Server of the current point: the refusal override when set, else the
+    /// every-game rotation `(first_server + games_total) % 2`.
     pub fn server(&self) -> Side {
+        if let Some(i) = self.serve_override {
+            return if i == 0 { Side::Home } else { Side::Away };
+        }
         let games_total = (self.games[0] + self.games[1]) as usize;
         if (self.first_server + games_total) % 2 == 0 {
             Side::Home
         } else {
             Side::Away
         }
+    }
+
+    /// Award the serve to `side` for the rest of the current game (serve-clock
+    /// refusal). Rotation returns when the game ends (`award_point` clears the
+    /// override). Does not move the score — only who serves.
+    pub fn award_serve(&mut self, side: Side) {
+        self.serve_override = Some(side as usize);
+        self.serve_forfeits[side.other() as usize] += 1;
+        self.serve_number = 1;
     }
 
     /// Receiver of the current point.
@@ -84,6 +107,8 @@ impl Score {
                 self.games = [0, 0];
             }
             self.points = [0, 0];
+            // A refusal-awarded serve lasts only the current game.
+            self.serve_override = None;
             return game_won;
         }
         false
@@ -222,6 +247,19 @@ mod tests {
         s.award_point(Side::Home);
         s.award_point(Side::Home);
         assert!(s.is_break_point());
+    }
+
+    #[test]
+    fn serve_clock_forfeit_awards_the_serve_to_the_opponent() {
+        let mut s = Score::new(0);
+        assert_eq!(s.server(), Side::Home);
+        s.award_serve(Side::Away);
+        assert_eq!(s.server(), Side::Away);
+        assert_eq!(s.serve_override, Some(1));
+        assert_eq!(s.serve_forfeits, [1, 0]);
+        // The award lasts only the current game; rotation resumes after it.
+        while !s.award_point(Side::Home) {}
+        assert_eq!(s.serve_override, None);
     }
 
     #[test]

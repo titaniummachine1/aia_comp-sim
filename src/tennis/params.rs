@@ -147,8 +147,18 @@ pub fn fatigued_charge(q: f32, active: i32) -> f32 {
 // --- Clocks ---
 /// Between-point hold before the next serve setup (v0.12 point_pause).
 pub const POINT_PAUSE: f32 = 1.15;
-/// Serve clock: server must toss within this window (seconds).
-pub const SERVE_CLOCK: f32 = 15.0;
+/// Serve clock: the server must get the serve under way within this window.
+/// On expiry the game **awards the serve to the opponent** (a refusal /
+/// delay-of-game forfeit of the serve for the rest of the game) — simulated by
+/// `Score::award_serve` in `TennisWorld::on_serve_deadline`.
+///
+/// Value: the game shows a 5 s `<ServeCountdownDisplay>` before the switch, so
+/// the visible countdown is 5 s. Whether the internal `serveDeadlineTick` starts
+/// 5 s or (say) 15 s before expiry is still unverified — read the field from the
+/// probe (`metadata_probe.h` already lists `serveDeadlineTick`) before pinning
+/// more. Scope (this game vs the whole set) is likewise unconfirmed; the sim
+/// models **this game** (rotation resumes when the game ends).
+pub const SERVE_CLOCK: f32 = 5.0;
 
 #[cfg(test)]
 mod measured_constants_tests {
@@ -223,7 +233,7 @@ mod measured_constants_tests {
         assert_eq!(GRAVITY, 28.0);
         assert_eq!(MAX_SPEED, 46.0);
         assert!((POINT_PAUSE - 1.15).abs() < 1e-6);
-        assert_eq!(SERVE_CLOCK, 15.0);
+        assert_eq!(SERVE_CLOCK, 5.0);
     }
 }
 
