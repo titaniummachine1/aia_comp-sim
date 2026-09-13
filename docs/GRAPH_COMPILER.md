@@ -27,14 +27,19 @@ supports nesting (unverified — test next).
 
 ## 2. Memory model
 
-- **RAM**: every source variable → one named variable (Set/Get pair),
-  assigned by the compiler. Previous-tick registers are free (latches).
-- **Arrays**: compile-time pool packed into Vector3 variables via
-  mixed-radix: value_i = Mod(Floor(cell / base^k), base) with base ≤ 2^8
-  per component (float32 exact to 2^24 → 3 components ≈ 16.7M capacity).
-  Address = base_slot + stride·i computed in arithmetic; read = decode,
-  write = re-encode + StoreVar. A write must read-modify-write the packed
-  vector (one GetVariable + arithmetic + one StoreVar).
+- **RAM**: a module-level source variable the bot WRITES becomes one named
+  variable (Set/Get pair); one it only reads inlines as a constant. Writes
+  must start at 0. Previous-tick registers are free (latches).
+- **Arrays** (as built, 2026-09-12 — the mixed-radix sketch below was
+  superseded): compile-time pool packed 3 float cells per Vector3 variable
+  (cells `[3k, 3k+1, 3k+2]` live in components x/y/z of `name_vk`); static
+  writes to the same vector merge into one read-modify-write per tick;
+  static reads split the component out; dynamic reads build a select-chain
+  (`acc = cell0; select(idx==k, cell_k, acc)`, miss => cell0). Writes need
+  static indices; reads may be dynamic. Plain-Python tables lower to this.
+  (Superseded sketch: mixed-radix `Mod(Floor(cell / base^k), base)` coding
+  with arithmetic address decode — never implemented; the packed-vector
+  form won on node cost.)
 - **Allocator (dynamic growth emulation)**: preallocated K-cell pool +
   free-list head (itself a packed variable). alloc/pop/push = a few
   arithmetic ops via Function calls. Indistinguishable from dynamic memory
@@ -43,13 +48,14 @@ supports nesting (unverified — test next).
 
 ## 3. Control flow
 
-| Source construct | Compilation |
+| Source construct | Compilation (as built, 2026-09-12) |
 |---|---|
-| `if/else` | `Select` nodes (both arms evaluated per tick — cheap, no divergence) |
-| `while` | state machine across ticks: condition latched; loop body runs one iteration per tick; unrolled depth 1 |
-| `for i in 0..N` | counter variable + state machine (or fully unrolled if N small and tick budget allows) |
-| function call | `Function` node instance (4 args, 1 return); per-call-site instantiation by the compiler (no runtime stack) |
-| recursion | cross-tick latch emulation only; within-tick = hard error at compile time (until Function nesting is verified) |
+| `if/else` | typed `Select` (float/bool/vector -> matching ConditionalSet node; both arms evaluate per tick) |
+| `while cond` | unrolled to 512 trips + `!!while_overflow` canary (burns the cap every tick — prefer latches for long loops) |
+| `for i in range(literal)` | unrolled (cap 16384 trips; `len(table)` counts as literal); break/continue via select-gating |
+| function call | inlined at call sites (any arity, defaults; recursion inlines to depth 128 + canary) — no `Function` nodes emitted |
+| recursion | inline to depth 128 (matches sim Function-nesting cap); over-budget levels wire 0.0 + canary, never silent |
+| tables | `cells = [...]` constants (static reads inline free, dynamic reads select-chain); module lists the bot writes become packed-Vector3 RAM |
 
 ## 4. Architecture
 
