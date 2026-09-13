@@ -105,3 +105,30 @@ supports nesting (unverified — test next).
 3. Verify the SAME graph loads and behaves in the game (spawn vs stock).
 4. Then extend toward titanium-style behavior (intercept ladder) expressed
    as source code — the usability test that matters.
+
+## 7. Modifier encoding: dropdowns are matched on TEXT, not on index
+
+Some node kinds store their dropdown selection as the Unity **option text** — the
+vendor marks them `DROPDOWN_MODIFIER_AS_LABEL`. Every tennis sensor is in that
+set: `TennisGetBool`, `TennisGetFloat`, `TennisGetVector3`, `TennisGetTransform`,
+`TennisAutoSwing`.
+
+For those kinds the emitted `modifier` must be the exact label (`"Ball Position"`,
+`"Prefer Charge"`). A numeric index names no option at all, so the gate holds its
+default and the sensor reads **dead for the whole match** — which is how a bot
+that swept the simulator could not touch the ball in the real game. The emitter
+now refuses to write one (`graphc-rs`: `tennis_get ... has no Unity label`).
+
+| Node kind | Modifier encoding |
+|---|---|
+| `TennisGetBool` / `TennisGetFloat` / `TennisGetVector3` / `TennisGetTransform` / `TennisAutoSwing` | Unity option **text** (required) |
+| `Operation`, `CompareFloats`, ... | operator id |
+| `Vector3Split` | component index |
+| `RelativePosition` | mode label |
+| `SetVariable` / `GetVariable` | variable name |
+
+The sim enforces the same rule (`graph::dropdowns::is_dead_label_modifier`), so an
+index-modifier graph reads dead there too instead of being silently upgraded to
+live data.
+
+Full write-up and evidence: [`TENNIS_MODIFIER_ENCODING.md`](TENNIS_MODIFIER_ENCODING.md).

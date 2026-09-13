@@ -74,11 +74,42 @@ impl ApiSlotTable {
             spec.version,
             crate::mode::GameVersion::TennisV014 | crate::mode::GameVersion::TennisV015
         ) {
-            assert!(
-                crate::graph::dropdowns::tennis_v014_admits(label),
-                "label {label:?} is not admitted by the Tennis v0.14/v0.15 runtime capture \
-                 (partial ABI — pin it in a capture or load with TennisV012)"
-            );
+            if !crate::graph::dropdowns::tennis_v014_admits(label) {
+                // Two different situations, two different truths:
+                //
+                // (a) The modifier is a bare dropdown *index* (`"0"`). Unity
+                //     matches these nodes on option **text**, so no option
+                //     matches, the gate keeps its default and the sensor is dead
+                //     in the game for the whole match. Mirror it: a dead slot
+                //     (UNKNOWN_ID) is faithfulness, not a shortcut. This is the
+                //     v57 "cannot hit the ball once" bug, reproduced.
+                //
+                // (b) The modifier is real Unity option text the runtime capture
+                //     does not pin. The game reads it **live**, so a dead slot
+                //     would be a sim artifact that makes a bot look worse than
+                //     it is — and this sim's sensor catalog is builder-ordered
+                //     (`data.DROPDOWN_OPTIONS`), so guessing a runtime index
+                //     would be exactly the phantom-entry bug class. Refuse
+                //     loudly instead: pin the label in a capture, or load with
+                //     TennisV012 (full builder-order catalog).
+                if !crate::graph::dropdowns::is_dropdown_index(label) {
+                    panic!(
+                        "label {label:?} is not admitted by the Tennis v0.14/v0.15 runtime capture \
+                         (partial ABI - pin it in a capture or load with TennisV012)"
+                    );
+                }
+                eprintln!(
+                    "graph VM: tennis node modifier {label:?} is a dropdown index; Unity matches \
+                     option text, so the game reads this sensor dead - mirroring that"
+                );
+                let dead_idx = self.labels.len();
+                self.labels.push(label.to_string());
+                self.kinds.push(kind);
+                self.dense_ids.push(crate::api::UNKNOWN_ID);
+                let dead_slot = ApiSlot::new((dead_idx + 1) as u16).expect("api slot");
+                self.label_to_slot.insert(key, dead_slot);
+                return dead_slot;
+            }
         }
         let dense = match (spec.mode, kind) {
             (crate::mode::GameMode::Soccer, ApiKind::Bool) => {
@@ -2223,6 +2254,59 @@ mod tests {
         assert!(
             take_recursion_limit_hit(),
             "2000-deep chain must trip the depth guard loudly"
+        );
+    }
+
+    /// The v57 bug class at the lowest level, over the shipped ABI.
+    ///
+    /// (a) A numeric dropdown modifier on a tennis sensor is a **dead** sensor
+    ///     in the game (Unity matches option text), so the slot must intern to
+    ///     `UNKNOWN_ID` and the VM must read `Null` — never a live ball.
+    /// (b) A real Unity option the runtime capture does not pin reads **live**
+    ///     in the game; the sim cannot model it (its catalog is builder-ordered),
+    ///     so it must refuse loudly instead of being quietly downgraded to dead.
+    ///     Reporting a live sensor as dead would make a bot look worse than it
+    ///     is — the same class of lie as the original bug, inverted.
+    #[test]
+    fn numeric_tennis_modifier_interns_dead_and_unpinned_label_refuses() {
+        let spec = crate::mode::GameSpec {
+            mode: crate::mode::GameMode::Tennis,
+            version: crate::mode::GameVersion::TennisV015,
+            variant: crate::mode::GameVariant::Standard,
+        };
+        let mut apis = ApiSlotTable {
+            mode: Some(spec),
+            labels: Vec::new(),
+            kinds: Vec::new(),
+            dense_ids: Vec::new(),
+            label_to_slot: HashMap::new(),
+        };
+
+        // (a) `"0"` is a dropdown index, not option text.
+        let dead = apis.intern("0", ApiKind::Vector3);
+        assert_eq!(apis.label(dead), "0");
+        assert_eq!(
+            apis.dense_id(dead),
+            crate::api::UNKNOWN_ID,
+            "an index modifier must map to the dead sensor id"
+        );
+        let again = apis.intern("0", ApiKind::Vector3);
+        assert_eq!(again.get(), dead.get(), "dead slots are memoised");
+        assert_eq!(apis.labels.len(), 1, "re-interning must not grow the table");
+
+        // (b) Unpinned *text* is not something the sim is allowed to fake.
+        let caught = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            apis.intern("Ball Speed", ApiKind::Float)
+        }))
+        .expect_err("a live-but-unpinned label must refuse loudly");
+        let msg = caught
+            .downcast_ref::<String>()
+            .cloned()
+            .or_else(|| caught.downcast_ref::<&str>().map(|s| (*s).to_string()))
+            .unwrap_or_default();
+        assert!(
+            msg.contains("not admitted"),
+            "panic must name the admission boundary, got: {msg}"
         );
     }
 }

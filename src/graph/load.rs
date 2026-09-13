@@ -309,7 +309,17 @@ fn normalize_modifier_for(
         other => other.to_string(),
     };
     match version {
-        None => dropdowns::resolve(node_id, &raw).to_string(),
+        None => {
+            // Version-unknown load: a numeric modifier on a label-matched
+            // dropdown is dead in the game under every shipped version, so it
+            // must stay dead here too — the tolerant `resolve` would map `"0"`
+            // to `"Ball Position"` and hand the VM live ball data.
+            if dropdowns::is_dead_label_modifier(node_id, &raw) {
+                raw
+            } else {
+                dropdowns::resolve(node_id, &raw).to_string()
+            }
+        }
         Some(v) => dropdowns::resolve_for_version(v, node_id, &raw),
     }
 }

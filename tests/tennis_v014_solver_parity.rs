@@ -131,7 +131,7 @@ fn replay(dir: &str) -> (usize, usize, f32, String, Vec<String>) {
             within += 1;
         } else if is_fallback {
             within += 1; // excluded from the gate: world-state dependent direction
-        } else if mismatches.len() < 10 {
+        } else if mismatches.len() < 40 {
             mismatches.push(format!(
                 "{} arg={:?} from=({:.1},{:.1},{:.1}) aim=({:.1},{:.1},{:.1}) q={power}: rust=({:.3},{:.3},{:.3}) game=({:.3},{:.3},{:.3}) err={:.3}",
                 case["case_id"].as_str().unwrap_or("?"),
@@ -153,6 +153,11 @@ fn v014_compute_shot_velocity_matches_the_game() {
     println!(
         "v0.14 shot solver parity: {within}/{total} within 0.25 m/s, max_err={max_err:.4} m/s\nworst: {worst}"
     );
+    // Always surface the mismatches (not only on failure): the known residual is
+    // the net-lip profile, and printing it keeps the numbers auditable.
+    if !mismatches.is_empty() {
+        println!("mismatches ({}):\n{}", mismatches.len(), mismatches.join("\n"));
+    }
     assert!(
         within as f32 / total as f32 >= 0.9,
         "solver parity regressed: only {within}/{total} within tolerance\n{}",

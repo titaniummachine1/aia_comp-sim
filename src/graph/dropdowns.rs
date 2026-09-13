@@ -436,14 +436,18 @@ pub mod tennis_v014 {
 
 /// Resolve a modifier for a specific game version.
 ///
+/// - **Label-matched nodes** (`label_matched`: `TennisGet*` / `TennisAutoSwing`)
+///   keep their modifier verbatim when it is a bare index. Unity serializes
+///   those dropdowns as **option text** and matches on it, so `"0"` names no
+///   option at all — the gate holds its default and the sensor is dead. That is
+///   the game's behaviour, and the sim reproduces it rather than helpfully
+///   guessing the intended label.
 /// - `TennisV012` (builder order): index → label via the full tables.
-/// - `TennisV014` (runtime order): the JSON index is interpreted against the
-///   v0.12 builder order (that is what builders write), the label is bridged
-///   through [`tennis_v014::alias`], and admitted only if the v0.14 capture
-///   pins it — otherwise the modifier is rejected (returned as-is is NOT an
-///   option: silent index confusion is the phantom-entry bug class).
-///   Callers treating an unchanged modifier as "unresolved" must handle this
-///   via [`tennis_v014::is_admitted`].
+/// - `TennisV014`/`TennisV015` (runtime order): a *label* modifier is bridged
+///   through [`tennis_v014::alias`] and admitted only if the v0.14 capture pins
+///   it — otherwise the modifier is rejected (returned as-is; silent index
+///   confusion is the phantom-entry bug class). Callers treating an unchanged
+///   modifier as "unresolved" must handle this via [`tennis_v014::is_admitted`].
 /// - `SoccerV05`: current soccer tables.
 pub fn resolve_for_version(
     version: crate::mode::GameVersion,
@@ -451,6 +455,17 @@ pub fn resolve_for_version(
     modifier: &str,
 ) -> String {
     use crate::mode::GameVersion;
+    // Unity matches the option **text** on these nodes — the builder marks them
+    // `DROPDOWN_MODIFIER_AS_LABEL` and every game-authored save carries labels
+    // (`modifier = "Ball Position"`), never an index. A numeric modifier
+    // therefore matches no option: the gate keeps its default and the sensor
+    // reads dead. Leave it unresolved on purpose. Bridging the index to a label
+    // (the old behaviour) handed the VM live ball data the game never produces,
+    // which is exactly how a bot that cannot touch the ball in-game swept the
+    // simulator.
+    if is_dead_label_modifier(node_id, modifier) {
+        return modifier.to_string();
+    }
     let resolved = resolve(node_id, modifier);
     match version {
         GameVersion::SoccerV05 | GameVersion::TennisV012 => resolved.to_string(),
@@ -459,6 +474,40 @@ pub fn resolve_for_version(
             aliased.to_string()
         }
     }
+}
+
+/// Node ids whose Unity dropdown serializes as **option text**, not an index
+/// (AIGamePyLibrary `DROPDOWN_MODIFIER_AS_LABEL`). These are the nodes where a
+/// numeric modifier is a *dead sensor*, not a shorthand.
+pub fn label_matched(node_id: &str) -> bool {
+    matches!(
+        node_id,
+        "TennisGetBool"
+            | "TennisGetFloat"
+            | "TennisGetTransform"
+            | "TennisGetVector3"
+            | "TennisAutoSwing"
+    )
+}
+
+/// True when the modifier is a bare dropdown index (`"0"`, `"27"`, …).
+/// Non-numeric text (a label, or a legacy alias) is not one.
+/// True when the modifier is a bare dropdown index (`"0"`, `"27"`, ...).
+/// Non-numeric text (a label, or a legacy alias) is not one.
+pub fn is_dropdown_index(modifier: &str) -> bool {
+    !modifier.is_empty() && modifier.parse::<usize>().is_ok()
+}
+
+/// True when `modifier` names a dropdown option by **index** on a node whose
+/// dropdown is serialized as **option text** — i.e. the modifier the game can
+/// never match, so the gate holds its default and the sensor reads dead.
+///
+/// Single source of truth for that rule: [`resolve_for_version`] uses it to
+/// refuse the index→label upgrade, and `graph::load` uses it on the
+/// version-unknown path so no load route can silently resurrect live ball data
+/// the game never produces.
+pub fn is_dead_label_modifier(node_id: &str, modifier: &str) -> bool {
+    label_matched(node_id) && is_dropdown_index(modifier)
 }
 
 /// True when a resolved tennis label is admitted under the v0.14 runtime
@@ -778,5 +827,142 @@ mod relative_pos_tests {
     #[should_panic(expected = "unknown Operation modifier")]
     fn unknown_operation_modifier_panics() {
         let _ = OperationKind::from_modifier("nope");
+    }
+}
+
+/// Regression tests for the label-vs-index bug class documented in
+/// `docs/TENNIS_MODIFIER_ENCODING.md`.
+///
+/// A `graphc` build once wrote `modifier = "0"` for `TennisGet*`; Unity matches
+/// those dropdowns on **option text**, so the sensor was dead in-game while the
+/// sim's tolerant resolver mapped `"0"` -> `"Ball Position"` and let the bot
+/// sweep the sim. These tests pin both halves: the game's rule, and the sim's
+/// refusal to paper over it.
+#[cfg(test)]
+mod modifier_encoding_tests {
+    use super::*;
+    use crate::mode::GameVersion;
+
+    /// The strict set is exactly the vendor's `DROPDOWN_MODIFIER_AS_LABEL`
+    /// (`AIGamePyLibrary/data.py`). Drift here either resurrects the
+    /// phantom-entry bug or kills a working sensor.
+    #[test]
+    fn label_matched_is_the_vendor_label_modifier_set() {
+        for k in [
+            "TennisGetBool",
+            "TennisGetFloat",
+            "TennisGetVector3",
+            "TennisGetTransform",
+            "TennisAutoSwing",
+        ] {
+            assert!(label_matched(k), "{k} is DROPDOWN_MODIFIER_AS_LABEL");
+        }
+        // Non-dropdown nodes keep literal modifiers, so an index there is legal.
+        for k in [
+            "Vector3Split",
+            "Operation",
+            "RelativePosition",
+            "TennisController",
+            "SoccerGetVector3",
+        ] {
+            assert!(!label_matched(k), "{k} is not a label-matched dropdown");
+        }
+    }
+
+    /// The bug, as a test: an index modifier on a tennis sensor must stay dead
+    /// on every version. `"0"` names no Unity option, so it can never be
+    /// upgraded to `"Ball Position"` (v0.14/v0.15) nor read through the v0.12
+    /// builder-order tables (`resolve` would otherwise map it — that tolerance
+    /// is what hid the bug).
+    #[test]
+    fn numeric_modifier_on_label_matched_sensor_is_dead() {
+        let versions = [
+            GameVersion::TennisV012,
+            GameVersion::TennisV014,
+            GameVersion::TennisV015,
+        ];
+        for version in versions {
+            for node in [
+                "TennisGetBool",
+                "TennisGetFloat",
+                "TennisGetVector3",
+                "TennisGetTransform",
+                "TennisAutoSwing",
+            ] {
+                let got = resolve_for_version(version, node, "0");
+                assert_eq!(got, "0", "{node} @ {version:?}: index must not resolve");
+                assert!(
+                    !tennis_v014_admits(&got),
+                    "{node} @ {version:?}: a dead modifier must not be admitted"
+                );
+            }
+        }
+    }
+
+    /// The game-correct encoding still works: Unity option text passes through,
+    /// with the four documented v0.12 -> v0.14 label aliases bridged.
+    #[test]
+    fn unity_label_modifier_resolves_and_is_admitted() {
+        for version in [GameVersion::TennisV012, GameVersion::TennisV015] {
+            assert_eq!(
+                resolve_for_version(version, "TennisGetVector3", "Ball Position"),
+                "Ball Position"
+            );
+        }
+        assert!(tennis_v014_admits("Ball Position"));
+        // `TennisAutoSwing` is a mode label, not a sensor: still verbatim.
+        assert_eq!(
+            resolve_for_version(GameVersion::TennisV015, "TennisAutoSwing", "Prefer Charge"),
+            "Prefer Charge"
+        );
+        // Alias bridging: v0.12 spelling -> v0.14 runtime spelling.
+        assert_eq!(
+            resolve_for_version(
+                GameVersion::TennisV015,
+                "TennisGetFloat",
+                "Time Ball To Ground"
+            ),
+            "Ball Time To Ground"
+        );
+        assert!(tennis_v014_admits("Ball Time To Ground"));
+        // A label the v0.14 capture does not pin (`Center Of Half` is a v0.12
+        // option with no pinned runtime position) passes through unchanged; the
+        // lowerer is what turns that into a dead sensor.
+        assert_eq!(
+            resolve_for_version(
+                GameVersion::TennisV015,
+                "TennisGetVector3",
+                "Center Of Half"
+            ),
+            "Center Of Half"
+        );
+        assert!(!tennis_v014_admits("Center Of Half"));
+    }
+
+    /// Numeric modifiers survive untouched on nodes that are *not* label-as-
+    /// modifier (`Operation` op ids, port names, `Vector3Split`), so the fix
+    /// cannot have broken ordinary graph encoding.
+    #[test]
+    fn numeric_modifier_on_ordinary_node_is_untouched() {
+        for version in [
+            GameVersion::TennisV012,
+            GameVersion::TennisV014,
+            GameVersion::TennisV015,
+        ] {
+            assert_eq!(resolve_for_version(version, "Vector3Split", "2"), "2");
+            assert_eq!(resolve_for_version(version, "Operation", "10"), "10");
+        }
+    }
+
+    /// Truth table for the shared predicate used by both `resolve_for_version`
+    /// and the version-unknown load path in `graph::load`.
+    #[test]
+    fn dead_label_modifier_predicate() {
+        assert!(is_dead_label_modifier("TennisGetVector3", "0"));
+        assert!(is_dead_label_modifier("TennisGetBool", "27"));
+        assert!(!is_dead_label_modifier("TennisGetVector3", "Ball Position"));
+        assert!(!is_dead_label_modifier("TennisGetVector3", ""));
+        assert!(!is_dead_label_modifier("Vector3Split", "0"));
+        assert!(!is_dead_label_modifier("Operation", "0"));
     }
 }
