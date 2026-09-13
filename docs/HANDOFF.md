@@ -7,6 +7,16 @@ results must be the same as in the game."** (Viewer/editor = QOL only.)
 
 ## 0. LATEST SESSION (2026-09-12) — READ THIS FIRST
 
+**2026-09-13 addendum — loop semantics MEASURED (game, ModHost v0.15f):**
+combinational cycles evaluate once per tick; the back-edge delivers the
+previous value (P1 `Add->Clamp->Add` ramps `1,2,4,5,6…→10`, P2 caps 11/10 —
+never 10-at-0). The `lower.rs:189` prev-tick model is now empirically
+confirmed, not assumed. Full notebook with probes, predictions, timeplot
+filenames and repro: `AIA_tennis/modhost/LOOP_SEMANTICS.md` (builder +
+runner + finals in `modhost/loop_probe_*.py`, `modhost/loop_probes/`).
+Consequence: unrolling is target-forced; compiler CSE audited exact
+(0.0% residual duplication on a 1959-op build) — no compiler change needed.
+
 **Plan of record: `C:\gitProjects\implementation_plan.md`** (phases A–F, with
 Phase F's status; open decisions at the end). Read it before starting anything.
 
