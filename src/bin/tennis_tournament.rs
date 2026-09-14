@@ -9,6 +9,7 @@
 use aia_comp_sim::tennis::vm::{BrainSide, TennisBrain};
 use aia_comp_sim::tennis::world::{Phase, TennisWorld};
 use aia_comp_sim::tennis::court::Side;
+use aia_comp_sim::tennis::score::MatchRules;
 
 thread_local! {
     static UNIMPLEMENTED: std::cell::RefCell<Vec<String>> =
@@ -63,6 +64,12 @@ fn main() {
     let mut points: usize = 4;
     let mut max_ticks: u64 = 120_000;
     let mut trace: Option<String> = None;
+    // Per-strike contact log (tier + contact geometry + aim, one JSON per
+    // strike). Analysis joins each strike with its first-bounce landing.
+    let mut trace_strikes: Option<String> = None;
+    // Optional custom format config. WITHOUT it the sim enforces official
+    // rules (best-of-3, cross-set serve rotation, per-point side alternation).
+    let mut rules_path: Option<String> = None;
     let mut args = std::env::args().skip(1);
     while let Some(a) = args.next() {
         match a.as_str() {
@@ -72,6 +79,8 @@ fn main() {
             "--points" => points = args.next().and_then(|v| v.parse().ok()).unwrap_or(points),
             "--max-ticks" => max_ticks = args.next().and_then(|v| v.parse().ok()).unwrap_or(max_ticks),
             "--trace" => trace = args.next(),
+            "--trace-strikes" => trace_strikes = args.next(),
+            "--rules" => rules_path = args.next(),
             _ => {}
         }
     }
@@ -84,7 +93,17 @@ fn main() {
     let mut away: Option<BrainSide> =
         load_bot(&away_name, aia_comp_sim::brain::TeamId::Away).map(|(b, _, _)| b);
 
-    let mut world = TennisWorld::new(seed);
+    let mut world = match rules_path {
+        Some(p) => {
+            let rules = MatchRules::load_json(std::path::Path::new(&p))
+                .unwrap_or_else(|e| panic!("--rules: {e}"));
+            TennisWorld::new_with_rules(seed, rules)
+        }
+        None => TennisWorld::new(seed),
+    };
+    if trace_strikes.is_some() {
+        std::env::set_var("AIA_STRIKE_LOG", "1");
+    }
     let mut trace_out: Option<std::io::BufWriter<std::fs::File>> = trace
         .as_ref()
         .map(|p| std::io::BufWriter::new(std::fs::File::create(p).expect("trace file")));
@@ -207,8 +226,22 @@ fn main() {
     });
 
     let winners_json = serde_json::to_string(&point_winners).unwrap_or_default();
+    if let Some(p) = trace_strikes.as_ref() {
+        use std::io::Write;
+        let mut f = std::io::BufWriter::new(std::fs::File::create(p).expect("strikes file"));
+        for s in &world.strike_log {
+            let _ = writeln!(
+                f,
+                "{{\"tick\":{},\"side\":{},\"serving\":{},\"tier\":\"{}\",\"ball\":[{:.3},{:.3},{:.3}],\"racket\":[{:.3},{:.3},{:.3}],\"aim\":[{:.2},{:.2}],\"q\":{:.2}}}",
+                s.tick, s.side, s.serving, s.tier,
+                s.ball[0], s.ball[1], s.ball[2],
+                s.racket[0], s.racket[1], s.racket[2],
+                s.aim[0], s.aim[1], s.charge,
+            );
+        }
+    }
     println!(
-        "{{\"home\":\"{}\",\"away\":\"{}\",\"seed\":{},\"ticks\":{},\"points_played\":{},\"score_pts\":[{},{}],\"games\":[{},{}],\"point_winners\":{},\"aces\":[{},{}],\"faults\":[{},{}],\"double_faults\":[{},{}],\"finished\":{},\"winner\":\"{}\",\"home_unimplemented\":{},\"home_approximated\":{}}}",
+        "{{\"home\":\"{}\",\"away\":\"{}\",\"seed\":{},\"ticks\":{},\"points_played\":{},\"score_pts\":[{},{}],\"games\":[{},{}],\"sets\":[{},{}],\"point_winners\":{},\"aces\":[{},{}],\"faults\":[{},{}],\"double_faults\":[{},{}],\"finished\":{},\"winner\":\"{}\",\"home_unimplemented\":{},\"home_approximated\":{}}}",
         home_name,
         away_name,
         seed,
@@ -216,6 +249,7 @@ fn main() {
         completed_points,
         world.score.points[0], world.score.points[1],
         world.score.games[0], world.score.games[1],
+        world.score.sets[0], world.score.sets[1],
         winners_json,
         world.score.aces[0], world.score.aces[1],
         world.score.faults[0], world.score.faults[1],

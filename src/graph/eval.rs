@@ -528,8 +528,8 @@ impl<'a> EvalCtx<'a> {
             }
 
             // TennisAuto* helper gates — same approximations as the VM arms:
-            // pass-through targets; swing from the swing-range/must-wait
-            // sensors with a flat default shot.
+            // pass-through targets; swing holds once the ball is playable
+            // (game: approach-hold, manager releases at the perfect window).
             "TennisAutoMove" | "TennisAutoAim" => {
                 let v = self
                     .input_named(node_sid, "Vector31")
@@ -539,13 +539,13 @@ impl<'a> EvalCtx<'a> {
             }
             "TennisAutoSwing" => match port_name {
                 "Bool1" => {
-                    let in_range = crate::tennis::api::bool_index("Ball In Swing Range")
+                    let playable = crate::tennis::api::bool_index("Is Ball Playable")
                         .and_then(|i| self.api.get_bool_id(i))
                         .unwrap_or(false);
                     let must_wait = crate::tennis::api::bool_index("Must Wait For Bounce")
                         .and_then(|i| self.api.get_bool_id(i))
                         .unwrap_or(false);
-                    GraphValue::Bool(in_range && !must_wait)
+                    GraphValue::Bool(playable && !must_wait)
                 }
                 "Float1" => GraphValue::Float(2.0),
                 _ => GraphValue::Null,

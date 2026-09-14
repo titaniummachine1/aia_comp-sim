@@ -203,6 +203,9 @@ pub struct TennisWorld {
     /// `AIA_SWING_MODEL=legacy` (or `off`/`false`/`0`) restores the old default
     /// so the recorded sweep verdicts stay reproducible.
     swing_hold_gate: bool,
+    /// Per-strike contact log (see `StrikeEvent`). Populated ONLY when
+    /// `AIA_STRIKE_LOG=1`, so long viewer sessions pay nothing.
+    pub strike_log: Vec<StrikeEvent>,
 }
 
 impl TennisWorld {
@@ -257,7 +260,18 @@ impl TennisWorld {
                 std::env::var("AIA_SWING_MODEL").as_deref(),
                 Ok("legacy") | Ok("off") | Ok("false") | Ok("0")
             ),
+            strike_log: Vec::new(),
         };
+        w.setup_serve();
+        w
+    }
+
+    /// Custom-config world (explicit opt-in only). `TennisWorld::new` enforces
+    /// official rules; this constructor applies a loaded `MatchRules` instead.
+    pub fn new_with_rules(seed: u64, rules: super::score::MatchRules) -> Self {
+        let mut w = Self::new(seed);
+        let first_server = w.score.first_server;
+        w.score = Score::with_rules(first_server, rules);
         w.setup_serve();
         w
     }
@@ -548,11 +562,29 @@ impl TennisWorld {
                     || (self.ball.vel.y > 0.0 && self.ball.pos.y >= TOSS_STRIKE_Y)
                     || self.ball.vel.y < 0.0;
                 let striking_phase = self.phase == Phase::Rally || tossing;
-                // The manager's auto-swing strikes only inside the PERFECT
-                // window (measured: game contacts cluster at the perfect
-                // boundary); an explicit bot swing may connect anywhere in the
-                // 2.6 m zone, which the tier rule scores as EARLY/LATE.
-                let window_ok = p.perfect_ticks >= 1 || cmds[i].swing;
+                // Release policy (game-faithful, "perfect when possible"):
+                // a held swing releases at the FIRST PERFECT tick. If the
+                // ball's velocity line will never enter the perfect radius
+                // (3D closest approach > 1.0 m), waiting is pointless —
+                // strike the moment it enters the 2.6 m zone (early beats a
+                // whiff; the game's explicit swings connect anywhere
+                // in-zone). A ball already past its closest approach folds
+                // into the same test (t* clamps to 0 -> d_min = current
+                // distance). The toss strike is exempt: the server's held
+                // swing releases at the toss apex, far outside the 1.0 m
+                // perfect radius.
+                let to_ball = self.ball.pos - racket;
+                let v2 = self.ball.vel.dot(self.ball.vel);
+                let t_closest = if v2 > 1e-9 {
+                    (0.0 - to_ball.dot(self.ball.vel) / v2).max(0.0)
+                } else {
+                    0.0
+                };
+                let d_min = (to_ball + self.ball.vel * t_closest).length();
+                let perfect_possible = d_min <= PERFECT_RADIUS;
+                let window_ok = tossing
+                    || p.perfect_ticks >= 1
+                    || (d_ball <= STRIKE_RADIUS && !perfect_possible);
                 if striking_phase
                     && !foul_risk
                     && in_toss_window
@@ -706,6 +738,24 @@ impl TennisWorld {
             self.serve_taped = false;
             self.serve_bounced = false;
             self.phase = Phase::Rally;
+        }
+        if std::env::var("AIA_STRIKE_LOG").as_deref() == Ok("1") {
+            let r = self.players[i].racket();
+            self.strike_log.push(StrikeEvent {
+                tick: self.tick,
+                side: i,
+                serving,
+                tier: match self.last_hit_tier {
+                    HitTier::Perfect => "perfect",
+                    HitTier::Early => "early",
+                    HitTier::Late => "late",
+                    HitTier::None => "none",
+                },
+                ball: [from.x, from.y, from.z],
+                racket: [r.x, r.y, r.z],
+                aim: [target.x, target.y],
+                charge: q,
+            });
         }
     }
 
@@ -886,23 +936,29 @@ impl TennisWorld {
     }
 
     fn on_rally_bounce(&mut self) {
-        // Second bounce on the same side kills the point: the side that did
-        // NOT last strike wins. First bounce out of court: last striker loses.
+        // Tennis rules (2026-09-14 correction — the award was INVERTED,
+        // giving every double bounce to the receiver and making unreturned
+        // shots score for the opponent; the champion's in-game record
+        // proves the striker wins): after a legal 1st bounce the receiver
+        // must return the ball — a 2nd bounce means they failed and the
+        // STRIKER wins, wherever the 2nd bounce lands ("second bounce can
+        // land anywhere, no location fault" — game-truth note). A 1st
+        // bounce out of court: the striker faults.
         self.strike_lock = None;
-        let landing = Vec2::new(self.ball.pos.x, self.ball.pos.z);
         let striker = self.last_striker();
+        if self.ball.bounces >= 2 {
+            if let Some(s) = striker {
+                self.resolve_point(s, PointReason::DoubleBounce);
+            }
+            return;
+        }
+        let landing = Vec2::new(self.ball.pos.x, self.ball.pos.z);
         let in_court = court::is_in_court_xz(landing.x, landing.y);
         if !in_court {
             // Out: point to the receiver of that shot.
             if let Some(s) = striker {
                 self.score.record_out(s);
                 self.resolve_point(s.other(), PointReason::Out);
-            }
-            return;
-        }
-        if self.ball.bounces >= 2 {
-            if let Some(s) = striker {
-                self.resolve_point(s.other(), PointReason::DoubleBounce);
             }
         }
     }
@@ -955,7 +1011,11 @@ impl TennisWorld {
 
     fn after_point(&mut self, winner: Side, _reason: PointReason, game_won: bool, _ace: bool) {
         self.last_point_winner = Some(winner);
-        if self.score.sets[Self::idx(winner)] > 0 && game_won {
+        // Enforced format: first to `sets_to_win` ends the match on the exact
+        // tick it happens — best-of-3 caps at 3 sets, 2-2 is unreachable.
+        if game_won
+            && self.score.sets[Self::idx(winner)] >= self.score.rules.sets_to_win
+        {
             self.end = Some(EndReason::SetWon(winner));
             self.phase = Phase::Finished;
             return;
@@ -1043,6 +1103,25 @@ enum PointReason {
     Foul,
     DoubleFault,
     Ace,
+}
+
+/// One resolved strike: contact-timing tier + contact geometry + aim.
+/// Recorded when `AIA_STRIKE_LOG=1` (strike-log instrumentation: under/over
+/// estimation as Early/Late, z-axis contact error, and — joined with the
+/// subsequent first-bounce landing in analysis — the landing effect).
+/// `last_hit_tier` alone cannot answer this: it is a label with no downstream
+/// effect (scatter comes from fatigue/charge only), so the geometry must be
+/// captured at the strike tick.
+#[derive(Debug, Clone)]
+pub struct StrikeEvent {
+    pub tick: u64,
+    pub side: usize,
+    pub serving: bool,
+    pub tier: &'static str,
+    pub ball: [f32; 3],
+    pub racket: [f32; 3],
+    pub aim: [f32; 2],
+    pub charge: f32,
 }
 
 /// Shortest distance from `p` to the segment `a`–`b`. The v0.15 swept-contact
@@ -1141,6 +1220,36 @@ mod serve_clock_tests {
         assert!(!TennisWorld::new(0).interpolate_ball);
         assert!(!TennisWorld::for_spec(0, GameSpec::tennis_v014()).interpolate_ball);
         assert!(TennisWorld::for_spec(0, GameSpec::tennis_v015()).interpolate_ball);
+    }
+
+    /// Best-of-3 decider: at 1-1 sets the next set ends the match 2-1, and a
+    /// finished match is frozen — 2-2 is unreachable, 3 sets max.
+    #[test]
+    fn third_set_decides_and_finished_match_is_frozen() {
+        use super::super::score::MatchRules;
+        let mut w = TennisWorld::new(0);
+        w.score.sets = [1, 1];
+        w.score.games = [1, 0];
+        w.score.points = [3, 0];
+        w.resolve_point(Side::Home, PointReason::Ace);
+        assert_eq!(w.score.sets, [2, 1]);
+        assert_eq!(w.end, Some(EndReason::SetWon(Side::Home)));
+        assert_eq!(w.phase, Phase::Finished);
+        let tick = w.tick;
+        w.step([None, None]);
+        assert_eq!(w.tick, tick, "step() after the end is a no-op");
+        assert_eq!(w.score.sets, [2, 1], "2-2 can never happen");
+
+        // Custom 1-set config ends at the first set instead.
+        let mut c = TennisWorld::new_with_rules(
+            0,
+            MatchRules::custom(4, 2, 1).unwrap(),
+        );
+        c.score.games = [1, 0];
+        c.score.points = [3, 0];
+        c.resolve_point(Side::Home, PointReason::Ace);
+        assert_eq!(c.score.sets, [1, 0]);
+        assert_eq!(c.end, Some(EndReason::SetWon(Side::Home)));
     }
 }
 

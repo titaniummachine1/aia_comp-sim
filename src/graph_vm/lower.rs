@@ -931,10 +931,15 @@ impl Lowerer {
                 crate::graph_vm::diagnostics::record_approximated("TennisAutoSwing");
                 match port_name {
                     "Bool1" => {
-                        let in_range = self
+                        // Game-measured: the node HOLDS once the ball is
+                        // playable (through the whole approach, 0.6-1.2 s)
+                        // and the manager releases at the perfect window —
+                        // NOT an in-zone pulse (that would strike 1 command
+                        // tick late, the 74%-LATE signature).
+                        let playable = self
                             .apis
-                            .intern("Ball In Swing Range", ApiKind::Bool);
-                        let r = self.emit_load_api(node_sid, "Ball In Swing Range", in_range, RegisterKind::Bool);
+                            .intern("Is Ball Playable", ApiKind::Bool);
+                        let r = self.emit_load_api(node_sid, "Is Ball Playable", playable, RegisterKind::Bool);
                         let must_wait = self.apis.intern("Must Wait For Bounce", ApiKind::Bool);
                         let w = self.emit_load_api(node_sid, "Must Wait For Bounce", must_wait, RegisterKind::Bool);
                         let not_wait = self.fresh_reg(RegisterKind::Bool);

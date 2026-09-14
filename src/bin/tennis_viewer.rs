@@ -293,7 +293,7 @@ fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut mats: Res
     // Scoreboard: three set rings spread BETWEEN the score labels (not clumped
     // in the middle). Each ring = a pale outline body (always visible) + one
     // lit inner disc (hidden until its set is won). Ring colours: home = orange,
-    // away = blue, centre = white (lit when the match is decided at 2 sets).
+    // away = blue, centre = white (lit when a side reaches 2 sets = match).
     let vh = mats.add(ColorMaterial {
         color: Color::srgba(1.0, 1.0, 1.0, 0.95),
         ..default()
@@ -485,7 +485,7 @@ fn sync_text(
         let lit = match fill.0 {
             0 => sets[0] >= 1,
             2 => sets[1] >= 1,
-            _ => sets[0] + sets[1] >= 2, // centre = match decided at 2 sets
+            _ => sets[0] >= 2 || sets[1] >= 2, // centre = a side took 2 sets
         };
         t.scale = if lit {
             Vec3::splat(SET_RING_INNER)
