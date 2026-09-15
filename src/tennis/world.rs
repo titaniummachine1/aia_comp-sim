@@ -206,6 +206,9 @@ pub struct TennisWorld {
     /// Per-strike contact log (see `StrikeEvent`). Populated ONLY when
     /// `AIA_STRIKE_LOG=1`, so long viewer sessions pay nothing.
     pub strike_log: Vec<StrikeEvent>,
+    /// Per-point outcome log (see `PointEvent`) — always on, so any run can
+    /// answer "how did we lose these points" without re-running.
+    pub point_log: Vec<PointEvent>,
 }
 
 impl TennisWorld {
@@ -261,6 +264,7 @@ impl TennisWorld {
                 Ok("legacy") | Ok("off") | Ok("false") | Ok("0")
             ),
             strike_log: Vec::new(),
+            point_log: Vec::new(),
         };
         w.setup_serve();
         w
@@ -281,6 +285,19 @@ impl TennisWorld {
     /// [`Self::new`] stays v0.14 so existing callers/results are unchanged.
     pub fn for_spec(seed: u64, spec: crate::mode::GameSpec) -> Self {
         let mut w = Self::new(seed);
+        w.interpolate_ball = spec.version.interpolates_ball();
+        w
+    }
+
+    /// Versioned world with an explicit match format (the `--rules` path).
+    /// Same contract as [`Self::for_spec`]: only the version-gated world
+    /// behaviour differs from `new_with_rules`.
+    pub fn for_spec_with_rules(
+        seed: u64,
+        spec: crate::mode::GameSpec,
+        rules: super::score::MatchRules,
+    ) -> Self {
+        let mut w = Self::new_with_rules(seed, rules);
         w.interpolate_ball = spec.version.interpolates_ball();
         w
     }
@@ -948,7 +965,21 @@ impl TennisWorld {
         let striker = self.last_striker();
         if self.ball.bounces >= 2 {
             if let Some(s) = striker {
-                self.resolve_point(s, PointReason::DoubleBounce);
+                // ACE: the server won the point on the serve with no receiver
+                // contact — only the serve strike is on record (`rally_hits`
+                // counts strikes; the serve is 1) and the serve landed in.
+                // This is the only producer of `PointReason::Ace`, which
+                // `resolve_point` maps to `Score::record_ace`; before it, the
+                // aces counter could never fire (HANDOFF open item).
+                let reason = if self.rally_hits <= 1
+                    && self.serve_bounced
+                    && s == self.score.server()
+                {
+                    PointReason::Ace
+                } else {
+                    PointReason::DoubleBounce
+                };
+                self.resolve_point(s, reason);
             }
             return;
         }
@@ -1009,8 +1040,23 @@ impl TennisWorld {
         self.after_point(winner, reason, game_won, ace);
     }
 
-    fn after_point(&mut self, winner: Side, _reason: PointReason, game_won: bool, _ace: bool) {
+    fn after_point(&mut self, winner: Side, reason: PointReason, game_won: bool, _ace: bool) {
         self.last_point_winner = Some(winner);
+        // Record BEFORE the match-end early return so the winning point of the
+        // match is in the log too. `striker` still resolves here: `hit_by`
+        // survives the bounce and is only cleared by `setup_serve`.
+        self.point_log.push(PointEvent {
+            tick: self.tick,
+            winner,
+            reason,
+            striker: self.last_striker(),
+            ball: [self.ball.pos.x, self.ball.pos.y, self.ball.pos.z],
+            bounces: self.ball.bounces,
+            rally_hits: self.rally_hits,
+            sets: self.score.sets,
+            games: self.score.games,
+            points: self.score.points,
+        });
         // Enforced format: first to `sets_to_win` ends the match on the exact
         // tick it happens — best-of-3 caps at 3 sets, 2-2 is unreachable.
         if game_won
@@ -1096,13 +1142,48 @@ impl TennisWorld {
     }
 }
 
+/// Why a point ended. Recorded per point in [`PointEvent`] so a losing
+/// streak is classified instead of inferred (HANDOFF open items: "classify
+/// point endings", "aces counter never fires").
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum PointReason {
+pub enum PointReason {
     DoubleBounce,
     Out,
     Foul,
     DoubleFault,
     Ace,
+}
+
+impl PointReason {
+    pub fn label(self) -> &'static str {
+        match self {
+            PointReason::DoubleBounce => "DoubleBounce",
+            PointReason::Out => "Out",
+            PointReason::Foul => "Foul",
+            PointReason::DoubleFault => "DoubleFault",
+            PointReason::Ace => "Ace",
+        }
+    }
+}
+
+/// One resolved point: winner, reason, striker, and the ball/score state at
+/// the resolution tick. Always recorded (a push of 4-6 words per point is
+/// free); `tennis_tournament --trace-points` dumps it and the summary JSON
+/// carries the reason tally.
+#[derive(Debug, Clone, Copy)]
+pub struct PointEvent {
+    pub tick: u64,
+    pub winner: Side,
+    pub reason: PointReason,
+    /// Last striker at resolution (None only when no strike was tracked).
+    pub striker: Option<Side>,
+    pub ball: [f32; 3],
+    pub bounces: usize,
+    pub rally_hits: i32,
+    /// Score AFTER the point was awarded.
+    pub sets: [u32; 2],
+    pub games: [u32; 2],
+    pub points: [u32; 2],
 }
 
 /// One resolved strike: contact-timing tier + contact geometry + aim.
@@ -1438,5 +1519,82 @@ mod hit_tier_tests {
     }
 }
 
+#[cfg(test)]
+mod point_log_tests {
+    use super::*;
 
+    /// Every resolved point lands in `point_log` with its reason — the data
+    /// the ladder lacked ("how did we lose these points"). The match-winning
+    /// point is recorded BEFORE the freeze, so a finished match is complete.
+    #[test]
+    fn resolved_points_are_logged_with_reason() {
+        let mut w = TennisWorld::new(0);
+        assert!(w.point_log.is_empty());
+        w.resolve_point(Side::Away, PointReason::Out);
+        assert_eq!(w.point_log.len(), 1);
+        let e = w.point_log[0];
+        assert_eq!(e.winner, Side::Away);
+        assert_eq!(e.reason, PointReason::Out);
+        assert_eq!(e.reason.label(), "Out");
 
+        // Match-winning point: still logged, then the world freezes.
+        w.score.sets = [1, 0];
+        w.score.games = [1, 0];
+        w.score.points = [3, 0];
+        w.resolve_point(Side::Home, PointReason::Ace);
+        assert_eq!(w.end, Some(EndReason::SetWon(Side::Home)));
+        assert_eq!(w.point_log.len(), 2, "match-winning point is logged");
+        assert_eq!(w.point_log[1].reason, PointReason::Ace);
+    }
+
+    /// An untouched serve double-bounce is an ACE: the point goes to the
+    /// server AND the aces counter fires. No code path could produce
+    /// `PointReason::Ace` before, so `Score::aces` was permanently 0.
+    #[test]
+    fn untouched_serve_double_bounce_is_an_ace() {
+        let mut w = TennisWorld::new(0);
+        let server = w.score.server();
+        w.phase = Phase::Rally;
+        w.rally_hits = 1; // the serve strike only
+        w.serve_bounced = true;
+        w.ball.bounces = 2;
+        w.hit_by = Some(server);
+        w.on_rally_bounce();
+        assert_eq!(w.score.aces[server as usize], 1, "ace counted");
+        assert_eq!(w.score.points[server as usize], 1, "point to the server");
+        assert_eq!(w.point_log[0].reason, PointReason::Ace);
+        assert_eq!(w.point_log[0].striker, Some(server));
+        assert_eq!(w.point_log[0].bounces, 2);
+    }
+
+    /// Once the receiver has struck the serve, the 2nd bounce is an ordinary
+    /// double bounce — NOT an ace (the aces counter must stay clean).
+    #[test]
+    fn returned_serve_double_bounce_is_not_an_ace() {
+        let mut w = TennisWorld::new(0);
+        let server = w.score.server();
+        w.phase = Phase::Rally;
+        w.rally_hits = 2; // serve + receiver return (or swing-and-miss contact)
+        w.serve_bounced = true;
+        w.ball.bounces = 2;
+        w.hit_by = Some(server);
+        w.on_rally_bounce();
+        assert_eq!(w.score.aces[server as usize], 0);
+        assert_eq!(w.point_log[0].reason, PointReason::DoubleBounce);
+    }
+
+    /// `for_spec_with_rules` combines the versioned world model with an
+    /// explicit format (the `--rules` path).
+    #[test]
+    fn for_spec_with_rules_keeps_rules_and_version() {
+        use super::super::score::MatchRules;
+        use crate::mode::GameSpec;
+        let rules = MatchRules::custom(4, 2, 1).unwrap();
+        let v15 = TennisWorld::for_spec_with_rules(0, GameSpec::tennis_v015(), rules);
+        assert!(v15.interpolate_ball, "v0.15 swept contact");
+        assert_eq!(v15.score.rules, rules);
+        let v14 = TennisWorld::for_spec_with_rules(0, GameSpec::tennis_v014(), rules);
+        assert!(!v14.interpolate_ball);
+        assert_eq!(v14.score.rules, rules);
+    }
+}

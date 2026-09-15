@@ -70,6 +70,16 @@ fn main() {
     // Optional custom format config. WITHOUT it the sim enforces official
     // rules (best-of-3, cross-set serve rotation, per-point side alternation).
     let mut rules_path: Option<String> = None;
+    // World model version. DEFAULT v015 = the live game's model: the v0.15
+    // free and Patreon builds share the world model, and its sole delta from
+    // v0.14 is the swept (frame-interpolated) ball contact, which
+    // `TennisWorld::for_spec` turns on. Running the old v0.14 default is what
+    // made the sim report "titanium66 beats Unlucky 2-1" while the real game
+    // bagelled it 6-0 (2026-09-14). Pass `--game-version v014` only to
+    // reproduce pre-2026-09-14 rows.
+    let mut game_version = String::from("v015");
+    // Per-point outcome log (winner + reason + striker + ball), see PointEvent.
+    let mut trace_points: Option<String> = None;
     let mut args = std::env::args().skip(1);
     while let Some(a) = args.next() {
         match a.as_str() {
@@ -81,6 +91,8 @@ fn main() {
             "--trace" => trace = args.next(),
             "--trace-strikes" => trace_strikes = args.next(),
             "--rules" => rules_path = args.next(),
+            "--game-version" => game_version = args.next().unwrap_or(game_version),
+            "--trace-points" => trace_points = args.next(),
             _ => {}
         }
     }
@@ -93,13 +105,20 @@ fn main() {
     let mut away: Option<BrainSide> =
         load_bot(&away_name, aia_comp_sim::brain::TeamId::Away).map(|(b, _, _)| b);
 
+    let (spec, world_spec_name): (aia_comp_sim::mode::GameSpec, &str) =
+        match game_version.as_str() {
+            "v014" => (aia_comp_sim::mode::GameSpec::tennis_v014(), "v014"),
+            "v015" | "latest" => (aia_comp_sim::mode::GameSpec::tennis_v015(), "v015"),
+            other => panic!("--game-version: unknown {other:?} (expected v014 | v015)"),
+        };
+
     let mut world = match rules_path {
         Some(p) => {
             let rules = MatchRules::load_json(std::path::Path::new(&p))
                 .unwrap_or_else(|e| panic!("--rules: {e}"));
-            TennisWorld::new_with_rules(seed, rules)
+            TennisWorld::for_spec_with_rules(seed, spec, rules)
         }
-        None => TennisWorld::new(seed),
+        None => TennisWorld::for_spec(seed, spec),
     };
     if trace_strikes.is_some() {
         std::env::set_var("AIA_STRIKE_LOG", "1");
@@ -226,6 +245,46 @@ fn main() {
     });
 
     let winners_json = serde_json::to_string(&point_winners).unwrap_or_default();
+    // Per-point outcome classification (winner x reason) — the ladder could
+    // not say WHY a point was lost before this; now every row carries it.
+    let mut reason_tally: std::collections::BTreeMap<&'static str, [u32; 2]> =
+        std::collections::BTreeMap::new();
+    for e in &world.point_log {
+        let slot = reason_tally.entry(e.reason.label()).or_insert([0, 0]);
+        slot[e.winner as usize] += 1;
+    }
+    let reasons_json = serde_json::to_string(
+        &reason_tally
+            .iter()
+            .map(|(k, v)| ((*k).to_string(), vec![v[0], v[1]]))
+            .collect::<Vec<_>>(),
+    )
+    .unwrap_or_default();
+    if let Some(p) = trace_points.as_ref() {
+        use std::io::Write;
+        let mut f = std::io::BufWriter::new(std::fs::File::create(p).expect("points file"));
+        for e in &world.point_log {
+            let striker = match e.striker {
+                Some(Side::Home) => "home",
+                Some(Side::Away) => "away",
+                None => "none",
+            };
+            let _ = writeln!(
+                f,
+                "{{\"tick\":{},\"winner\":\"{}\",\"reason\":\"{}\",\"striker\":\"{}\",\"ball\":[{:.3},{:.3},{:.3}],\"bounces\":{},\"rally_hits\":{},\"sets\":[{},{}],\"games\":[{},{}],\"points\":[{},{}]}}",
+                e.tick,
+                if e.winner == Side::Home { "home" } else { "away" },
+                e.reason.label(),
+                striker,
+                e.ball[0], e.ball[1], e.ball[2],
+                e.bounces,
+                e.rally_hits,
+                e.sets[0], e.sets[1],
+                e.games[0], e.games[1],
+                e.points[0], e.points[1],
+            );
+        }
+    }
     if let Some(p) = trace_strikes.as_ref() {
         use std::io::Write;
         let mut f = std::io::BufWriter::new(std::fs::File::create(p).expect("strikes file"));
@@ -241,10 +300,11 @@ fn main() {
         }
     }
     println!(
-        "{{\"home\":\"{}\",\"away\":\"{}\",\"seed\":{},\"ticks\":{},\"points_played\":{},\"score_pts\":[{},{}],\"games\":[{},{}],\"sets\":[{},{}],\"point_winners\":{},\"aces\":[{},{}],\"faults\":[{},{}],\"double_faults\":[{},{}],\"finished\":{},\"winner\":\"{}\",\"home_unimplemented\":{},\"home_approximated\":{}}}",
+        "{{\"home\":\"{}\",\"away\":\"{}\",\"seed\":{},\"game_version\":\"{}\",\"ticks\":{},\"points_played\":{},\"score_pts\":[{},{}],\"games\":[{},{}],\"sets\":[{},{}],\"point_winners\":{},\"aces\":[{},{}],\"faults\":[{},{}],\"double_faults\":[{},{}],\"point_reasons\":{},\"finished\":{},\"winner\":\"{}\",\"home_unimplemented\":{},\"home_approximated\":{}}}",
         home_name,
         away_name,
         seed,
+        world_spec_name,
         world.tick,
         completed_points,
         world.score.points[0], world.score.points[1],
@@ -254,6 +314,7 @@ fn main() {
         world.score.aces[0], world.score.aces[1],
         world.score.faults[0], world.score.faults[1],
         world.score.double_faults[0], world.score.double_faults[1],
+        reasons_json,
         world.end.is_some(),
         winner.unwrap_or_else(|| "none".to_string()),
         serde_json::to_string(&home_unimpl).unwrap_or_default(),

@@ -5,6 +5,169 @@
 **"We don't clone the game 1:1 — if we play any 2 AIs against each other the
 results must be the same as in the game."** (Viewer/editor = QOL only.)
 
+## 0a. LATEST SESSION (2026-09-14) - SCORING BUG FIXED - READ BEFORE SECTION 0
+
+**THE double-bounce award was INVERTED** (world.rs on_rally_bounce): every
+double bounce went to the RECEIVER (striker.other()) - unreturned shots
+scored for the opponent, aces impossible, titanium54 lost to pusher, the
+entire pre-2026-09-14 tennis ladder era (25W-64L) was an artifact. Raw-trace
+proof: serve bounced IN the box, untouched, 2nd bounce at +26.7, receiver +1.
+
+Fixed: STRIKER wins the double bounce, 2nd-bounce location irrelevant
+(game-truth: second bounce can land anywhere, no location fault). 1st-bounce
+out still faults the striker. 46/46 tennis tests.
+
+**In-flight arena bound = FULL court (|x|>28, |z|>18), not half** - the 2nd
+bounce lands first; deep shots are valid winners (an earlier titanium build
+wrongly zero-scored deep candidates on a half-court misread).
+
+**Result (best-of-3, seed 7, AIA_AIM_MODEL=separate): titanium66 97W-4L vs
+the whole field** (data/tennis/titanium_ladder.jsonl; losses: Apex 1-2,
+LeBlock_James 1-2, slicer 0-2, titanium2 0-2). All pre-fix sim tennis
+numbers are void - never compare across the correction boundary.
+
+Also this session:
+- Best-of-3 scoring (first to 2 sets; MatchRules default 4/2/2; --rules
+  file.json opt-in override, loud validation, BOM-tolerant) + serve rotation
+  CONTINUES across sets (total_games clock - the per-set reset pinned every
+  set opener to the same server). 2-2 impossible, 3 sets max.
+- TennisAutoSwing approx = Is Ball Playable && !Must Wait (approach-hold,
+  game-measured) in lower.rs AND eval.rs (was in-range = the 74%-LATE
+  contact signature). Mode dropdown still ignored by the sim.
+- World release rule: held swing releases at the FIRST PERFECT tick; if the
+  ball's velocity line cannot reach the perfect radius (3D closest approach
+  > 1.0 m), strike at 2.6 m-zone entry; toss strike exempt. The old
+  explicit-swing clause is gone (uniform rule; stock pulses included).
+- Per-strike StrikeEvent log: AIA_STRIKE_LOG=1 or --trace-strikes
+  (tier/serving/ball/racket/aim/charge); analysis:
+  scripts/archive/strike_join.py.
+- tennis_tournament: --rules, --trace-strikes, sets in the JSON summary.
+- Scripts: run_titanium_ladder.py (4 workers, resume-safe, sets
+  AIA_AIM_MODEL=separate - REQUIRED for compiler bots: the legacy aim latch
+  ignores t.aim(); without it titanium lost to stock 0-2),
+  score_titanium_ladder.py, archive/{strike_join,ladder_diag,
+  ladder_weakness,trace_landings}.py.
+- titanium66 (aia_graphc) is the ladder champion arm; titanium63 kept in
+  Saves as the pre-correction reference.
+
+OPEN: verify the GAME's double-bounce award from existing captures (the sim
+was inverted; the game evidence says striker-wins - confirm); aces counter
+never fires (map serve double-bounce to Ace); slicer 0-2 and titanium2 0-2
+traced next.
+
+## 0.5 SESSION 2026-09-14b — REAL-GAME REPRODUCTION + v0.15 DEFAULT
+
+### The sim was running v0.14 physics against a v0.15 game
+`tennis_tournament` called `TennisWorld::new` / `new_with_rules` (both v0.14
+by design) and NEVER `for_spec`. The live game is v0.15 / v0.15f, whose only
+world delta from v0.14 is the swept (frame-interpolated) ball contact. So
+every ladder row — including the 97W-4L record — was measured with the wrong
+contact model.
+
+Fix: `--game-version v014|v015`, DEFAULT **v015**; the world is built with
+`TennisWorld::for_spec` / `for_spec_with_rules`. The summary JSON now carries
+`"game_version"`; `run_titanium_ladder.py` passes it explicitly
+(`AIA_LADDER_VERSION` overrides) and **includes it in the resume key**, so a
+v014 row can never satisfy a v015 request.
+
+Measured effect (seed 7, AIA_AIM_MODEL=separate):
+
+| match | v014 (old default) | v015 (new default) | real game |
+|---|---|---|---|
+| titanium66 vs titanium2 | 0-2 loss | **2-0 win** | - |
+| titanium66 vs slicer | 0-2 (0/14) | 0-2 (1/16) | - |
+| titanium66 vs underdog | - | 2-0, 8 aces | - |
+| titanium66 vs Unlucky | 2-1 win | (pending re-run) | **0-6 loss** |
+
+The version flips matchups. Never compare across this boundary either.
+
+### Real game driven end-to-end (no user needed)
+`modctl.py` / `stress_game_run.py` with
+`MODHOST_GAMEDIR=modhost/v0.15f` and
+`MODHOST_PARITY_EXE=.../Aialanders-paritymod-reset-v015.exe`. Long runs MUST
+go through a scheduled task — the agent shell kills children.
+titanium66 vs Unlucky, seed 7, 6 points → Unlucky won EVERY point (first game
+4-0). The sim said titanium66 wins. That gap is the parity work.
+
+Re-run AFTER the version fix (v015, `separate`): still **titanium66 2-1**
+(9883 ticks — the ladder row, reproduced deterministically). But the reason
+tally exposes a likely fidelity bug: **Unlucky double-faults 10 times**
+(`faults[0,20]`, `double_faults[0,10]`, `point_reasons` `DoubleFault[10,0]`).
+Unlucky is a titanium-family bot that serves fine in the real game, so the
+sim's serve/strike model for it is broken — 10 free points is most of the
+match. **TOP FIDELITY LEAD.**
+(Also: this match costs ~2-3 min of CPU against the 200k-tick cap, which is
+why it looks like a hang.)
+
+### TimePlot exports merge BOTH bots (attribution trap)
+The game's TimePlot export is global: it contains every graph's TimePlot
+nodes. Only 11 channels are titanium66's (`T.shots/struck/hit/shot/aim_x/
+aim_z/walk_x/walk_z/chase/oti/mti`). `Aim X/Z`, `Self X/Z`, `Opponent X/Z`,
+`Ball X/Z`, `Self stamina`, `Opponent stamina`, `Playable`,
+`Attack score best`, `Walk time reserve`, `Mode 0 recover...` all belong to
+**Unlucky** (verified by grepping the saves). Reading `Aim X` as titanium's was
+wrong. In the controlled capture titanium66's own aim was
+`T.aim_x ∈ [+3.5, +13]`, `T.aim_z ∈ [-5, +5]` — wide/deep, never centre.
+
+### Point-reason instrumentation (aces + "how did we lose")
+- `TennisWorld.point_log: Vec<PointEvent>` (pub) records every resolved point:
+  tick / winner / **reason** / striker / ball / bounces / rally_hits / score.
+  The match-winning point is recorded before the freeze.
+- `--trace-points <file>` dumps it; the summary carries
+  `"point_reasons":[[reason,[home,away]],...]`.
+- **Aces now fire.** `PointReason::Ace` is produced when an untouched serve
+  double-bounces (`rally_hits <= 1`, `serve_bounced`, `striker == server`) →
+  `Score::record_ace`. It was unreachable before, so `aces` was always
+  `[0,0]`. Verified: titanium66 vs underdog → `"aces":[8,0]`.
+- `scripts/analyze_point_endings.py --points <file>` uses the log as the
+  source of truth (the trace inference cannot see set-winning points — games
+  reset 2→0) and prints per-point reason / striker / end-ball / ARENA-OUT,
+  plus the late-contact rate.
+- `scripts/score_titanium_ladder.py` filters by `--version` and prints the
+  point-ending tally per opponent (the weakness map).
+
+### Measured weakness signatures (v015)
+- **titanium66 is late on 79% of rally contacts (45/57)** vs titanium2's 48% —
+  the single biggest handicap, and the top bot-side bug candidate.
+- titanium2 wins only on deep 2nd bounces at x≈-25..-28. The same depth at
+  |x|>28 is an ARENA-OUT that faults titanium2 and hands the point over. Both
+  are "deep ball past titanium66" and award OPPOSITE sides.
+
+### Bot A/B requires reproducible builds (graphc)
+A rebuilt graphc save is NOT the build of record unless you pin the GUID
+seed: the frontend used to emit phi-merge nodes in Python-set order (now
+sorted, `graphc/tests/test_determinism.py`) and the backend mints port/node
+sIDs from wall-clock nanos (now pinnable with `GRAPHC_UUID_SEED=<u64>`).
+Build BOTH A/B arms with the SAME seed, from identical source plus the one
+patch, and confirm two builds are byte-identical before trusting a result.
+Details: `aia_graphc/HANDOFF.md`.
+
+### THE AIM MODEL IS A MATCH-DECIDING, NON-FAITHFUL KNOB (re-measured)
+`AIA_AIM_MODEL=separate` versus the legacy default **flips matchups**
+(v015, seed 7, titanium66 as home):
+
+| match | separate | legacy (default) |
+|---|---|---|
+| t66 vs titanium2 | titanium2 wins 2-0 (8218 ticks, `Out[0,18]`) | **t66 wins 2-0** (9926 ticks, `Out[15,0]`) |
+
+Two runs with the same setting are byte-identical, so this is the MODEL, not
+noise. Note `run_titanium_ladder.py` **forces `separate`** via
+`os.environ.setdefault` — which contradicts the project's own game-set
+measurement: the `separate_aim` comment in `world.rs` records that on the
+78-row game set **separate scored 18/78 and legacy 24/78**, i.e. legacy was
+closer to the game. So the headline "titanium66 97W-4L" record is conditional
+on a known-unfaithful approximation.
+
+**Action:** decide the aim model against game data BEFORE quoting any ladder
+number, and record which model each row used (like `game_version`).
+
+### OPEN (new)
+- **Arena-exit boundary decides matches.** A ball that lands IN and then
+  leaves |x|>28 (or |z|>18) faults the striker; the same ball bouncing again
+  at 27 wins for the striker. A ~1-unit margin at the wall flips the award —
+  verify against the game before trusting any deep-ball result.
+- Real-game bagel vs Unlucky is still unexplained; the sim disagrees.
+
 ## 0. LATEST SESSION (2026-09-12) — READ THIS FIRST
 
 **2026-09-13 addendum — loop semantics MEASURED (game, ModHost v0.15f):**

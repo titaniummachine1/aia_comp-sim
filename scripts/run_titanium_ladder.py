@@ -37,6 +37,14 @@ SEED = sys.argv[2] if len(sys.argv) > 2 else "7"
 # Optional 3rd arg: comma-separated opponent subset (smoke tests).
 ONLY = sys.argv[3].split(",") if len(sys.argv) > 3 else None
 
+# World-model version. v015 (default) = the live game: the v0.15 free and
+# Patreon builds share the world model, whose only delta from v0.14 is the
+# swept (frame-interpolated) ball contact. Rows produced before 2026-09-14
+# were v014 physics and are NOT comparable — that default is what made the
+# sim report "titanium66 beats Unlucky 2-1" while the real game bagelled it
+# 6-0. Set AIA_LADDER_VERSION=v014 only to reproduce those old rows.
+GAME_VERSION = os.environ.get("AIA_LADDER_VERSION", "v015")
+
 # Compiler bots split walk/aim via t.aim() — the sim's legacy aim latch
 # IGNORES that wire (strike aims fall back to deep-middle = arena suicide).
 # Every compiler-bot run MUST set the separate-aim latch model. Measured
@@ -83,7 +91,10 @@ def done_keys():
                     continue
                 try:
                     r = json.loads(line)
-                    keys.add((r.get("home"), r.get("away"), str(r.get("seed"))))
+                    # Version is part of the identity: a v014 row must NOT
+                    # satisfy a v015 request (old rows have no field → v014).
+                    keys.add((r.get("home"), r.get("away"), str(r.get("seed")),
+                              r.get("game_version", "v014")))
                 except ValueError:
                     pass
     return keys
@@ -91,7 +102,8 @@ def done_keys():
 
 def play(bot):
     cmd = CMD + ["--home", HOME, "--away", bot,
-                 "--seed", SEED, "--points", POINTS, "--max-ticks", MAX_TICKS]
+                 "--seed", SEED, "--points", POINTS, "--max-ticks", MAX_TICKS,
+                 "--game-version", GAME_VERSION]
     rec = {"home": HOME, "away": bot, "seed": SEED}
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=TIMEOUT)
@@ -114,8 +126,9 @@ def main():
     if ONLY:
         bots = [b for b in bots if b in ONLY]
     done = done_keys()
-    todo = [b for b in bots if (HOME, b, SEED) not in done]
+    todo = [b for b in bots if (HOME, b, SEED, GAME_VERSION) not in done]
     print(f"{len(bots)} opponents; home={HOME} seed={SEED} workers={WORKERS}; "
+          f"world={GAME_VERSION}; "
           f"{len(todo)} to play ({len(done)} cached)")
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     wins = losses = 0

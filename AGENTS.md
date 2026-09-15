@@ -47,6 +47,16 @@ Use `soccer_headless` for batch testing. Parse stdout JSON for results.
 
 - `scripts/*.py` = live pipeline only. Prefix rule: `run_*` (execute), `score_*`/`compare_*`/`analyze_*` (read-only scoring), `gate_*`/`promote_*` (promotion). One-off probes go to `scripts/archive/` (already holds the 6 `_*.py` temps moved 2026-09-11). Never leave `_tmp_*` or `__pycache__/` at top level — delete pycache, archive temps on sight.
 - Tennis results canonical: game side `C:\gitProjects\AIA_tennis\modhost\game_tournament_results.jsonl` (merged; shards `*_w1..w4` + `*fix2*` merge with dedupe home+away+seed, keep stateful rows). Sim side `data/tennis/sim_pairs_results.jsonl` (append mode — resume-safe; truncate only via python, never PowerShell `Set-Content` = BOM). Timeplots: game `modhost/captures/timeplots-<date>/` + `modhost/game_timeplots/<bot>/`, parsed only via `modhost/parse_timeplots.py` (locale-comma rule). Fixtures: `tests/fixtures/tennis-v014/` (committed, CI replays).
+- **Validity 2026-09-14**: `tennis_tournament` gained `--game-version v014|v015`
+  (**default v015** = the live game's world model, swept ball contact) and
+  `--trace-points`. **The summary JSON is version-tagged** (`game_version`) and
+  carries `point_reasons` (winner x reason tallies). Every result produced
+  before 2026-09-14 ran **v0.14 physics** and is NOT comparable — that default
+  is why the sim reported "titanium66 beats Unlucky 2-1" while the real v0.15f
+  game bagelled it 6-0. `run_titanium_ladder.py` passes the version explicitly
+  and keys its resume cache on it. `scripts/analyze_point_endings.py` and
+  `score_titanium_ladder.py` read the reasons (a `--points` log is
+  authoritative; trace inference misses set-winning points).
 - Validity 2026-09-11: `run_sim_tournament_pairs.py` replays `--points 8` vs merged game file (does NOT yet auto-include fix2 shards — merge first); `score_parity.py` aggregates `agree-seq`/`agree-leader` vs `disagree` (fixed: `startswith("agree")` check); `parse_timeplots.py` + `compare_timeplots.py` valid.
 - Multi-seed **distributional** parity (2026-09-12): game side is `modhost\restart_sweep.jsonl` (one launch, `restart_match` per seed; a row is usable only when `state.restart_epoch` is present — pre-fix rows lack it and are skipped because the boot match's snapshot was misattributed; `serving_team` = THAT seed's setup server). `scripts/run_sim_seed_sweep.py` replays the same (home, away, seed) triples headless with matched `--points` + `AIA_FIRST_SERVER` from `serving_team` → `data/tennis/sim_seed_sweep.jsonl` (append, resume-safe). `scripts/score_distribution.py` is READ-ONLY: per-pairing + pooled home-win / server-hold / mean-points and the total-variation distance between the game and sim leader distributions, with exact per-seed agreement demoted to a secondary column. This is the HANDOFF §11 "valid ground truth" metric — never headline the exact % (first-server mapping + RNG draw sites are still unpinned).
 
