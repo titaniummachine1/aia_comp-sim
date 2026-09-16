@@ -1,8 +1,10 @@
 //! Headless tennis tournament match: two graph bots (or stock) play N points
-//! in the tennis world; prints a JSON summary line for batch collection.
+//! (`--points`) or a full best-of-3 match (`--match`: first to 2 sets, 3rd
+//! set iff 1-1) in the tennis world; prints a JSON summary line for batch.
 //!
 //! Usage:
 //!   tennis_tournament --home titanium54 --away aia3 --seed 7 --points 4
+//!   tennis_tournament --home titanium85 --away Unlucky --seed 7 --match --game-version v015
 //!   tennis_tournament --home titanium54 --away "" --seed 7   (away = stock)
 //! Optional --trace out.jsonl dumps per-tick state (sim "timeplots").
 
@@ -62,6 +64,10 @@ fn main() {
     let mut away_name = String::new();
     let mut seed: u64 = 7;
     let mut points: usize = 4;
+    // Full-match mode: play until the match ends (best-of-3: first to 2
+    // sets, 3rd set iff 1-1) instead of stopping after `--points`. The
+    // point cap still applies as a safety bound when both are given.
+    let mut full_match = false;
     let mut max_ticks: u64 = 120_000;
     let mut trace: Option<String> = None;
     // Per-strike contact log (tier + contact geometry + aim, one JSON per
@@ -87,6 +93,7 @@ fn main() {
             "--away" => away_name = args.next().unwrap_or(away_name),
             "--seed" => seed = args.next().and_then(|v| v.parse().ok()).unwrap_or(seed),
             "--points" => points = args.next().and_then(|v| v.parse().ok()).unwrap_or(points),
+            "--match" => full_match = true,
             "--max-ticks" => max_ticks = args.next().and_then(|v| v.parse().ok()).unwrap_or(max_ticks),
             "--trace" => trace = args.next(),
             "--trace-strikes" => trace_strikes = args.next(),
@@ -152,13 +159,13 @@ fn main() {
         out
     }
     // Per-point winner log for exact outcome-parity comparison with the
-    // game's point_winners[] (0=home, 1=away). award_point resets points on
-    // a game win, so winners are detected from per-step deltas: a games
-    // increment marks a game-winning point; otherwise a points increment.
+    // game's point_winners[] (0=home, 1=away). Winners come from the
+    // point_log (one entry per resolved point): the old per-step delta
+    // form missed set-clinching points (games reset to [0,0] masks the
+    // increment) and the match-winning point (no PointPause follows it).
+    let mut prev_logged = 0usize;
     let mut point_winners: Vec<u8> = Vec::new();
-    while world.end.is_none() && world.tick < max_ticks && completed_points < points {
-        let prev_points = world.score.points;
-        let prev_games = world.score.games;
+    while world.end.is_none() && world.tick < max_ticks && (full_match || completed_points < points) {
         let (home_cmd, home_ch, away_cmd, away_ch) = if trace_channels {
             aia_comp_sim::debug_draw::begin_frame();
             let hc = home.as_mut().and_then(|b| b.command_for(&world));
@@ -176,15 +183,10 @@ fn main() {
         let away_cmd = away_cmd;
         world.step([home_cmd, away_cmd]);
 
-        if world.score.games[0] > prev_games[0] {
-            point_winners.push(0);
-        } else if world.score.games[1] > prev_games[1] {
-            point_winners.push(1);
-        } else if world.score.points[0] > prev_points[0] {
-            point_winners.push(0);
-        } else if world.score.points[1] > prev_points[1] {
-            point_winners.push(1);
+        for e in &world.point_log[prev_logged..] {
+            point_winners.push(e.winner as u8);
         }
+        prev_logged = world.point_log.len();
 
         if let Some(w) = trace_out.as_mut() {
             use std::io::Write;

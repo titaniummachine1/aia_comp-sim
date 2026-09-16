@@ -234,10 +234,30 @@ impl Score {
         self.is_game_point(self.receiver())
     }
 
-    /// Match point: one more game wins the (modeled) set.
+    /// Match over: either side reached `sets_to_win` (best-of-3 default =
+    /// first to 2; the 3rd set only exists as the 1-1 decider).
+    pub fn match_winner(&self) -> Option<Side> {
+        if self.sets[0] >= self.rules.sets_to_win {
+            Some(Side::Home)
+        } else if self.sets[1] >= self.rules.sets_to_win {
+            Some(Side::Away)
+        } else {
+            None
+        }
+    }
+
+    /// True MATCH point for `side`: one more point wins the game, that game
+    /// wins the set, and that set wins the match (all thresholds from the
+    /// enforced `rules`, never hard-coded counts).
     pub fn is_match_point(&self, side: Side) -> bool {
         let i = side as usize;
-        self.games[i] + 1 >= GAMES_TO_WIN_SET && self.is_game_point(side)
+        if !self.is_game_point(side) {
+            return false;
+        }
+        if self.games[i] + 1 < self.rules.games_to_win_set {
+            return false;
+        }
+        self.sets[i] + 1 >= self.rules.sets_to_win
     }
 
     pub fn is_winning(&self, side: Side) -> bool {
@@ -403,6 +423,26 @@ mod tests {
         // The award lasts only the current game; rotation resumes after it.
         while !s.award_point(Side::Home) {}
         assert_eq!(s.serve_override, None);
+    }
+
+    #[test]
+    fn match_point_means_match_not_set() {
+        // Set point at 0-0 sets is NOT a match point; at 1-0 it is.
+        let mut s = Score::new(0);
+        while !s.award_point(Side::Home) {} // game 1
+        s.award_point(Side::Home);
+        s.award_point(Side::Home);
+        s.award_point(Side::Home); // 40-0, one game from the set ...
+        assert!(s.is_game_point(Side::Home));
+        assert!(!s.is_match_point(Side::Home)); // ... but sets are 0-0
+        assert_eq!(s.match_winner(), None);
+        let mut t = Score::new(0);
+        t.sets = [1, 0];
+        t.games = [1, 0];
+        t.points = [3, 0];
+        assert!(t.is_match_point(Side::Home));
+        t.award_point(Side::Home); // set 2-0, match 2-0
+        assert_eq!(t.match_winner(), Some(Side::Home));
     }
 
     #[test]

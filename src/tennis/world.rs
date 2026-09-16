@@ -1059,9 +1059,7 @@ impl TennisWorld {
         });
         // Enforced format: first to `sets_to_win` ends the match on the exact
         // tick it happens — best-of-3 caps at 3 sets, 2-2 is unreachable.
-        if game_won
-            && self.score.sets[Self::idx(winner)] >= self.score.rules.sets_to_win
-        {
+        if game_won && self.score.match_winner() == Some(winner) {
             self.end = Some(EndReason::SetWon(winner));
             self.phase = Phase::Finished;
             return;
