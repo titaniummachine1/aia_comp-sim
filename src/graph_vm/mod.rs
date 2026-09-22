@@ -28,3 +28,4 @@ pub use program::RuntimeProgram;
 pub use runtime_brain::{CachedProgram, RuntimeBrain};
 pub use trace::{compare_traces, ObservableTrace, TraceMismatch};
 pub use value::{RegisterKind, VmValue};
+pub mod racing_vm;
