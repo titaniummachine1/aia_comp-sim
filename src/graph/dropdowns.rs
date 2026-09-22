@@ -473,6 +473,10 @@ pub fn resolve_for_version(
             let aliased = tennis_v014::alias(resolved);
             aliased.to_string()
         }
+        // RacingV022: no alias tables — racing saves store the raw index and
+        // the ABI is admitted but unverified (no parity sim). The index
+        // resolves directly to its label via the tables above.
+        GameVersion::RacingV022 => resolved.to_string(),
     }
 }
 

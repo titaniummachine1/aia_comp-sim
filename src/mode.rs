@@ -23,6 +23,9 @@ use crate::graph::load::TeamGraph;
 pub enum GameMode {
     Soccer,
     Tennis,
+    /// RacingV2 — ABI-only gate (no parity simulator exists for racing; the
+    /// admit list below is pylib-proven but nothing semantic is verified).
+    Racing,
 }
 
 impl GameMode {
@@ -31,6 +34,7 @@ impl GameMode {
         match self {
             GameMode::Soccer => "Soccer",
             GameMode::Tennis => "Tennis",
+            GameMode::Racing => "RacingV2",
         }
     }
 
@@ -39,8 +43,29 @@ impl GameMode {
         match self {
             GameMode::Soccer => "SoccerController1",
             GameMode::Tennis => "TennisController",
+            GameMode::Racing => "ModularCarController",
         }
     }
+
+    /// Whether an offline simulator verifies this mode's graphs.
+    /// RacingV2 is ABI-only: the gate admits pylib-proven node kinds but
+    /// nothing below has ever been simulated or measured against the game.
+    pub fn parity(self) -> Parity {
+        match self {
+            GameMode::Soccer | GameMode::Tennis => Parity::Verified,
+            GameMode::Racing => Parity::None,
+        }
+    }
+}
+
+/// Simulator parity status — what admitting a graph is actually worth.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Parity {
+    /// Offline sim matches the game (physics + graph semantics) on fixtures.
+    Verified,
+    /// Node ABI admitted; nothing semantic verified. Emitting graphs for
+    /// in-game testing is fine; trusting numbers is not.
+    None,
 }
 
 /// Game builds. Dropdown tables and sensor semantics are per-version; alias
@@ -65,6 +90,10 @@ pub enum GameVersion {
     /// interpolated between frames; the time-to-ground cache was fixed) — see
     /// `docs/GAME_VERSIONS.md`.
     TennisV015,
+    /// RacingV2 v0.22. ABI-only: the admit list below is complete against the
+    /// 2026 AIGamePyLibrary fork + 14 real car graphs, but nothing semantic
+    /// is verified — there is no racing simulator.
+    RacingV022,
 }
 
 impl GameVersion {
@@ -74,6 +103,7 @@ impl GameVersion {
             GameVersion::TennisV012
             | GameVersion::TennisV014
             | GameVersion::TennisV015 => GameMode::Tennis,
+            GameVersion::RacingV022 => GameMode::Racing,
         }
     }
 
@@ -82,6 +112,7 @@ impl GameVersion {
         match mode {
             GameMode::Soccer => GameVersion::SoccerV05,
             GameMode::Tennis => GameVersion::TennisV015,
+            GameMode::Racing => GameVersion::RacingV022,
         }
     }
 
@@ -155,8 +186,30 @@ impl GameSpec {
         Self::latest(GameMode::Tennis)
     }
 
+    /// RacingV2 v0.22 — the current racing ABI target. ABI-only: admitting a
+    /// graph here means its node kinds, ports and dropdown indices match the
+    /// game; it says NOTHING about physics — no simulator exists. Compilers
+    /// targeting this spec must carry the parity warning.
+    pub fn racing() -> Self {
+        Self::latest(GameMode::Racing)
+    }
+
     pub fn is_pure(&self) -> bool {
         false
+    }
+
+    /// Non-fatal advisory for this spec: `Some` when the target has no parity
+    /// simulator. Compilers print this with every emit.
+    pub fn parity_warning(&self) -> Option<String> {
+        match self.mode.parity() {
+            Parity::Verified => None,
+            Parity::None => Some(format!(
+                "NO PARITY SIMULATOR for {:?}/v0.22: RacingV2 node ABI is \
+                 admitted but unverified — test every change in-game. Only \
+                 soccer v0.12 and tennis v0.14/v15f are parity-backed.",
+                self.mode,
+            )),
+        }
     }
 }
 
@@ -244,6 +297,18 @@ impl NodeRejection {
 /// Mode-owned node types whose names do not start with the mode prefix.
 const SOCCER_EXTRA_NODES: &[&str] = &["ConstructSoccerProperties"];
 const TENNIS_EXTRA_NODES: &[&str] = &["ConstructTennisProperties"];
+/// RacingV2 modular-car nodes: pylib-proven (ports + index modifiers verified
+/// against 14 real car graphs), but NEVER sim-verified.
+const RACING_EXTRA_NODES: &[&str] = &[
+    "GetCarPart",
+    "GetCarFromTransform",
+    "ModularCarController",
+    "Autosteer",
+    "Autothrottle",
+    "CarRaycasts",
+    "HitInfo",
+    "ConstructRacingV2Properties",
+];
 
 /// Classify a node type against a spec. `Ok(())` = legal.
 pub fn check_node(spec: GameSpec, node_id: &str) -> Result<(), NodeRejection> {
@@ -266,7 +331,15 @@ pub fn check_node(spec: GameSpec, node_id: &str) -> Result<(), NodeRejection> {
             }),
         };
     }
-    for m in [GameMode::Soccer, GameMode::Tennis] {
+    if RACING_EXTRA_NODES.contains(&node_id) {
+        return match spec.mode {
+            GameMode::Racing => Ok(()),
+            _ => Err(NodeRejection::OtherMode {
+                owned_by: GameMode::Racing,
+            }),
+        };
+    }
+    for m in [GameMode::Soccer, GameMode::Tennis, GameMode::Racing] {
         if node_id.starts_with(m.node_prefix()) {
             return if m == spec.mode {
                 Ok(())
@@ -350,5 +423,55 @@ mod tests {
             GameSpec::tennis_builder().version,
             GameVersion::TennisV012
         );
+        assert_eq!(
+            GameSpec::latest(GameMode::Racing).version,
+            GameVersion::RacingV022
+        );
+        assert_eq!(GameSpec::racing().version, GameVersion::RacingV022);
+    }
+
+    #[test]
+    fn racing_mode_admits_pylib_proven_nodes_with_parity_warning() {
+        let racing = GameSpec::racing();
+        for node in [
+            "RacingV2GetFloat",
+            "RacingV2GetBool",
+            "RacingV2GetCar",
+            "RacingV2GetWaypoint",
+            "RacingV2Waypoint",
+            "ConstructRacingV2Properties",
+            "GetCarPart",
+            "GetCarFromTransform",
+            "ModularCarController",
+            "Autosteer",
+            "Autothrottle",
+            "CarRaycasts",
+            "HitInfo",
+            "RelativePosition",
+            "TimePlot",
+        ] {
+            assert!(check_node(racing, node).is_ok(), "{node}");
+        }
+        // Cross-mode nodes are refused in racing graphs...
+        assert_eq!(
+            check_node(racing, "SoccerGetFloat"),
+            Err(NodeRejection::OtherMode {
+                owned_by: GameMode::Soccer
+            })
+        );
+        // ...and racing nodes are refused in the parity modes.
+        assert_eq!(
+            check_node(GameSpec::soccer(), "RacingV2GetFloat"),
+            Err(NodeRejection::OtherMode {
+                owned_by: GameMode::Racing
+            })
+        );
+        // Everyone agrees there is no racing simulator.
+        assert_eq!(GameMode::Racing.parity(), Parity::None);
+        assert_eq!(GameMode::Soccer.parity(), Parity::Verified);
+        assert_eq!(GameMode::Tennis.parity(), Parity::Verified);
+        assert!(GameSpec::soccer().parity_warning().is_none());
+        let w = racing.parity_warning().expect("racing must warn");
+        assert!(w.contains("NO PARITY SIMULATOR"), "{w}");
     }
 }

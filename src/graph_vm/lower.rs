@@ -136,6 +136,11 @@ impl ApiSlotTable {
             (crate::mode::GameMode::Tennis, ApiKind::Vector3) => {
                 crate::tennis::api::vector_index(label).unwrap_or(crate::api::UNKNOWN_ID)
             }
+            // RacingV2 has no simulator: every label resolves to UNKNOWN_ID
+            // (a known-dead slot), mirroring the game's behaviour of reading
+            // an unverified API as garbage — and the loud parity warning says
+            // exactly that. No invented catalog, no phantom data.
+            (crate::mode::GameMode::Racing, _) => crate::api::UNKNOWN_ID,
         };
         let idx = self.labels.len();
         self.labels.push(label.to_string());

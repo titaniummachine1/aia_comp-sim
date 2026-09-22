@@ -5,6 +5,38 @@ and compile it to the game's node graph — instead of hand-placing hundreds
 of nodes (Adam: 371 nodes; Apex: 860; LeBlock_James hand-compiler blocked on
 previous-tick registers).
 
+## 0. Supported games and what a compile is worth
+
+| Game (graphc target) | Parity simulator? | What "compiled" means |
+|---|---|---|
+| `("soccer", "v0.12")` | **Yes** (full) | CC-verified physics + graph semantics |
+| `("tennis", "v0.14")` / `("tennis", "v15f")` | **Yes** (full) | fixture-matrix + word-pinned constants |
+| `("racing", "v0.22")` / `("racing", "v0.22f")` | **NO — none exists** | ABI-only: node kinds/ports/index tables are pylib-proven, everything else (sensor semantics, controller port order, part ids, constants) is an **UNVERIFIED GUESS**. Every racing emit carries the `NO PARITY SIMULATOR` warning. |
+
+The parity contract: a compile is only as good as the offline simulator
+behind it. Soccer and tennis compiles are CI'd against `tennis_tournament` /
+headless sims; racing compiles are emitted for in-game testing only.
+
+## 0.1 RacingV2 specifics (accepted, ABI-only)
+
+- **Sensors** (`race_get`): `float`/`bool`/`car`/`waypoint`/`waypoint_mode`
+  with labels resolved to indices through the 2026 AIGamePyLibrary fork's
+  `DROPDOWN_OPTIONS` (embedded fallback in `graphc/desc.py`), verified
+  kind-for-kind against 14 real car graphs
+  (`aialanders-legacy/games/Racing/data/`).
+- **Encoding**: racing saves store the INDEX as the modifier — opposite of
+  tennis label encoding. Unknown labels/indices fail loudly (a wrong index
+  selects a different valid sensor).
+- **Car parts** (`race_car_part`): `RacingV2GetCar` -> `GetCarPart` ->
+  `PositionOf` (`RelativePosition` mode 13) is the dumped community recipe.
+- **Drive** (`race_drive`): `ModularCarController(Float1, Float2, Float3)` is
+  pylib-order only — which of throttle/steering/brake is which port is
+  UNVERIFIED. `race_autosteer`/`race_autothrottle` use the game assists.
+- Warnings: the `CompileReport` + CLI JSON carry
+  `parity: "None"` and the loud no-sim warning; the Python frontend prints it
+  once per process.
+
+
 ## 1. Verified machine model (2026-09-10, pinned by tests)
 
 | Primitive | Semantics | Proof |
