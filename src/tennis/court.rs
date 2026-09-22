@@ -49,7 +49,11 @@ pub fn is_in_court_xz(x: f32, z: f32) -> bool {
 ///
 /// Returns `(min, max)` corners in world space.
 pub fn service_box(receiver: Side, ad_court: bool) -> (Vec2, Vec2) {
-    let grow = LINE_WIDTH * 0.5;
+    // Edge tolerance MUST match the rally court check (`is_in_court_xz` =
+    // line/2 + BALL_OUT_RADIUS): the same ball-touching-line is IN in both.
+    // With line/2 alone, Unlucky's line-riding deuce serve (aim x=7.0,
+    // steered landing x=7.134) faulted 4/4 in-sim while landing IN in-game.
+    let grow = LINE_WIDTH * 0.5 + BALL_OUT_RADIUS;
     let x_max = receiver.sign() * (COURT_LENGTH * 0.25) + receiver.sign() * grow;
     let x_min = if receiver.sign() > 0.0 { 0.0 - grow } else { 0.0 + grow };
     let (z_lo, z_hi) = if ad_court { (-1.0, 0.0) } else { (0.0, 1.0) };
@@ -181,16 +185,23 @@ mod tests {
 
     #[test]
     fn service_box_is_diagonal_half_with_line_grow() {
+        // Box edges carry the same tolerance as the rally court check
+        // (line/2 + BALL_OUT_RADIUS): a ball touching the line is IN.
+        let g = LINE_WIDTH * 0.5 + BALL_OUT_RADIUS;
         let (min, max) = service_box(Side::Away, false);
-        assert!((min.x - (-0.075)).abs() < 1e-5);
-        assert!((max.x - (7.0 + 0.075)).abs() < 1e-5);
-        assert!((min.y - (-0.075)).abs() < 1e-5);
-        assert!((max.y - (6.0 + 0.075)).abs() < 1e-5);
+        assert!((min.x - (-g)).abs() < 1e-5);
+        assert!((max.x - (7.0 + g)).abs() < 1e-5);
+        assert!((min.y - (-g)).abs() < 1e-5);
+        assert!((max.y - (6.0 + g)).abs() < 1e-5);
         let (min, max) = service_box(Side::Away, true);
-        assert!(min.y < 0.0 && max.y <= 0.075);
+        assert!(min.y < 0.0 && max.y <= g);
         // Deuce-court serve landing deep and wide is in; the ad mirror is out.
         assert!(is_serve_in(Side::Away, false, 6.0, 4.0));
         assert!(!is_serve_in(Side::Away, false, 6.0, -4.0));
+        // Unlucky's line-riding deuce serve (steered landing 7.134, 6.036):
+        // IN with the ball-radius tolerance, OUT without it (was a sim-only
+        // double fault; the game never faults it).
+        assert!(is_serve_in(Side::Away, false, 7.134, 6.036));
         let _ = max;
     }
 

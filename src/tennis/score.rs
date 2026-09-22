@@ -186,7 +186,10 @@ impl Score {
 
     /// Award a point to `side`. Returns true when the game (and possibly the
     /// set/match) completed and serve should rotate. Thresholds come from
-    /// the enforced `rules`, never hard-coded counts.
+    /// the enforced `rules`, never hard-coded counts. Standard tennis both
+    /// levels: games need 4 points with a 2-point lead (deuce/advantage),
+    /// sets need `games_to_win_set` with a 2-GAME lead — 2-1 wins nothing,
+    /// play continues until someone leads by 2 (advantage-set shape).
     pub fn award_point(&mut self, side: Side) -> bool {
         let i = side as usize;
         self.points[i] += 1;
@@ -197,7 +200,9 @@ impl Score {
             self.games[i] += 1;
             self.total_games += 1;
             let game_won = true;
-            if self.games[i] >= self.rules.games_to_win_set {
+            if self.games[i] >= self.rules.games_to_win_set
+                && self.games[i] as i32 - self.games[1 - i] as i32 >= 2
+            {
                 self.sets[i] += 1;
                 self.games = [0, 0];
             }

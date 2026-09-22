@@ -1,0 +1,12 @@
+{"tick":67,"side":1,"serving":true,"tier":"perfect","ball":[14.000,3.351,0.400],"racket":[13.450,1.333,0.400],"aim":[-7.00,6.00],"q":0.76}
+{"tick":227,"side":1,"serving":true,"tier":"perfect","ball":[14.000,3.351,0.400],"racket":[13.450,1.333,0.400],"aim":[-7.00,6.00],"q":0.76}
+{"tick":448,"side":1,"serving":true,"tier":"perfect","ball":[14.000,3.351,-0.400],"racket":[13.450,1.333,-0.400],"aim":[-3.50,-3.00],"q":0.76}
+{"tick":543,"side":0,"serving":false,"tier":"late","ball":[-3.803,0.818,-3.045],"racket":[-4.262,1.333,-3.083],"aim":[13.00,5.00],"q":1.00}
+{"tick":721,"side":1,"serving":true,"tier":"perfect","ball":[14.000,3.351,0.400],"racket":[13.450,1.333,0.400],"aim":[-7.00,6.00],"q":0.76}
+{"tick":881,"side":1,"serving":true,"tier":"perfect","ball":[14.000,3.351,0.400],"racket":[13.450,1.333,0.400],"aim":[-7.00,6.00],"q":0.76}
+{"tick":1102,"side":1,"serving":true,"tier":"perfect","ball":[14.000,3.351,-0.400],"racket":[13.450,1.333,-0.400],"aim":[-3.50,-3.00],"q":0.76}
+{"tick":1197,"side":0,"serving":false,"tier":"late","ball":[-3.803,0.818,-3.045],"racket":[-4.262,1.333,-3.083],"aim":[13.00,5.00],"q":1.00}
+{"tick":1375,"side":0,"serving":true,"tier":"perfect","ball":[-14.917,3.351,2.700],"racket":[-14.367,1.333,2.700],"aim":[3.50,3.00],"q":0.76}
+{"tick":1407,"side":1,"serving":false,"tier":"late","ball":[4.663,0.679,3.019],"racket":[4.398,1.333,2.567],"aim":[-7.04,-5.80],"q":1.00}
+{"tick":1590,"side":0,"serving":true,"tier":"perfect","ball":[-14.917,3.351,-2.700],"racket":[-14.367,1.333,-2.700],"aim":[3.50,-3.00],"q":0.76}
+{"tick":1621,"side":1,"serving":false,"tier":"late","ball":[4.067,0.499,-3.009],"racket":[4.141,1.333,-3.416],"aim":[-7.04,5.80],"q":1.00}

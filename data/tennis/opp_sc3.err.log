@@ -1,0 +1,14 @@
+warning: function `can_intercept_segments` is never used
+   --> src\deterministic.rs:810:4
+    |
+810 | fn can_intercept_segments(
+    |    ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `normalize_modifier` is never used
+   --> src\graph\load.rs:289:4
+    |
+289 | fn normalize_modifier(node_id: &str, value: &serde_json::Value) -> String {
+    |    ^^^^^^^^^^^^^^^^^^
+

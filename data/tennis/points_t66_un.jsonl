@@ -1,0 +1,6 @@
+{"tick":320,"winner":"home","reason":"DoubleFault","striker":"away","ball":[-7.134,0.439,6.036],"bounces":1,"rally_hits":1,"sets":[0,0],"games":[0,0],"points":[1,0]}
+{"tick":593,"winner":"home","reason":"DoubleBounce","striker":"home","ball":[27.368,0.375,11.879],"bounces":2,"rally_hits":2,"sets":[0,0],"games":[0,0],"points":[2,0]}
+{"tick":974,"winner":"home","reason":"DoubleFault","striker":"away","ball":[-7.134,0.439,6.036],"bounces":1,"rally_hits":1,"sets":[0,0],"games":[0,0],"points":[3,0]}
+{"tick":1247,"winner":"home","reason":"DoubleBounce","striker":"home","ball":[27.368,0.375,11.879],"bounces":2,"rally_hits":2,"sets":[0,0],"games":[1,0],"points":[0,0]}
+{"tick":1462,"winner":"away","reason":"DoubleBounce","striker":"away","ball":[-16.252,0.310,-9.395],"bounces":2,"rally_hits":2,"sets":[0,0],"games":[1,0],"points":[0,1]}
+{"tick":1674,"winner":"away","reason":"DoubleBounce","striker":"away","ball":[-15.730,0.368,9.603],"bounces":2,"rally_hits":2,"sets":[0,0],"games":[1,0],"points":[0,2]}
